@@ -211,7 +211,13 @@ fun PrimaryButtonStory() {
 ./gradlew wasmJsBrowserDistribution
 ```
 
-The output lands in `build/dist/wasmJs/productionExecutable`. The catalog's Export button (in the running app) also builds a standalone, self-contained zip of the current site client-side and triggers a browser download of it, whether running via `runCStoriesWasm` or from a production distribution.
+The output lands in `build/dist/wasmJs/productionExecutable`. To package it as a zip ready to host anywhere (S3, GitHub Pages, an internal file server, ...), run:
+
+```
+./gradlew cstoriesExportWeb
+```
+
+The zip is written to `build/cstories/<project-name>-web.zip`.
 
 ## License
 

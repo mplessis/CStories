@@ -4,9 +4,6 @@
     <string name="controls_empty_state">Aucun control pour cette story</string>
 
     <string name="main_header_title">Story Preview</string>
-    <string name="main_header_export_button">Export</string>
-    <string name="main_header_export_unavailable_dev">Export indisponible en mode dev — faites un build de production (wasmJsBrowserDistribution)</string>
-    <string name="main_header_export_failed">Échec de l\'export : %1$s</string>
 
     <string name="canvas_live_preview">Live preview</string>
 

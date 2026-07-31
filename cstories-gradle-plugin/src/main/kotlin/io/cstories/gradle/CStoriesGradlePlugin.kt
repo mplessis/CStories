@@ -132,8 +132,8 @@ class CStoriesGradlePlugin : Plugin<Project> {
 
     /**
      * Wires the generated wasmJs entry point (`CStoriesWasmJsEntryPoint.kt`),
-     * the `runCStoriesWasm` alias task, and the standalone export manifest
-     * tasks — the wasmJs/browser counterpart of [configureDesktop].
+     * the `runCStoriesWasm` alias task, and the `cstoriesExportWeb`
+     * packaging task — the wasmJs/browser counterpart of [configureDesktop].
      *
      * Generated sources are wired using plain (non task-derived) directory
      * paths rather than `aggregateTask.map { ... }`. Gradle would otherwise
@@ -165,7 +165,7 @@ class CStoriesGradlePlugin : Plugin<Project> {
             dependsOn("wasmJsBrowserDevelopmentRun")
         }
 
-        registerStandaloneManifestTask(project)
+        registerExportWebTask(project)
     }
 
     /**
@@ -217,65 +217,20 @@ class CStoriesGradlePlugin : Plugin<Project> {
     }
 
     /**
-     * Both the production distribution and the development webpack bundle
-     * get a manifest listing all files they produced, written next to
-     * `index.html`. The catalog's Export button reads this manifest at
-     * runtime to build a standalone zip client-side (see
-     * `cstories-runtime`'s `triggerStandaloneExport`).
-     *
-     * For `wasmJsBrowserDistribution`, everything (resources + compiled
-     * bundle) already lands in the same `dist` directory, so the manifest
-     * task simply lists that one directory and finalizes the distribution
-     * task since it's a single terminating task run.
-     *
-     * For the dev workflow (`runCStoriesWasm` / `wasmJsBrowserDevelopmentRun`),
-     * things are split: the dev server serves static files (`index.html`,
-     * compose resources) from `build/processedResources/wasmJs/main`, but
-     * the compiled JS/wasm bundle is only ever produced by the dev server's
-     * own in-process webpack-dev-middleware — there's no prior finished
-     * Gradle task whose output directory reflects what gets served. To work
-     * around this, `wasmJsBrowserDevelopmentRun` is made to *depend on*
-     * `wasmJsBrowserDevelopmentWebpack` (which normally isn't in its task
-     * graph) so a first webpack compilation happens through Gradle, writing
-     * the bundle to `build/kotlin-webpack/wasmJs/developmentExecutable`.
-     * webpack's content hashes are deterministic for identical sources, so
-     * when the dev server subsequently compiles the same sources itself, it
-     * reproduces the exact same file names. The manifest task then lists
-     * files from *both* directories, but writes the manifest itself into
-     * `processedResources/wasmJs/main`, since that's the directory the dev
-     * server actually serves static files from.
+     * Packages the wasmJs production distribution (`wasmJsBrowserDistribution`
+     * output, `build/dist/wasmJs/productionExecutable`) as a single zip
+     * archive, ready to be uploaded and hosted anywhere as a static site
+     * (S3, GitHub Pages, Netlify, an internal file server, ...).
      */
-    private fun registerStandaloneManifestTask(project: Project) {
+    private fun registerExportWebTask(project: Project) {
         val productionDistDir = project.layout.buildDirectory.dir("dist/wasmJs/productionExecutable")
-        val productionManifestTask = project.tasks.register(
-            "cstoriesGenerateStandaloneManifest",
-            CStoriesStandaloneManifestTask::class.java,
-        ) {
+        project.tasks.register("cstoriesExportWeb", org.gradle.api.tasks.bundling.Zip::class.java) {
             group = "cstories"
-            description = "Writes a manifest of the wasmJs production distribution files, used by the Export button"
-            siteDirectories.from(productionDistDir)
-            manifestOutputDirectory.set(productionDistDir)
-        }
-
-        project.tasks.matching { it.name == "wasmJsBrowserDistribution" }.configureEach {
-            finalizedBy(productionManifestTask)
-        }
-
-        val developmentResourcesDir = project.layout.buildDirectory.dir("processedResources/wasmJs/main")
-        val developmentBundleDir = project.layout.buildDirectory.dir("kotlin-webpack/wasmJs/developmentExecutable")
-        val developmentManifestTask = project.tasks.register(
-            "cstoriesGenerateStandaloneDevelopmentManifest",
-            CStoriesStandaloneManifestTask::class.java,
-        ) {
-            group = "cstories"
-            description = "Writes a manifest of the wasmJs development bundle files, used by the Export button"
-            siteDirectories.from(developmentResourcesDir, developmentBundleDir)
-            manifestOutputDirectory.set(developmentResourcesDir)
-            dependsOn("wasmJsBrowserDevelopmentWebpack")
-        }
-
-        project.tasks.matching { it.name == "wasmJsBrowserDevelopmentRun" }.configureEach {
-            dependsOn(developmentManifestTask)
+            description = "Packages the wasmJs production distribution as a zip ready to host anywhere"
+            dependsOn("wasmJsBrowserDistribution")
+            from(productionDistDir)
+            archiveFileName.set("${project.name}-web.zip")
+            destinationDirectory.set(project.layout.buildDirectory.dir("cstories"))
         }
     }
 }
