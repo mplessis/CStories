@@ -33,6 +33,10 @@ kotlin {
             implementation(compose.components.resources)
         }
 
+        jvmMain.dependencies {
+            implementation(libs.compose.hot.reload.runtime.api)
+        }
+
         jvmTest.dependencies {
             implementation(kotlin("test"))
         }

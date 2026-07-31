@@ -11,6 +11,7 @@ kotlinpoet = "2.2.0"
 ksp-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }
+compose-hot-reload-runtime-api = { module = "org.jetbrains.compose.hot-reload:hot-reload-runtime-api", version.ref = "compose-hot-reload" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

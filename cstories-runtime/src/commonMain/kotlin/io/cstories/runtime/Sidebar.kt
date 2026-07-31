@@ -71,8 +71,10 @@ fun Sidebar(
                 }
             }
         }
-        Spacer(Modifier.height(14.dp))
-        PromoCard()
+        if (!isHotReloadActive()) {
+            Spacer(Modifier.height(14.dp))
+            PromoCard()
+        }
     }
 }
 
@@ -301,7 +303,7 @@ private fun PromoCard() {
     val clipboard = LocalClipboardManager.current
     val scope = rememberCoroutineScope()
     var copied by remember { mutableStateOf(false) }
-    val command = "./gradlew runCStories --continuous"
+    val command = hotReloadCommand
 
     Column(
         modifier = Modifier
