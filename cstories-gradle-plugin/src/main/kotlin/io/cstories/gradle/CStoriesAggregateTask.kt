@@ -18,8 +18,14 @@ abstract class CStoriesAggregateTask : DefaultTask() {
     @get:OutputDirectory
     abstract val outputDirectory: DirectoryProperty
 
+    @get:OutputDirectory
+    abstract val webResourcesDirectory: DirectoryProperty
+
     @get:Input
     abstract val packageName: Property<String>
+
+    @get:Input
+    abstract val jsBundleBaseName: Property<String>
 
     @TaskAction
     fun generate() {
@@ -34,6 +40,9 @@ abstract class CStoriesAggregateTask : DefaultTask() {
 
         File(kotlinDir, "AllStoriesRegistry.kt").writeText(buildRegistrySource(registries))
         File(kotlinDir, "CStoriesEntryPoint.kt").writeText(buildEntryPointSource())
+
+        val webResourcesDir = webResourcesDirectory.get().asFile.apply { mkdirs() }
+        File(webResourcesDir, "index.html").writeText(buildIndexHtmlSource())
     }
 
     private fun readRegistries(file: File): List<String> {
@@ -86,14 +95,47 @@ abstract class CStoriesAggregateTask : DefaultTask() {
         return """
             |package ${packageName.get()}
             |
+            |import androidx.compose.ui.ExperimentalComposeUiApi
             |import androidx.compose.ui.window.CanvasBasedWindow
             |import io.cstories.runtime.CStoriesApp
             |
+            |@OptIn(ExperimentalComposeUiApi::class)
             |fun main() {
             |    CanvasBasedWindow("CStories") {
             |        CStoriesApp(AllStoriesRegistry.entries)
             |    }
             |}
+        """.trimMargin()
+    }
+
+    private fun buildIndexHtmlSource(): String {
+        return """
+            |<!DOCTYPE html>
+            |<html lang="en">
+            |<head>
+            |    <meta charset="UTF-8">
+            |    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            |    <title>CStories</title>
+            |    <style>
+            |        html, body {
+            |            margin: 0;
+            |            padding: 0;
+            |            width: 100%;
+            |            height: 100%;
+            |        }
+            |
+            |        #ComposeTarget {
+            |            width: 100%;
+            |            height: 100%;
+            |            display: block;
+            |        }
+            |    </style>
+            |</head>
+            |<body>
+            |    <canvas id="ComposeTarget"></canvas>
+            |    <script src="${jsBundleBaseName.get()}.js"></script>
+            |</body>
+            |</html>
         """.trimMargin()
     }
 
