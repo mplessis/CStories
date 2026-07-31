@@ -192,6 +192,12 @@ class CStoriesGradlePlugin : Plugin<Project> {
         val desktopExtension = project.extensions.findByType(DesktopExtension::class.java)
         desktopExtension?.application?.mainClass = "io.cstories.generated.CStoriesDesktopEntryPointKt"
 
+        // Compose Hot Reload needs its own Gradle plugin applied on top of
+        // the standard Compose Multiplatform one: it wires the `hotRunJvm`
+        // task (and the JBR-based agent behind it) that `runCStoriesDesktopHotReload`
+        // below delegates to.
+        project.pluginManager.apply("org.jetbrains.compose.hot-reload")
+
         // Compose Desktop's own packaging tasks are geared towards producing
         // an installable/distributable app. For a quick "preview the catalog"
         // loop, the plain `jvmRun` task Kotlin already registers for the jvm
@@ -207,6 +213,18 @@ class CStoriesGradlePlugin : Plugin<Project> {
             group = "cstories"
             description = "Runs the generated CStories catalog as a desktop application"
             dependsOn("jvmRun")
+        }
+
+        // Compose Hot Reload's own `hotRunJvm` task (named after the `jvm`
+        // target declared by the consumer) recompiles and reloads changed
+        // classes into the already-running window instead of restarting the
+        // whole process. Kept as a separate task from `runCStoriesDesktop`
+        // so the plain, always-available `jvmRun`-backed path keeps working
+        // unchanged.
+        project.tasks.register("runCStoriesDesktopHotReload") {
+            group = "cstories"
+            description = "Runs the generated CStories catalog as a desktop application with Compose Hot Reload"
+            dependsOn("hotRunJvm")
         }
     }
 

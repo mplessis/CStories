@@ -22,6 +22,7 @@ version = cstoriesVersion
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
     implementation("org.jetbrains.compose:compose-gradle-plugin:${libs.versions.compose.multiplatform.get()}")
+    implementation("org.jetbrains.compose.hot-reload:org.jetbrains.compose.hot-reload.gradle.plugin:${libs.versions.compose.hot.reload.get()}")
     implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:${libs.versions.ksp.get()}")
 }
 
