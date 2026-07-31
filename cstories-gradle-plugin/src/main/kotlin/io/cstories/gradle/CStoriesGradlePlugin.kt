@@ -227,16 +227,23 @@ class CStoriesGradlePlugin : Plugin<Project> {
             dependsOn("jvmRun")
         }
 
-        // Compose Hot Reload's own `hotRunJvm` task (named after the `jvm`
-        // target declared by the consumer) recompiles and reloads changed
-        // classes into the already-running window instead of restarting the
-        // whole process. Kept as a separate task from `runCStoriesDesktop`
-        // so the plain, always-available `jvmRun`-backed path keeps working
-        // unchanged.
-        project.tasks.register("runCStoriesDesktopHotReload") {
+        // Compose Hot Reload's own `hotRunJvm` task (registered by the
+        // hot-reload plugin itself) is a plain `ComposeHotRun` task, which
+        // is what actually exposes the `--auto`/`--autoReload` CLI options
+        // (declared via `@Option` directly on that task class). A simple
+        // `dependsOn`-based lifecycle alias — like `runCStoriesDesktop`
+        // above — can't forward those: Gradle resolves CLI options against
+        // the concrete task type being invoked, and a lifecycle task has
+        // none. Registering our own `ComposeHotRun` task instead (wired to
+        // the same jvm compilation) makes `runCStoriesDesktopHotReload`
+        // support `--auto` directly, while `runCStoriesDesktop` keeps
+        // working unchanged.
+        val jvmMainCompilation = kotlin.targets.getByName("jvm").compilations.getByName("main")
+        project.tasks.register("runCStoriesDesktopHotReload", ComposeHotRun::class.java) {
             group = "cstories"
             description = "Runs the generated CStories catalog as a desktop application with Compose Hot Reload"
-            dependsOn("hotRunJvm")
+            compilation.set(jvmMainCompilation)
+            mainClass.set("io.cstories.generated.CStoriesDesktopEntryPointKt")
         }
     }
 
