@@ -13,6 +13,16 @@ kotlin {
     wasmJs {
         browser()
     }
+    // Story functions live in a consumer's commonMain and directly call
+    // this module's `knobs` composables (KnobPanel, TextKnob, ...), so
+    // cstories-runtime must publish every target the consumer's shared
+    // module might target — even though the catalog app itself only ever
+    // actually runs on wasmJs — otherwise resolving commonMain metadata
+    // for those other targets fails. Kept in sync with the target list of
+    // cstories-annotations.
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     sourceSets {
         commonMain.dependencies {
