@@ -8,8 +8,10 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.dependencies
 import org.gradle.kotlin.dsl.findByType
 import org.gradle.kotlin.dsl.register
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.compose.ComposeExtension
 import org.jetbrains.compose.desktop.DesktopExtension
+import org.jetbrains.compose.reload.gradle.ComposeHotRun
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 class CStoriesGradlePlugin : Plugin<Project> {
@@ -189,7 +191,8 @@ class CStoriesGradlePlugin : Plugin<Project> {
             add("jvmMainImplementation", desktopCurrentOs(project))
         }
 
-        val desktopExtension = project.extensions.findByType(DesktopExtension::class.java)
+        val desktopExtension = project.extensions.findByType(ComposeExtension::class.java)
+            ?.extensions?.findByType(DesktopExtension::class.java)
         desktopExtension?.application?.mainClass = "io.cstories.generated.CStoriesDesktopEntryPointKt"
 
         // Compose Hot Reload needs its own Gradle plugin applied on top of
@@ -197,6 +200,15 @@ class CStoriesGradlePlugin : Plugin<Project> {
         // task (and the JBR-based agent behind it) that `runCStoriesDesktopHotReload`
         // below delegates to.
         project.pluginManager.apply("org.jetbrains.compose.hot-reload")
+
+        // Compose Hot Reload's `mainClass` convention falls back to
+        // `compose.desktop.application.mainClass` (set just above), but only
+        // when that property is actually readable at task-configuration
+        // time — set it explicitly too so `hotRunJvm` always finds the
+        // generated entry point regardless of ordering.
+        project.tasks.withType<ComposeHotRun>().configureEach {
+            mainClass.set("io.cstories.generated.CStoriesDesktopEntryPointKt")
+        }
 
         // Compose Desktop's own packaging tasks are geared towards producing
         // an installable/distributable app. For a quick "preview the catalog"
