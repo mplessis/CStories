@@ -64,9 +64,7 @@ class CStoriesGradlePlugin : Plugin<Project> {
 
             val aggregateTask = registerAggregateTask(project, kotlin, hasWasmJs, hasJvm)
             if (hasWasmJs) {
-                wireWasmJsGeneratedSources(project, kotlin, aggregateTask)
-                registerRunAlias(project)
-                registerStandaloneManifestTask(project)
+                configureWasm(project, kotlin, aggregateTask)
             }
             if (hasJvm) {
                 configureDesktop(project, kotlin, aggregateTask)
@@ -133,16 +131,20 @@ class CStoriesGradlePlugin : Plugin<Project> {
     }
 
     /**
-     * Wires the generated sources using plain (non task-derived) directory
+     * Wires the generated wasmJs entry point (`CStoriesWasmJsEntryPoint.kt`),
+     * the `runCStoriesWasm` alias task, and the standalone export manifest
+     * tasks — the wasmJs/browser counterpart of [configureDesktop].
+     *
+     * Generated sources are wired using plain (non task-derived) directory
      * paths rather than `aggregateTask.map { ... }`. Gradle would otherwise
      * infer an automatic task dependency from *every* consumer of the
-     * `wasmJsMain`/`jvmMain` source set — including that target's own KSP
-     * task — onto [aggregateTask]. Since [aggregateTask] itself explicitly
-     * depends on that same KSP task (to read its generated manifest), that
-     * automatic inference would create a circular dependency. Ordering is
-     * instead guaranteed explicitly, only on the actual Kotlin compile task.
+     * `wasmJsMain` source set — including that target's own KSP task — onto
+     * [aggregateTask]. Since [aggregateTask] itself explicitly depends on
+     * that same KSP task (to read its generated manifest), that automatic
+     * inference would create a circular dependency. Ordering is instead
+     * guaranteed explicitly, only on the actual Kotlin compile task.
      */
-    private fun wireWasmJsGeneratedSources(
+    private fun configureWasm(
         project: Project,
         kotlin: KotlinMultiplatformExtension,
         aggregateTask: TaskProvider<CStoriesAggregateTask>,
@@ -156,6 +158,14 @@ class CStoriesGradlePlugin : Plugin<Project> {
         project.tasks.matching { it.name == "wasmJsProcessResources" }.configureEach {
             dependsOn(aggregateTask)
         }
+
+        project.tasks.register("runCStoriesWasm") {
+            group = "cstories"
+            description = "Runs the generated CStories catalog in a browser"
+            dependsOn("wasmJsBrowserDevelopmentRun")
+        }
+
+        registerStandaloneManifestTask(project)
     }
 
     /**
@@ -206,14 +216,6 @@ class CStoriesGradlePlugin : Plugin<Project> {
             ?: "org.jetbrains.compose.desktop:desktop-jvm:1.8.2"
     }
 
-    private fun registerRunAlias(project: Project) {
-        project.tasks.register("runCStories") {
-            group = "cstories"
-            description = "Runs the generated CStories catalog"
-            dependsOn("wasmJsBrowserDevelopmentRun")
-        }
-    }
-
     /**
      * Both the production distribution and the development webpack bundle
      * get a manifest listing all files they produced, written next to
@@ -226,7 +228,7 @@ class CStoriesGradlePlugin : Plugin<Project> {
      * task simply lists that one directory and finalizes the distribution
      * task since it's a single terminating task run.
      *
-     * For the dev workflow (`runCStories` / `wasmJsBrowserDevelopmentRun`),
+     * For the dev workflow (`runCStoriesWasm` / `wasmJsBrowserDevelopmentRun`),
      * things are split: the dev server serves static files (`index.html`,
      * compose resources) from `build/processedResources/wasmJs/main`, but
      * the compiled JS/wasm bundle is only ever produced by the dev server's

@@ -12,7 +12,7 @@ Showkase gets close, but it is Android-only and couples demo annotations directl
 
 The goal of CStories is to provide a publishable Kotlin Multiplatform library that any Compose Multiplatform project can add as a regular dependency plus a KSP processor.
 
-With it, teams can define stories as dedicated demo composables kept separate from the design system itself, then expose them in a web catalog powered by the `wasmJs` target.
+With it, teams can define stories as dedicated demo composables kept separate from the design system itself, then expose them in a catalog running either as a desktop application (`jvm` target) or as a web app (`wasmJs` target) — whichever platform(s) the consumer's module already targets.
 
 The intended experience includes:
 
@@ -35,7 +35,7 @@ The project is designed around five modules:
 - `cstories-annotations`: a dependency-free Kotlin Multiplatform module containing the `@CStory` annotation with source retention only
 - `cstories-processor`: a JVM-only KSP processor that discovers stories, validates them, generates per-module registries, and emits manifests for aggregation
 - `cstories-runtime`: a Compose Multiplatform runtime module that provides the catalog application shell, navigation tree, story frame, and knob composables
-- `cstories-gradle-plugin`: a Gradle plugin that wires the executable `wasmJs` target, adds the required dependencies, generates the catalog entry point, and aggregates registries across modules
+- `cstories-gradle-plugin`: a Gradle plugin that auto-detects the `jvm()`/`wasmJs()` targets already declared by the consumer, adds the required dependencies, generates the corresponding catalog entry point(s), and aggregates registries across modules
 - `sample`: a dogfooding module used to validate the end-to-end developer experience
 
 ## Story Organization
@@ -50,21 +50,31 @@ The runtime is responsible for rebuilding that hierarchy into a navigation tree 
 
 The intended developer experience is deliberately simple.
 
-A consumer applies the CStories Gradle plugin to the module that contains stories. The plugin then configures the executable `wasmJs` target, adds the required dependencies, generates the application entry point, and makes the catalog launchable directly from the IDE.
+A consumer applies the CStories Gradle plugin to the module that contains stories, having already declared the Kotlin Multiplatform target(s) it wants for the catalog:
 
-The long-term goal is to make running the catalog feel like running any normal Compose Multiplatform web app, without forcing consumers to handcraft a separate preview application.
+- `jvm()` — the plugin generates a Compose Desktop entry point, runnable via `./gradlew jvmRun` or the `runCStoriesDesktop` alias. No browser, no wasm toolchain required.
+- `wasmJs { browser(); binaries.executable() }` — the plugin generates a Kotlin/Wasm browser entry point, runnable via `./gradlew runCStoriesWasm`.
+- Both — both entry points are generated side by side; use whichever alias fits your workflow.
+
+Applying the plugin with neither target declared fails fast with a clear error instead of silently forcing one.
+
+In every case, the plugin adds the required CStories dependencies (`cstories-annotations`, `cstories-runtime`, the `cstories-processor` KSP dependency), generates the application entry point(s), and makes the catalog launchable directly from the IDE — no separate preview application to handcraft by hand.
+
+> **Why does `wasmJs` need `browser()`/`binaries.executable()` declared explicitly, but not `jvm()`?** Kotlin finalizes a wasmJs target's binary/output-file conventions as soon as the target is configured. Reconfiguring `browser()`/`binaries.executable()` on it later (which is what the plugin would need to do, since it only detects declared targets after the consumer's own `kotlin { }` block has run) breaks those conventions. Declaring it yourself — standard practice for any Kotlin/Wasm app — avoids the issue entirely. `jvm()` has no equivalent finalization step, so a bare `jvm()` is enough.
 
 ### Watch mode
 
-`./gradlew runCStories` runs the catalog once. For active development, run it with Gradle's continuous build instead:
+`./gradlew runCStoriesWasm` runs the web catalog once. For active development, run it with Gradle's continuous build instead:
 
 ```
-./gradlew runCStories --continuous
+./gradlew runCStoriesWasm --continuous
 ```
 
 Gradle watches the project sources and automatically recompiles the `wasmJs` target whenever a story or component changes. The webpack dev server then reloads the page in the browser.
 
 This is a full page reload, not a state-preserving hot reload: navigation state in the catalog (selected story, knob values, and so on) is lost on every reload, and the reload takes a few seconds depending on project size. True hot reload with state preservation is not currently available for the `wasmJs` target in the Kotlin/Compose Multiplatform ecosystem.
+
+The desktop catalog (`./gradlew runCStoriesDesktop`) does not support continuous/watch mode — restart it manually after changes.
 
 ## Publishing Locally
 
@@ -105,9 +115,25 @@ dependencyResolutionManagement {
 }
 ```
 
-**2. Apply the plugin on a dedicated stories module — not directly on your design system module.**
+**2. Apply the plugin, declaring the target(s) you want the catalog to run on.**
 
-The plugin adds the executable `wasmJs` target to whatever module it's applied to. If your design system module (say, `:lib`) already targets other platforms and pulls in dependencies that aren't published for `wasmJs` (a private icon library, a platform-specific SDK, ...), applying the plugin directly to `:lib` forces Gradle to resolve *all* of its `commonMain` dependencies for `wasmJs` too, and the build breaks with errors like:
+If your design system module already targets `jvm()` (or you're fine adding it), you can apply the plugin **directly on it** — a `jvm()`-only catalog needs no `wasmJs` target at all, so it never forces Gradle to resolve `commonMain` dependencies for a platform your module doesn't otherwise support:
+
+```kotlin
+// lib/build.gradle.kts
+plugins {
+    kotlin("multiplatform") version "2.2.0"
+    id("org.jetbrains.compose") version "1.8.2"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
+    id("io.cstories.gradle") version "0.1.0-SNAPSHOT"
+}
+
+kotlin {
+    jvm()
+}
+```
+
+If you also want (or only want) the web catalog, and your design system module already targets other platforms and pulls in dependencies that aren't published for `wasmJs` (a private icon library, a platform-specific SDK, ...), applying the plugin directly to that module with `wasmJs` declared forces Gradle to resolve *all* of its `commonMain` dependencies for `wasmJs` too, and the build breaks with errors like:
 
 ```
 Could not resolve com.example:some-native-only-lib:1.0.0.
@@ -119,7 +145,7 @@ This mirrors CStories' own core principle (`@CStory` never lives on the design s
 
 ```
 :lib            // your design system, untouched — jvm, ios, android, whatever it already targets
-:lib:stories    // new module — depends on :lib, applies the CStories plugin, only ever targets wasmJs
+:lib:stories    // new module — depends on :lib, applies the CStories plugin, targets wasmJs (and/or jvm)
 ```
 
 `settings.gradle.kts`:
@@ -131,6 +157,8 @@ include(":lib", ":lib:stories")
 `lib/stories/build.gradle.kts`:
 
 ```kotlin
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
@@ -138,7 +166,14 @@ plugins {
     id("io.cstories.gradle") version "0.1.0-SNAPSHOT"
 }
 
+@OptIn(ExperimentalWasmDsl::class)
 kotlin {
+    jvm() // optional — add it for a desktop catalog alongside the web one
+    wasmJs {
+        browser()
+        binaries.executable()
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(project(":lib"))
@@ -149,7 +184,7 @@ kotlin {
 
 Stories live in `lib/stories/src/commonMain`, importing components from `:lib` and demonstrating them — `:lib` never depends on CStories, and `:lib:stories` never needs to resolve `:lib`'s non-`wasmJs`-published dependencies for any target other than `wasmJs`.
 
-The plugin takes care of the rest: it adds the executable `wasmJs` target, wires `cstories-annotations`, `cstories-runtime`, and the `cstories-processor` KSP dependency, and generates the catalog's entry point. No manual dependency declarations for CStories itself are needed.
+The plugin takes care of the rest for whichever target(s) you declared: it wires `cstories-annotations`, `cstories-runtime`, and the `cstories-processor` KSP dependency, and generates the catalog's entry point(s). No manual dependency declarations for CStories itself are needed.
 
 **3. Write a story**, kept separate from the design system component it demonstrates:
 
@@ -166,7 +201,8 @@ fun PrimaryButtonStory() {
 **4. Run the catalog**:
 
 ```
-./gradlew runCStories
+./gradlew runCStoriesDesktop   # jvm target — opens a desktop window
+./gradlew runCStoriesWasm      # wasmJs target — opens a browser dev server
 ```
 
 **5. Produce a servable static site** (for hosting, sharing, or CI) with:
@@ -175,7 +211,7 @@ fun PrimaryButtonStory() {
 ./gradlew wasmJsBrowserDistribution
 ```
 
-The output lands in `build/dist/wasmJs/productionExecutable`. The catalog's Export button (in the running app) also builds a standalone, self-contained zip of the current site client-side and triggers a browser download of it, whether running via `runCStories` or from a production distribution.
+The output lands in `build/dist/wasmJs/productionExecutable`. The catalog's Export button (in the running app) also builds a standalone, self-contained zip of the current site client-side and triggers a browser download of it, whether running via `runCStoriesWasm` or from a production distribution.
 
 ## License
 
