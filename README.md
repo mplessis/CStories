@@ -54,6 +54,18 @@ A consumer applies the CStories Gradle plugin to the module that contains storie
 
 The long-term goal is to make running the catalog feel like running any normal Compose Multiplatform web app, without forcing consumers to handcraft a separate preview application.
 
+### Watch mode
+
+`./gradlew runCStories` runs the catalog once. For active development, run it with Gradle's continuous build instead:
+
+```
+./gradlew runCStories --continuous
+```
+
+Gradle watches the project sources and automatically recompiles the `wasmJs` target whenever a story or component changes. The webpack dev server then reloads the page in the browser.
+
+This is a full page reload, not a state-preserving hot reload: navigation state in the catalog (selected story, knob values, and so on) is lost on every reload, and the reload takes a few seconds depending on project size. True hot reload with state preservation is not currently available for the `wasmJs` target in the Kotlin/Compose Multiplatform ecosystem.
+
 ## License
 
 See [LICENSE](./LICENSE).
