@@ -5,9 +5,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,24 +23,26 @@ fun CStoriesApp(stories: List<StoryEntry>) {
     var selected by remember(stories) { mutableStateOf(stories.firstOrNull()) }
 
     MaterialTheme {
-        Row(Modifier.fillMaxSize()) {
-            Sidebar(
-                tree = tree,
-                selectedPath = selected?.path,
-                onSelect = { selected = it },
-                modifier = Modifier
-                    .width(280.dp)
-                    .fillMaxHeight(),
-            )
-            HorizontalDivider()
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-            ) {
-                selected?.let { entry ->
-                    StoryFrame(entry)
-                } ?: EmptyState()
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Row(Modifier.fillMaxSize()) {
+                Sidebar(
+                    tree = tree,
+                    selectedPath = selected?.path,
+                    onSelect = { selected = it },
+                    modifier = Modifier
+                        .width(280.dp)
+                        .fillMaxHeight(),
+                )
+                VerticalDivider()
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
+                ) {
+                    selected?.let { entry ->
+                        StoryFrame(entry)
+                    } ?: EmptyState()
+                }
             }
         }
     }
