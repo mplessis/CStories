@@ -1,0 +1,13 @@
+/.gradle/
+/.kotlin/
+/.idea/
+/build/
+**/build/
+
+# Local wrapper files are currently untracked in this repository state.
+# Keep them ignored until explicitly requested for versioning.
+/gradlew
+/gradlew.bat
+/gradle/wrapper/
+
+.DS_Store
