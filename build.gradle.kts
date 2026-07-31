@@ -7,6 +7,6 @@ plugins {
 }
 
 allprojects {
-    group = "io.cstories"
-    version = "0.1.0-SNAPSHOT"
+    group = property("cstoriesGroup") as String
+    version = property("cstoriesVersion") as String
 }

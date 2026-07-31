@@ -203,11 +203,3 @@ class CStoriesGradlePlugin : Plugin<Project> {
 }
 
 private const val MODULE_NAME_OPTION = "cstories.moduleName"
-
-/**
- * Version of the published `io.cstories:*` artifacts to depend on when no
- * local sibling subproject is found. Must be kept in sync with the root
- * build's `allprojects { version = ... }` (this is a separate, included
- * Gradle build, so it can't share that declaration directly).
- */
-private const val CSTORIES_VERSION = "0.1.0-SNAPSHOT"

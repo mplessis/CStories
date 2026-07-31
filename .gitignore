@@ -4,6 +4,7 @@
 /build/
 **/build/
 **/.gradle/
+**/.kotlin/
 
 # Local wrapper files are currently untracked in this repository state.
 # Keep them ignored until explicitly requested for versioning.
