@@ -105,17 +105,49 @@ dependencyResolutionManagement {
 }
 ```
 
-**2. Apply the plugin** on the module that contains (or will contain) stories, alongside Compose Multiplatform:
+**2. Apply the plugin on a dedicated stories module — not directly on your design system module.**
+
+The plugin adds the executable `wasmJs` target to whatever module it's applied to. If your design system module (say, `:lib`) already targets other platforms and pulls in dependencies that aren't published for `wasmJs` (a private icon library, a platform-specific SDK, ...), applying the plugin directly to `:lib` forces Gradle to resolve *all* of its `commonMain` dependencies for `wasmJs` too, and the build breaks with errors like:
+
+```
+Could not resolve com.example:some-native-only-lib:1.0.0.
+Required by:
+    project :lib
+```
+
+This mirrors CStories' own core principle (`@CStory` never lives on the design system component itself) at the module level: keep a **separate stories module** that depends on `:lib` as a regular dependency and is the only place `wasmJs` and the CStories plugin get applied. `:lib` itself stays completely untouched — no new target, no new dependency resolution constraints.
+
+```
+:lib            // your design system, untouched — jvm, ios, android, whatever it already targets
+:lib:stories    // new module — depends on :lib, applies the CStories plugin, only ever targets wasmJs
+```
+
+`settings.gradle.kts`:
 
 ```kotlin
-// build.gradle.kts
+include(":lib", ":lib:stories")
+```
+
+`lib/stories/build.gradle.kts`:
+
+```kotlin
 plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
     id("io.cstories.gradle") version "0.1.0-SNAPSHOT"
 }
+
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation(project(":lib"))
+        }
+    }
+}
 ```
+
+Stories live in `lib/stories/src/commonMain`, importing components from `:lib` and demonstrating them — `:lib` never depends on CStories, and `:lib:stories` never needs to resolve `:lib`'s non-`wasmJs`-published dependencies for any target other than `wasmJs`.
 
 The plugin takes care of the rest: it adds the executable `wasmJs` target, wires `cstories-annotations`, `cstories-runtime`, and the `cstories-processor` KSP dependency, and generates the catalog's entry point. No manual dependency declarations for CStories itself are needed.
 
