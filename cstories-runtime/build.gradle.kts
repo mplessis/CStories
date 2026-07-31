@@ -26,6 +26,11 @@ kotlin {
         jvmTest.dependencies {
             implementation(kotlin("test"))
         }
+
+        wasmJsMain.dependencies {
+            implementation(npm("jszip", "3.10.1"))
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+        }
     }
 }
 

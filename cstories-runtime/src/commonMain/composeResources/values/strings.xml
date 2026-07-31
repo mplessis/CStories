@@ -5,14 +5,15 @@
 
     <string name="main_header_title">Story Preview</string>
     <string name="main_header_export_button">Export</string>
+    <string name="main_header_export_unavailable_dev">Export indisponible en mode dev — faites un build de production (wasmJsBrowserDistribution)</string>
+    <string name="main_header_export_failed">Échec de l\'export : %1$s</string>
 
     <string name="canvas_live_preview">Live preview</string>
 
     <string name="sidebar_search_placeholder">Rechercher une story…</string>
 
     <string name="promo_title">Watch mode</string>
-    <string name="promo_description">La commande %1$s, permet de rebuild automatiquement le catalogue à chaque
-        changement de story. Copiez et lancez-la dans votre terminal, à la racine du projet.
+    <string name="promo_description">La commande %1$s, permet de rebuild automatiquement le catalogue à chaque changement de story. Copiez et lancez-la dans votre terminal, à la racine du projet.
     </string>
     <string name="promo_copied_button">Copié !</string>
     <string name="promo_watch_button">Watch !</string>
