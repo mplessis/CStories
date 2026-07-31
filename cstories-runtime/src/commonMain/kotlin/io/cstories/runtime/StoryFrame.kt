@@ -14,6 +14,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.cstories.runtime.resources.Res
+import io.cstories.runtime.resources.canvas_live_preview
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * The canvas card hosting the live preview of the currently selected story,
@@ -59,8 +62,9 @@ private fun CanvasToolbar() {
                     .clip(CircleShape)
                     .background(CStoriesColors.success),
             )
+            Spacer(Modifier.width(6.dp))
             Text(
-                text = "  Live preview",
+                text = stringResource(Res.string.canvas_live_preview),
                 color = CStoriesColors.textMuted,
                 fontSize = 12.5.sp,
                 fontWeight = FontWeight.Bold,

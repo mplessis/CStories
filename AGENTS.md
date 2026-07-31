@@ -4,6 +4,7 @@
 - Keep the implementation minimal and incremental.
 - Prefer small, focused changes over speculative abstractions.
 - Do not add CI, release automation, or remote publishing unless explicitly requested.
+- UI text in `cstories-runtime` must be managed through Compose Multiplatform string resources (`src/commonMain/composeResources/values/strings.xml` + `stringResource(Res.string.xxx)`), never hardcoded in composables.
 
 ## Commit Rules
 

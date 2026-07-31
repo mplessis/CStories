@@ -23,8 +23,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.cstories.runtime.resources.Res
+import io.cstories.runtime.resources.promo_copied_button
+import io.cstories.runtime.resources.promo_description
+import io.cstories.runtime.resources.promo_title
+import io.cstories.runtime.resources.promo_watch_button
+import io.cstories.runtime.resources.sidebar_search_placeholder
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun Sidebar(
@@ -120,7 +127,7 @@ private fun SearchField(value: String, onValueChange: (String) -> Unit) {
     ) {
         if (value.isEmpty()) {
             Text(
-                text = "Rechercher une story…",
+                text = stringResource(Res.string.sidebar_search_placeholder),
                 color = CStoriesColors.textFaint,
                 fontSize = 13.sp,
             )
@@ -304,15 +311,14 @@ private fun PromoCard() {
             .padding(16.dp),
     ) {
         Text(
-            text = "Watch mode",
+            text = stringResource(Res.string.promo_title),
             color = Color.White,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            text = "La comamnde $command, permet de rebuild automatiquement le catalogue à chaque changement de story. " +
-                    "Copiez et lancez-la dans votre terminal, à la racine du projet.",
+            text = stringResource(Res.string.promo_description, command),
             color = Color.White.copy(alpha = 0.65f),
             fontSize = 11.5.sp,
             lineHeight = 16.sp,
@@ -339,7 +345,7 @@ private fun PromoCard() {
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                text = if (copied) "Copié !" else "Watch !",
+                text = if (copied) stringResource(Res.string.promo_copied_button) else stringResource(Res.string.promo_watch_button),
                 fontSize = 12.5.sp,
                 fontWeight = FontWeight.Bold,
             )

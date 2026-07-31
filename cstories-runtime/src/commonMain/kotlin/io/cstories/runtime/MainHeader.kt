@@ -20,6 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.cstories.runtime.resources.Res
+import io.cstories.runtime.resources.main_header_export_button
+import io.cstories.runtime.resources.main_header_title
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Top of the "Story Preview" pane: title, breadcrumb subtitle and the
@@ -35,7 +39,7 @@ fun MainHeader(breadcrumbPath: List<String>, modifier: Modifier = Modifier) {
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Story Preview",
+                text = stringResource(Res.string.main_header_title),
                 color = CStoriesColors.text,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
@@ -56,7 +60,7 @@ fun MainHeader(breadcrumbPath: List<String>, modifier: Modifier = Modifier) {
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                text = "Export",
+                text = stringResource(Res.string.main_header_export_button),
                 fontSize = 12.5.sp,
                 fontWeight = FontWeight.Bold,
             )

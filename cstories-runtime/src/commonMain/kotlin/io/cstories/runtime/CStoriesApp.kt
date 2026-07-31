@@ -22,6 +22,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.cstories.runtime.knobs.LocalControlsSlot
+import io.cstories.runtime.resources.Res
+import io.cstories.runtime.resources.empty_state_no_stories
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CStoriesApp(stories: List<StoryEntry>) {
@@ -89,6 +92,6 @@ fun CStoriesApp(stories: List<StoryEntry>) {
 @Composable
 private fun EmptyState() {
     Box(modifier = Modifier.fillMaxSize()) {
-        Text("No stories available", modifier = Modifier.padding(28.dp))
+        Text(stringResource(Res.string.empty_state_no_stories), modifier = Modifier.padding(28.dp))
     }
 }

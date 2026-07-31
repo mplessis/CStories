@@ -25,6 +25,11 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.cstories.runtime.resources.Res
+import io.cstories.runtime.resources.controls_empty_state
+import io.cstories.runtime.resources.controls_reset_button
+import io.cstories.runtime.resources.controls_title
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * The right-hand "Controls" card, mirroring the mockup's `.controls-panel`:
@@ -48,7 +53,7 @@ fun ControlsPanel(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "CONTROLS",
+                text = stringResource(Res.string.controls_title),
                 color = CStoriesColors.textFaint,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
@@ -70,7 +75,7 @@ fun ControlsPanel(
                     modifier = Modifier.size(14.dp),
                 )
                 Spacer(Modifier.width(4.dp))
-                Text(text = "Reset", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold)
+                Text(text = stringResource(Res.string.controls_reset_button), fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold)
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -79,7 +84,7 @@ fun ControlsPanel(
             content()
         } else {
             Text(
-                text = "Aucun control pour cette story",
+                text = stringResource(Res.string.controls_empty_state),
                 color = CStoriesColors.textFaint,
                 fontSize = 12.sp,
                 fontStyle = FontStyle.Italic,
