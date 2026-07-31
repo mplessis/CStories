@@ -80,16 +80,15 @@ The desktop catalog (`./gradlew runCStoriesDesktop`) does not support continuous
 
 CStories is not yet published to a remote repository — `mavenLocal()` is the only supported publication target for now.
 
-Because `cstories-gradle-plugin` is a separate, included Gradle build (see `pluginManagement { includeBuild(...) }` in `settings.gradle.kts`), publishing everything requires two commands run from the repository root:
+Because `cstories-gradle-plugin` is a separate, included Gradle build (see `pluginManagement { includeBuild(...) }` in `settings.gradle.kts`), its own `publishToMavenLocal` task isn't picked up by the root project's — a single `publishAllToMavenLocal` aggregate task wires both together:
 
 ```
-./gradlew publishToMavenLocal
-./gradlew -p cstories-gradle-plugin publishToMavenLocal
+./gradlew publishAllToMavenLocal
 ```
 
-The first command publishes `cstories-annotations`, `cstories-processor`, and `cstories-runtime`. The second publishes `cstories-gradle-plugin` itself, along with the plugin marker artifact needed to resolve `id("io.cstories.gradle")` from `mavenLocal()`.
+This publishes `cstories-annotations`, `cstories-processor`, and `cstories-runtime` (via the root project's tasks) as well as `cstories-gradle-plugin` itself, along with the plugin marker artifact needed to resolve `id("io.cstories.gradle")` from `mavenLocal()`.
 
-The published group and version (`io.cstories` / `0.1.0-SNAPSHOT` by default) come from the root `gradle.properties` (`cstoriesGroup` / `cstoriesVersion`), which is the single source of truth — update it there if you need a different version, then republish with both commands above.
+The published group and version (`io.cstories` / `0.1.0-SNAPSHOT` by default) come from the root `gradle.properties` (`cstoriesGroup` / `cstoriesVersion`), which is the single source of truth — update it there if you need a different version, then republish with `publishAllToMavenLocal`.
 
 ## Using CStories in an External Project
 
