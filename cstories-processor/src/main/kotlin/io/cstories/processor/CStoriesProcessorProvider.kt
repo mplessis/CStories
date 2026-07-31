@@ -11,9 +11,10 @@ class CStoriesProcessorProvider : SymbolProcessorProvider {
         return CStoriesProcessor(
             codeGenerator = environment.codeGenerator,
             logger = environment.logger,
-            moduleName = environment.options[MODULE_NAME_OPTION].orEmpty(),
+            moduleName = environment.options[MODULE_NAME_OPTION]
+                ?: System.getProperty(MODULE_NAME_OPTION).orEmpty(),
         )
     }
 }
 
-internal const val MODULE_NAME_OPTION = "cstories.moduleName"
+const val MODULE_NAME_OPTION = "cstories.moduleName"
