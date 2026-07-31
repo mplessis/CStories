@@ -2,13 +2,7 @@ package io.cstories.runtime
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -43,17 +37,9 @@ fun StoryFrame(entry: StoryEntry, resetToken: Int, modifier: Modifier = Modifier
                 .padding(40.dp),
             contentAlignment = Alignment.Center,
         ) {
-//            Box(
-//                modifier = Modifier
-//                    .background(CStoriesColors.surface, RoundedCornerShape(CStoriesRadii.lg))
-//                    .border(1.dp, CStoriesColors.border, RoundedCornerShape(CStoriesRadii.lg))
-//                    .padding(56.dp),
-//                contentAlignment = Alignment.Center,
-//            ) {
-                key(entry.path, resetToken) {
-                    entry.composableInvoker()
-                }
-//            }
+            key(entry.path, resetToken) {
+                entry.composableInvoker()
+            }
         }
     }
 }
