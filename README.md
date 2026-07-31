@@ -85,7 +85,7 @@ The published group and version (`io.cstories` / `0.1.0-SNAPSHOT` by default) co
 
 Once published to `mavenLocal()`, any other Compose Multiplatform project can depend on CStories without needing this repository at all.
 
-**1. Add `mavenLocal()` to plugin resolution**, in the consumer project's `settings.gradle.kts`:
+**1. Add `mavenLocal()` to both plugin and dependency resolution**, in the consumer project's `settings.gradle.kts`. These are two separate repository blocks — `pluginManagement` only resolves the plugin itself, while `dependencyResolutionManagement` resolves the actual `io.cstories:*` library artifacts (`cstories-annotations`, `cstories-runtime`); missing the second one causes errors like `Could not find io.cstories:cstories-annotations:0.1.0-SNAPSHOT`.
 
 ```kotlin
 pluginManagement {
@@ -93,6 +93,14 @@ pluginManagement {
         mavenLocal()
         gradlePluginPortal()
         mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        google()
     }
 }
 ```
