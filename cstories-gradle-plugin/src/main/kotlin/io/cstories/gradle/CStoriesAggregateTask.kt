@@ -134,11 +134,21 @@ abstract class CStoriesAggregateTask : DefaultTask() {
         return """
             |package ${packageName.get()}
             |
+            |import androidx.compose.ui.unit.DpSize
+            |import androidx.compose.ui.unit.dp
+            |import androidx.compose.ui.window.WindowState
             |import androidx.compose.ui.window.singleWindowApplication
             |import io.cstories.runtime.CStoriesApp
+            |import java.awt.Dimension
+            |
+            |private val MinWindowSize = DpSize(1600.dp, 1200.dp)
             |
             |fun main() {
-            |    singleWindowApplication(title = "CStories") {
+            |    singleWindowApplication(
+            |        title = "CStories",
+            |        state = WindowState(size = MinWindowSize),
+            |    ) {
+            |        window.minimumSize = Dimension(1600, 1200)
             |        CStoriesApp(AllStoriesRegistry.entries)
             |    }
             |}
