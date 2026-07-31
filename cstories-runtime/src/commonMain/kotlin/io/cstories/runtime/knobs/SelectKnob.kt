@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,6 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.cstories.runtime.CStoriesColors
@@ -41,10 +49,15 @@ fun SelectKnob(
 ) {
     Knob(label = label) {
         var expanded by remember { mutableStateOf(false) }
+        val density = LocalDensity.current
+        var anchorWidth by remember { mutableStateOf(0.dp) }
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .onGloballyPositioned { coordinates ->
+                        anchorWidth = with(density) { coordinates.size.width.toDp() }
+                    }
                     .background(CStoriesColors.surfaceMuted, RoundedCornerShape(CStoriesRadii.sm))
                     .border(1.dp, CStoriesColors.border, RoundedCornerShape(CStoriesRadii.sm))
                     .clickable { expanded = true }
@@ -63,14 +76,54 @@ fun SelectKnob(
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
+                containerColor = CStoriesColors.surface,
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+                shape = RoundedCornerShape(CStoriesRadii.sm),
+                border = androidx.compose.foundation.BorderStroke(1.dp, CStoriesColors.border),
+                modifier = Modifier
+                    .width(anchorWidth)
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(CStoriesRadii.sm),
+                        ambientColor = Color.Black.copy(alpha = 0.06f),
+                        spotColor = Color.Black.copy(alpha = 0.06f),
+                    )
+                    .background(CStoriesColors.surface),
             ) {
                 options.forEach { option ->
+                    val isSelected = option == value
                     DropdownMenuItem(
-                        text = { Text(option) },
+                        text = {
+                            Text(
+                                text = option,
+                                color = if (isSelected) CStoriesColors.primary else CStoriesColors.text,
+                                fontSize = 13.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            )
+                        },
+                        trailingIcon = if (isSelected) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    tint = CStoriesColors.primary,
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                        } else {
+                            null
+                        },
                         onClick = {
                             onValueChange(option)
                             expanded = false
                         },
+                        colors = MenuDefaults.itemColors(
+                            textColor = CStoriesColors.text,
+                        ),
+                        modifier = Modifier.background(
+                            if (isSelected) CStoriesColors.primarySoft else CStoriesColors.surface,
+                        ),
                     )
                 }
             }
