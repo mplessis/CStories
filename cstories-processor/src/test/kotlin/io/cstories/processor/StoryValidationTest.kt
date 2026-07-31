@@ -6,39 +6,55 @@ import kotlin.test.assertNull
 
 class StoryValidationTest {
     @Test
-    fun `validateGroupAndName accepts valid values`() {
-        assertNull(StoryValidation.validateGroupAndName("DesignSystem/Buttons", "Primary"))
+    fun `validateCollectionGroupAndName accepts valid values`() {
+        assertNull(StoryValidation.validateCollectionGroupAndName("DesignSystem", "Buttons", "Primary"))
     }
 
     @Test
-    fun `validateGroupAndName rejects blank group`() {
+    fun `validateCollectionGroupAndName rejects blank collection`() {
         assertEquals(
-            "@CStory group and name must not be blank",
-            StoryValidation.validateGroupAndName("", "Primary"),
+            "@CStory collection, group and name must not be blank",
+            StoryValidation.validateCollectionGroupAndName("", "Buttons", "Primary"),
         )
     }
 
     @Test
-    fun `validateGroupAndName rejects blank name`() {
+    fun `validateCollectionGroupAndName rejects blank group`() {
         assertEquals(
-            "@CStory group and name must not be blank",
-            StoryValidation.validateGroupAndName("Buttons", " "),
+            "@CStory collection, group and name must not be blank",
+            StoryValidation.validateCollectionGroupAndName("DesignSystem", "", "Primary"),
         )
     }
 
     @Test
-    fun `validateGroupAndName rejects slash in name`() {
+    fun `validateCollectionGroupAndName rejects blank name`() {
+        assertEquals(
+            "@CStory collection, group and name must not be blank",
+            StoryValidation.validateCollectionGroupAndName("DesignSystem", "Buttons", " "),
+        )
+    }
+
+    @Test
+    fun `validateCollectionGroupAndName rejects slash in name`() {
         assertEquals(
             "@CStory 'name' must not contain '/', use 'group' for hierarchy: Primary/Default",
-            StoryValidation.validateGroupAndName("Buttons", "Primary/Default"),
+            StoryValidation.validateCollectionGroupAndName("DesignSystem", "Buttons", "Primary/Default"),
         )
     }
 
     @Test
-    fun `validateGroupAndName rejects empty group segments`() {
+    fun `validateCollectionGroupAndName rejects empty collection segments`() {
+        assertEquals(
+            "@CStory 'collection' must not contain empty segments: DesignSystem//Nested",
+            StoryValidation.validateCollectionGroupAndName("DesignSystem//Nested", "Buttons", "Primary"),
+        )
+    }
+
+    @Test
+    fun `validateCollectionGroupAndName rejects empty group segments`() {
         assertEquals(
             "@CStory 'group' must not contain empty segments: Buttons//Nested",
-            StoryValidation.validateGroupAndName("Buttons//Nested", "Primary"),
+            StoryValidation.validateCollectionGroupAndName("DesignSystem", "Buttons//Nested", "Primary"),
         )
     }
 }

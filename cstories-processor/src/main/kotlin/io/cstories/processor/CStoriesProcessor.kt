@@ -57,14 +57,16 @@ class CStoriesProcessor(
 
         val annotation = function.annotations.firstOrNull { it.annotationType.resolve().declaration.qualifiedNameAsString() == CSTORY_ANNOTATION_FQN }
             ?: return null
+        val collection = annotation.stringArgument("collection")
         val group = annotation.stringArgument("group")
         val name = annotation.stringArgument("name")
 
-        val groupValidationError = StoryValidation.validateGroupAndName(group, name)
-        if (groupValidationError != null) {
-            logger.error(groupValidationError, function)
+        val validationError = StoryValidation.validateCollectionGroupAndName(collection, group, name)
+        if (validationError != null) {
+            logger.error(validationError, function)
             return null
         }
+        val validatedCollection = checkNotNull(collection)
         val validatedGroup = checkNotNull(group)
         val validatedName = checkNotNull(name)
 
@@ -90,6 +92,7 @@ class CStoriesProcessor(
         }
 
         return StoryDescriptor(
+            collection = validatedCollection,
             group = validatedGroup,
             name = validatedName,
             invoker = invoker,
