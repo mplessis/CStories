@@ -244,6 +244,10 @@ class CStoriesGradlePlugin : Plugin<Project> {
             description = "Runs the generated CStories catalog as a desktop application with Compose Hot Reload"
             compilation.set(jvmMainCompilation)
             mainClass.set("io.cstories.generated.CStoriesDesktopEntryPointKt")
+            // Auto reload mode by default, so consumers don't need to
+            // remember passing `--auto` every time. Still overridable with
+            // `--no-auto` if explicit reload is ever preferred.
+            isAutoReloadEnabled.set(true)
         }
     }
 
