@@ -6,6 +6,7 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -15,17 +16,30 @@ abstract class CStoriesAggregateTask : DefaultTask() {
     @get:Classpath
     abstract val runtimeClasspath: ConfigurableFileCollection
 
+    @get:Optional
     @get:OutputDirectory
-    abstract val outputDirectory: DirectoryProperty
+    abstract val wasmJsOutputDirectory: DirectoryProperty
 
+    @get:Optional
+    @get:OutputDirectory
+    abstract val desktopOutputDirectory: DirectoryProperty
+
+    @get:Optional
     @get:OutputDirectory
     abstract val webResourcesDirectory: DirectoryProperty
 
     @get:Input
     abstract val packageName: Property<String>
 
+    @get:Optional
     @get:Input
     abstract val jsBundleBaseName: Property<String>
+
+    @get:Input
+    abstract val generateWasmJsEntryPoint: Property<Boolean>
+
+    @get:Input
+    abstract val generateDesktopEntryPoint: Property<Boolean>
 
     @TaskAction
     fun generate() {
@@ -34,15 +48,23 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             .distinct()
             .sorted()
 
-        val outputDir = outputDirectory.get().asFile
         val packagePath = packageName.get().replace('.', '/')
-        val kotlinDir = File(outputDir, packagePath).apply { mkdirs() }
+        val registrySource = buildRegistrySource(registries)
 
-        File(kotlinDir, "AllStoriesRegistry.kt").writeText(buildRegistrySource(registries))
-        File(kotlinDir, "CStoriesEntryPoint.kt").writeText(buildEntryPointSource())
+        if (generateWasmJsEntryPoint.get()) {
+            val wasmJsKotlinDir = File(wasmJsOutputDirectory.get().asFile, packagePath).apply { mkdirs() }
+            File(wasmJsKotlinDir, "AllStoriesRegistry.kt").writeText(registrySource)
+            File(wasmJsKotlinDir, "CStoriesWasmJsEntryPoint.kt").writeText(buildWasmJsEntryPointSource())
 
-        val webResourcesDir = webResourcesDirectory.get().asFile.apply { mkdirs() }
-        File(webResourcesDir, "index.html").writeText(buildIndexHtmlSource())
+            val webResourcesDir = webResourcesDirectory.get().asFile.apply { mkdirs() }
+            File(webResourcesDir, "index.html").writeText(buildIndexHtmlSource())
+        }
+
+        if (generateDesktopEntryPoint.get()) {
+            val desktopKotlinDir = File(desktopOutputDirectory.get().asFile, packagePath).apply { mkdirs() }
+            File(desktopKotlinDir, "AllStoriesRegistry.kt").writeText(registrySource)
+            File(desktopKotlinDir, "CStoriesDesktopEntryPoint.kt").writeText(buildDesktopEntryPointSource())
+        }
     }
 
     private fun readRegistries(file: File): List<String> {
@@ -91,7 +113,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
         """.trimMargin()
     }
 
-    private fun buildEntryPointSource(): String {
+    private fun buildWasmJsEntryPointSource(): String {
         return """
             |package ${packageName.get()}
             |
@@ -102,6 +124,21 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |@OptIn(ExperimentalComposeUiApi::class)
             |fun main() {
             |    CanvasBasedWindow("CStories") {
+            |        CStoriesApp(AllStoriesRegistry.entries)
+            |    }
+            |}
+        """.trimMargin()
+    }
+
+    private fun buildDesktopEntryPointSource(): String {
+        return """
+            |package ${packageName.get()}
+            |
+            |import androidx.compose.ui.window.singleWindowApplication
+            |import io.cstories.runtime.CStoriesApp
+            |
+            |fun main() {
+            |    singleWindowApplication(title = "CStories") {
             |        CStoriesApp(AllStoriesRegistry.entries)
             |    }
             |}
