@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.multiplatform)
@@ -5,6 +7,7 @@ plugins {
     `maven-publish`
 }
 
+@OptIn(ExperimentalWasmDsl::class)
 kotlin {
     jvm()
     wasmJs {
@@ -16,6 +19,10 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+        }
+
+        jvmTest.dependencies {
+            implementation(kotlin("test"))
         }
     }
 }
