@@ -1,4 +1,6 @@
 pluginManagement {
+    includeBuild("cstories-gradle-plugin")
+
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -7,7 +9,9 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    // Kotlin/Wasm and the Node toolchain add their own distribution repository
+    // during task setup, so a strict settings-only policy breaks web runs.
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
     repositories {
         mavenLocal()
         mavenCentral()
@@ -21,6 +25,5 @@ include(
     ":cstories-annotations",
     ":cstories-processor",
     ":cstories-runtime",
-    ":cstories-gradle-plugin",
     ":sample",
 )
