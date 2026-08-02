@@ -185,26 +185,58 @@ Stories live in `lib/stories/src/commonMain`, importing components from `:lib` a
 
 The plugin takes care of the rest for whichever target(s) you declared: it wires `cstories-annotations`, `cstories-runtime`, and the `cstories-processor` KSP dependency, and generates the catalog's entry point(s). No manual dependency declarations for CStories itself are needed.
 
-**3. Write a story**, kept separate from the design system component it demonstrates:
+**3. Annotate your components with `@CStoryComponent`**, so a story can reference one safely and the catalog's documentation panel can surface its KDoc:
+
+```kotlin
+// lib/src/commonMain/kotlin/.../PrimaryButton.kt
+import io.cstories.annotations.CStoryComponent
+
+/**
+ * High-emphasis filled button, used for the main call-to-action.
+ *
+ * @param text Label displayed inside the button.
+ * @param onClick Called when the button is clicked.
+ */
+@CStoryComponent
+@Composable
+fun PrimaryButton(text: String, onClick: () -> Unit) { /* ... */ }
+```
+
+This requires applying an additional plugin **directly on the module that declares the component** (`:lib`, not `:lib:stories`) — `id("io.cstories.gradle.components")`. Unlike `id("io.cstories.gradle")` (the catalog plugin from step 2), this one is lightweight: it doesn't apply Compose Multiplatform, doesn't require a `jvm()`/`wasmJs()` target, and doesn't wire any catalog/entry-point task. It only wires KSP to process `@CStoryComponent` and generate `io.cstories.generated.CStoryComponentRefs`, an object exposing one FQN constant per annotated function:
+
+```kotlin
+// lib/build.gradle.kts
+plugins {
+    kotlin("multiplatform") version "2.2.0"
+    id("io.cstories.gradle.components") version "0.1.0-SNAPSHOT"
+}
+```
+
+This is required whenever the component and the story that demonstrates it live in **different Gradle modules** (the `:lib` / `:lib:stories` split from step 2): KSP only ever scans annotated symbols within the module it's currently processing, never across a dependency boundary. Applying `io.cstories.gradle.components` directly on `:lib` generates `CStoryComponentRefs` locally, in the same compilation where the component's KDoc is still visible as source — the catalog module (`:lib:stories`) then simply imports it like any other dependency symbol. This same mechanism is what lets the documentation panel work at all across that module boundary: the resolved KDoc gets pre-rendered to Markdown and embedded as an annotation on the matching `CStoryComponentRefs` property (annotations survive compilation, unlike KDoc comments), so `:lib:stories` can read it back without ever needing to see `:lib`'s source directly.
+
+If your component and its story instead live in the **same module** (a single-module setup, applying only `io.cstories.gradle`), `@CStoryComponent` and `id("io.cstories.gradle.components")` aren't needed at all — `component = "..."` can be omitted, or `@CStoryComponent` can still be used purely for the `CStoryComponentRefs` safe-reference benefit, without the extra plugin (the `@CStory` catalog plugin already wires the same KSP processing for components declared in its own module).
+
+**4. Write a story**, kept separate from the design system component it demonstrates, referencing the component through the generated ref:
 
 ```kotlin
 import io.cstories.annotations.CStory
+import io.cstories.generated.CStoryComponentRefs
 
-@CStory(collection = "DesignSystem", group = "Button", name = "Primary")
+@CStory(collection = "DesignSystem", group = "Button", name = "Primary", component = CStoryComponentRefs.PrimaryButton)
 @Composable
 fun PrimaryButtonStory() {
     PrimaryButton(text = "Click me", onClick = {})
 }
 ```
 
-**4. Run the catalog**:
+**5. Run the catalog**:
 
 ```
 ./gradlew runCStoriesDesktop   # jvm target — opens a desktop window
 ./gradlew runCStoriesWasm      # wasmJs target — opens a browser dev server
 ```
 
-**5. Produce a servable static site** (for hosting, sharing, or CI) with:
+**6. Produce a servable static site** (for hosting, sharing, or CI) with:
 
 ```
 ./gradlew wasmJsBrowserDistribution
