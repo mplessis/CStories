@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,12 +16,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.cstories.runtime.resources.Res
 import io.cstories.runtime.resources.code_tab_label
+import io.cstories.runtime.resources.docs_code_panel_collapse
+import io.cstories.runtime.resources.docs_code_panel_expand
 import io.cstories.runtime.resources.docs_tab_label
 import org.jetbrains.compose.resources.stringResource
 
@@ -42,6 +48,9 @@ fun DocsCodeTabs(documentation: String?, usageCode: String?, modifier: Modifier 
     var selected by remember(documentation, usageCode) {
         mutableStateOf(if (documentation != null) DocsCodeTab.DOCS else DocsCodeTab.CODE)
     }
+    var expanded by remember(documentation, usageCode) { mutableStateOf(true) }
+    val collapseDescription = stringResource(Res.string.docs_code_panel_collapse)
+    val expandDescription = stringResource(Res.string.docs_code_panel_expand)
 
     Column(
         modifier = modifier
@@ -51,6 +60,7 @@ fun DocsCodeTabs(documentation: String?, usageCode: String?, modifier: Modifier 
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -69,24 +79,37 @@ fun DocsCodeTabs(documentation: String?, usageCode: String?, modifier: Modifier 
                     onClick = { selected = DocsCodeTab.CODE },
                 )
             }
+            Spacer(Modifier.weight(1f))
+            ChevronIcon(
+                expanded = expanded,
+                tint = CStoriesColors.textFaint,
+                modifier = Modifier
+                    .clickable(onClick = { expanded = !expanded })
+                    .semantics {
+                        contentDescription = if (expanded) collapseDescription else expandDescription
+                    }
+                    .padding(6.dp),
+            )
         }
-        when (selected) {
-            DocsCodeTab.DOCS -> documentation?.let {
-                MarkdownText(
-                    markdown = it,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-                )
-            }
+        if (expanded) {
+            when (selected) {
+                DocsCodeTab.DOCS -> documentation?.let {
+                    MarkdownText(
+                        markdown = it,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                    )
+                }
 
-            DocsCodeTab.CODE -> usageCode?.let {
-                CodeBlock(
-                    code = it,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-                )
+                DocsCodeTab.CODE -> usageCode?.let {
+                    CodeBlock(
+                        code = it,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                    )
+                }
             }
         }
     }

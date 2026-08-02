@@ -19,4 +19,6 @@
 
     <string name="docs_tab_label">Docs</string>
     <string name="code_tab_label">Code</string>
+    <string name="docs_code_panel_collapse">Réduire le panel</string>
+    <string name="docs_code_panel_expand">Agrandir le panel</string>
 </resources>
