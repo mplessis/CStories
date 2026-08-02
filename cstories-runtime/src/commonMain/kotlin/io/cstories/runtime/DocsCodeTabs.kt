@@ -43,13 +43,21 @@ private enum class DocsCodeTab { DOCS, CODE }
  * both are `null` (e.g. the story has no `component = ...` reference).
  */
 @Composable
-fun DocsCodeTabs(documentation: String?, usageCode: String?, modifier: Modifier = Modifier) {
+fun DocsCodeTabs(
+    documentation: String?,
+    usageCode: String?,
+    knobValues: Map<String, String> = emptyMap(),
+    modifier: Modifier = Modifier,
+) {
     if (documentation == null && usageCode == null) return
 
     var selected by remember(documentation, usageCode) {
         mutableStateOf(if (documentation != null) DocsCodeTab.DOCS else DocsCodeTab.CODE)
     }
     var expanded by remember(documentation, usageCode) { mutableStateOf(false) }
+    val substitution = remember(usageCode, knobValues) {
+        usageCode?.let { substituteKnobValues(it, knobValues) }
+    }
     val collapseDescription = stringResource(Res.string.docs_code_panel_collapse)
     val expandDescription = stringResource(Res.string.docs_code_panel_expand)
 
@@ -110,9 +118,10 @@ fun DocsCodeTabs(documentation: String?, usageCode: String?, modifier: Modifier 
                     )
                 }
 
-                DocsCodeTab.CODE -> usageCode?.let {
+                DocsCodeTab.CODE -> substitution?.let {
                     CodeBlock(
-                        code = it,
+                        code = it.text,
+                        highlightRanges = it.highlightRanges,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),

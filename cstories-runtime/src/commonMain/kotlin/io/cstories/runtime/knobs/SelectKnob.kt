@@ -39,6 +39,12 @@ import io.cstories.runtime.CStoriesRadii
 /**
  * A dropdown/select-style knob, mirroring the mockup's `<select>` controls
  * (e.g. button `variant`, badge `tone`).
+ *
+ * [literalValue], when provided, is injected verbatim (unquoted) instead of
+ * a quoted string literal when substituting [codeKey] into the story's
+ * "Code" tab — used by the [T] enum overload below to inject e.g.
+ * `BadgeTone.Success` instead of `"Success"`. Most callers should prefer
+ * that overload directly over passing [literalValue] manually.
  */
 @Composable
 fun SelectKnob(
@@ -46,7 +52,10 @@ fun SelectKnob(
     value: String,
     options: List<String>,
     onValueChange: (String) -> Unit,
+    codeKey: String? = null,
+    literalValue: String? = null,
 ) {
+    PublishKnobValue(codeKey, value, literalValue)
     Knob(label = label) {
         var expanded by remember { mutableStateOf(false) }
         val density = LocalDensity.current
@@ -129,4 +138,27 @@ fun SelectKnob(
             }
         }
     }
+}
+
+/**
+ * Enum-typed overload of [SelectKnob]: derives [options] from `enumValues<T>()`
+ * and, when [codeKey] is set, automatically substitutes the story's "Code"
+ * tab with the fully-qualified constant (e.g. `BadgeTone.Success`) instead
+ * of a quoted string, without the story author needing `.name` / `valueOf`.
+ */
+@Composable
+inline fun <reified T : Enum<T>> SelectKnob(
+    label: String,
+    value: T,
+    noinline onValueChange: (T) -> Unit,
+    codeKey: String? = null,
+) {
+    SelectKnob(
+        label = label,
+        value = value.name,
+        options = enumValues<T>().map { it.name },
+        onValueChange = { selected -> onValueChange(enumValueOf<T>(selected)) },
+        codeKey = codeKey,
+        literalValue = codeKey?.let { "${T::class.simpleName}.${value.name}" },
+    )
 }

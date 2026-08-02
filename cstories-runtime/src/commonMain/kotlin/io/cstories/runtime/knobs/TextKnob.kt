@@ -20,7 +20,9 @@ fun TextKnob(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
+    codeKey: String? = null,
 ) {
+    PublishKnobValue(codeKey, value)
     Knob(label = label) {
         BasicTextField(
             value = value,

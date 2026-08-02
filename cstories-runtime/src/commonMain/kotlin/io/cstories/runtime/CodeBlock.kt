@@ -15,11 +15,12 @@ import androidx.compose.ui.unit.sp
  * Read-only monospace rendering of a Kotlin source snippet, with Kotlin
  * syntax highlighting (see [KotlinSyntaxHighlighter]), used to display
  * the exact expression that invokes a story's referenced component (see
- * [DocsCodeTabs]).
+ * [DocsCodeTabs]). [highlightRanges] marks spans (e.g. substituted knob
+ * values) with an extra background highlight.
  */
 @Composable
-fun CodeBlock(code: String, modifier: Modifier = Modifier) {
-    val highlighted = remember(code) { highlightKotlin(code) }
+fun CodeBlock(code: String, highlightRanges: List<IntRange> = emptyList(), modifier: Modifier = Modifier) {
+    val highlighted = remember(code, highlightRanges) { highlightKotlin(code, highlightRanges) }
     Text(
         text = highlighted,
         fontFamily = FontFamily.Monospace,

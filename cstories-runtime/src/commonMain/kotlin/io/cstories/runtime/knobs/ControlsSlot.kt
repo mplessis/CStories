@@ -13,3 +13,12 @@ import androidx.compose.runtime.staticCompositionLocalOf
  */
 internal val LocalControlsSlot: ProvidableCompositionLocal<MutableState<(@Composable () -> Unit)?>?> =
     staticCompositionLocalOf { null }
+
+/**
+ * "Portal" used to publish the current values of a story's knobs (keyed by
+ * the `codeKey` each knob declares) out to the runtime, so the "Code" tab
+ * (see [io.cstories.runtime.DocsCodeTabs]) can substitute them into the
+ * story's usage snippet and stay in sync with the live preview.
+ */
+internal val LocalKnobValuesSlot: ProvidableCompositionLocal<MutableState<Map<String, String>>?> =
+    staticCompositionLocalOf { null }

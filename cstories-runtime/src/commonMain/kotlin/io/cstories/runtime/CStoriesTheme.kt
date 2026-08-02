@@ -48,6 +48,9 @@ object CStoriesColors {
     val codeComment = Color(0xFF6E7781)
     val codeAnnotation = Color(0xFFB35900)
     val codeType = Color(0xFF953800)
+
+    /** Background applied to code spans substituted with the current live value of a knob. */
+    val codeHighlight = Color(0x33FDB44B)
 }
 
 object CStoriesRadii {

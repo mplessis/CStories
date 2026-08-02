@@ -25,12 +25,12 @@ fun BadgeStory() {
 
     Column {
         KnobPanel {
-            TextKnob(label = "Text", value = text, onValueChange = { text = it })
+            TextKnob(label = "Text", value = text, onValueChange = { text = it }, codeKey = "text")
             SelectKnob(
                 label = "Tone",
-                value = tone.name,
-                options = BadgeTone.entries.map { it.name },
-                onValueChange = { tone = BadgeTone.valueOf(it) },
+                value = tone,
+                onValueChange = { tone = it },
+                codeKey = "tone",
             )
         }
 

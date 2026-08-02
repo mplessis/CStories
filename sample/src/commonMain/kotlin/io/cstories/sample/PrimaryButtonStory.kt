@@ -25,11 +25,13 @@ fun PrimaryButtonStory() {
                 label = "Label",
                 value = label,
                 onValueChange = { label = it },
+                codeKey = "label",
             )
             BooleanKnob(
                 label = "Enabled",
                 value = enabled,
                 onValueChange = { enabled = it },
+                codeKey = "enabled",
             )
         }
 

@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.cstories.runtime.knobs.LocalControlsSlot
+import io.cstories.runtime.knobs.LocalKnobValuesSlot
 import io.cstories.runtime.resources.Res
 import io.cstories.runtime.resources.empty_state_no_stories
 import org.jetbrains.compose.resources.stringResource
@@ -55,6 +56,10 @@ fun CStoriesApp(stories: List<StoryEntry>) {
                         val controlsSlot = remember(entry.path) {
                             mutableStateOf<(@Composable () -> Unit)?>(null)
                         }
+                        val resetToken = resetTokens.value[entry.path] ?: 0
+                        val knobValuesSlot = remember(entry.path, resetToken) {
+                            mutableStateOf<Map<String, String>>(emptyMap())
+                        }
                         MainHeader(breadcrumbPath = entry.path)
                         Row(
                             modifier = Modifier
@@ -62,7 +67,10 @@ fun CStoriesApp(stories: List<StoryEntry>) {
                                 .fillMaxWidth()
                                 .padding(start = 28.dp, end = 28.dp, bottom = 28.dp),
                         ) {
-                            CompositionLocalProvider(LocalControlsSlot provides controlsSlot) {
+                            CompositionLocalProvider(
+                                LocalControlsSlot provides controlsSlot,
+                                LocalKnobValuesSlot provides knobValuesSlot,
+                            ) {
                                 Column(
                                     modifier = Modifier
                                         .weight(1f)
@@ -71,27 +79,31 @@ fun CStoriesApp(stories: List<StoryEntry>) {
                                 ) {
                                     StoryFrame(
                                         entry = entry,
-                                        resetToken = resetTokens.value[entry.path] ?: 0,
+                                        resetToken = resetToken,
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxWidth(),
                                     )
                                     if (entry.documentation != null || entry.usageCode != null) {
-                                        DocsCodeTabs(documentation = entry.documentation, usageCode = entry.usageCode)
+                                        DocsCodeTabs(
+                                            documentation = entry.documentation,
+                                            usageCode = entry.usageCode,
+                                            knobValues = knobValuesSlot.value,
+                                        )
                                     }
                                 }
+                                Box(modifier = Modifier.width(20.dp))
+                                ControlsPanel(
+                                    controlsSlot = controlsSlot,
+                                    onReset = {
+                                        resetTokens.value = resetTokens.value +
+                                            (entry.path to ((resetTokens.value[entry.path] ?: 0) + 1))
+                                    },
+                                    modifier = Modifier
+                                        .width(288.dp)
+                                        .fillMaxHeight(),
+                                )
                             }
-                            Box(modifier = Modifier.width(20.dp))
-                            ControlsPanel(
-                                controlsSlot = controlsSlot,
-                                onReset = {
-                                    resetTokens.value = resetTokens.value +
-                                        (entry.path to ((resetTokens.value[entry.path] ?: 0) + 1))
-                                },
-                                modifier = Modifier
-                                    .width(288.dp)
-                                    .fillMaxHeight(),
-                            )
                         }
                     } ?: EmptyState()
                 }

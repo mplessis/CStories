@@ -17,7 +17,9 @@ fun BooleanKnob(
     label: String,
     value: Boolean,
     onValueChange: (Boolean) -> Unit,
+    codeKey: String? = null,
 ) {
+    PublishKnobValue(codeKey, value)
     Knob(label = null) {
         Row(
             modifier = Modifier.fillMaxWidth(),
