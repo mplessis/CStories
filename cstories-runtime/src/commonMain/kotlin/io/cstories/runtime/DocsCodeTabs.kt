@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -90,6 +91,7 @@ fun DocsCodeTabs(documentation: String?, usageCode: String?, modifier: Modifier 
                 expanded = expanded,
                 tint = CStoriesColors.textFaint,
                 modifier = Modifier
+                    .clip(RoundedCornerShape(CStoriesRadii.sm))
                     .clickable(onClick = { expanded = !expanded })
                     .semantics {
                         contentDescription = if (expanded) collapseDescription else expandDescription
@@ -129,6 +131,7 @@ private fun DocsCodeTabButton(label: String, selected: Boolean, onClick: () -> U
         fontSize = 12.5.sp,
         fontWeight = FontWeight.Bold,
         modifier = Modifier
+            .clip(RoundedCornerShape(CStoriesRadii.sm))
             .clickable(onClick = onClick)
             .background(
                 if (selected) CStoriesColors.surfaceMuted else androidx.compose.ui.graphics.Color.Transparent,
