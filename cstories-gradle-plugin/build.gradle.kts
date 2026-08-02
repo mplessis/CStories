@@ -34,6 +34,13 @@ gradlePlugin {
             displayName = "CStories Gradle Plugin"
             description = "Configures CStories for Compose Multiplatform projects"
         }
+        create("cstoriesComponents") {
+            id = "io.cstories.gradle.components"
+            implementationClass = "io.cstories.gradle.CStoriesComponentsGradlePlugin"
+            displayName = "CStories Components Gradle Plugin"
+            description = "Generates CStoryComponentRefs for @CStoryComponent-annotated functions " +
+                "in a plain component/design-system library module"
+        }
     }
 }
 

@@ -48,6 +48,8 @@ class CStoriesGradlePlugin : Plugin<Project> {
             }
         }
 
+        project.wireComponentRefsGeneration(kotlin)
+
         // The consumer declares its jvm()/wasmJs() targets in the `kotlin { }`
         // block of its own build script, which runs *after* this plugin is
         // applied (plugins {} blocks are evaluated first). Detecting which
@@ -86,11 +88,6 @@ class CStoriesGradlePlugin : Plugin<Project> {
             add("commonMainImplementation", localProjectOrCoordinates(project, "cstories-annotations"))
             add("commonMainImplementation", localProjectOrCoordinates(project, "cstories-runtime"))
         }
-    }
-
-    private fun localProjectOrCoordinates(project: Project, moduleName: String): Any {
-        return project.rootProject.findProject(":$moduleName")
-            ?: "io.cstories:$moduleName:$CSTORIES_VERSION"
     }
 
     private fun configureKsp(project: Project) {
@@ -276,7 +273,6 @@ class CStoriesGradlePlugin : Plugin<Project> {
     }
 }
 
-private const val MODULE_NAME_OPTION = "cstories.moduleName"
 private const val WASM_JS_OUTPUT_PATH = "generated/cstories/wasmJsMain/kotlin"
 private const val DESKTOP_OUTPUT_PATH = "generated/cstories/jvmMain/kotlin"
 private const val WEB_RESOURCES_PATH = "generated/cstories/wasmJsMain/resources"

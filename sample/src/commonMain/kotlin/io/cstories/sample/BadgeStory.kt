@@ -7,24 +7,30 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import io.cstories.annotations.CStory
+import io.cstories.generated.CStoryComponentRefs
 import io.cstories.runtime.knobs.KnobPanel
 import io.cstories.runtime.knobs.SelectKnob
 import io.cstories.runtime.knobs.TextKnob
 
-@CStory(collection = "DesignSystem", group = "Badges", name = "Default")
+@CStory(
+    collection = "DesignSystem",
+    group = "Badges",
+    name = "Default",
+    component = CStoryComponentRefs.DemoBadge,
+)
 @Composable
 fun BadgeStory() {
     var text by remember { mutableStateOf("Nouveau") }
-    var tone by remember { mutableStateOf("success") }
+    var tone by remember { mutableStateOf(BadgeTone.Success) }
 
     Column {
         KnobPanel {
             TextKnob(label = "Text", value = text, onValueChange = { text = it })
             SelectKnob(
                 label = "Tone",
-                value = tone,
-                options = listOf("success", "warning", "error"),
-                onValueChange = { tone = it },
+                value = tone.name,
+                options = BadgeTone.entries.map { it.name },
+                onValueChange = { tone = BadgeTone.valueOf(it) },
             )
         }
 

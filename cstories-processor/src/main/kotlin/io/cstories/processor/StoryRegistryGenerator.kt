@@ -1,6 +1,7 @@
 package io.cstories.processor
 
 import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.Dependencies
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -49,8 +50,17 @@ internal object StoryRegistryGenerator {
 
         fileSpec.writeTo(
             codeGenerator = codeGenerator,
-            aggregating = false,
-            originatingKSFiles = entries.mapNotNull { it.originatingFile },
+            // Entries accumulate across KSP rounds/invocations (see
+            // `CStoriesProcessor.runStoriesPass`), so this output can't be
+            // tied to a specific, precise set of originating `KSFile`s the
+            // way a normal per-round aggregating write would be — using
+            // `Dependencies(aggregating = true)` with an empty file list
+            // would make KSP treat it as depending on *nothing*, and prune
+            // it as orphaned on the next incremental run where nothing
+            // happens to be individually re-flagged. `Dependencies.ALL_FILES`
+            // is KSP's own shorthand for "depends on everything", the
+            // correct way to express a whole-module aggregate like this.
+            dependencies = Dependencies.ALL_FILES,
         )
 
         return registry
@@ -83,7 +93,8 @@ internal object StoryRegistryGenerator {
                 builder.add("%S", segment)
             }
             builder.add("),\n")
-            builder.add("    composableInvoker = %L\n", buildInvoker(entry.invoker))
+            builder.add("    composableInvoker = %L,\n", buildInvoker(entry.invoker))
+            builder.add("    documentation = %L\n", entry.documentation?.let { CodeBlock.of("%S", it) } ?: CodeBlock.of("null"))
             builder.add("  )")
             if (index < entries.lastIndex) {
                 builder.add(",")

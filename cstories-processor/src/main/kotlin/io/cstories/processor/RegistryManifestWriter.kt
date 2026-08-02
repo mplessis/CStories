@@ -2,14 +2,16 @@ package io.cstories.processor
 
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.symbol.KSFile
 import java.io.OutputStreamWriter
 
 internal object RegistryManifestWriter {
-    fun write(codeGenerator: CodeGenerator, registry: GeneratedRegistry, files: List<KSFile>) {
+    fun write(codeGenerator: CodeGenerator, registry: GeneratedRegistry) {
         codeGenerator
             .createNewFile(
-                dependencies = Dependencies(aggregating = false, sources = files.toTypedArray()),
+                // See `StoryRegistryGenerator` for why this uses
+                // `Dependencies.ALL_FILES` rather than
+                // `Dependencies(aggregating = true)`.
+                dependencies = Dependencies.ALL_FILES,
                 packageName = "",
                 fileName = "META-INF/cstories/registries",
                 extensionName = "txt",

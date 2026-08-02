@@ -16,4 +16,6 @@
     <string name="promo_watch_button">Watch !</string>
 
     <string name="empty_state_no_stories">Aucune story définie</string>
+
+    <string name="documentation_panel_title">Component usage</string>
 </resources>

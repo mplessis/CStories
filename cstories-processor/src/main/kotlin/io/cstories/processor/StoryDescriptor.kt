@@ -1,13 +1,11 @@
 package io.cstories.processor
 
-import com.google.devtools.ksp.symbol.KSFile
-
 internal data class StoryDescriptor(
     val collection: String,
     val group: String,
     val name: String,
     val invoker: StoryInvoker,
-    val originatingFile: KSFile?,
+    val documentation: String? = null,
 ) {
     val pathSegments: List<String>
         get() = collection.split('/') + group.split('/') + name

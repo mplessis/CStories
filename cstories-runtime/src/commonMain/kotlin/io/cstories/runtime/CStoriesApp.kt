@@ -1,6 +1,7 @@
 package io.cstories.runtime
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -62,13 +63,23 @@ fun CStoriesApp(stories: List<StoryEntry>) {
                                 .padding(start = 28.dp, end = 28.dp, bottom = 28.dp),
                         ) {
                             CompositionLocalProvider(LocalControlsSlot provides controlsSlot) {
-                                StoryFrame(
-                                    entry = entry,
-                                    resetToken = resetTokens.value[entry.path] ?: 0,
+                                Column(
                                     modifier = Modifier
                                         .weight(1f)
                                         .fillMaxHeight(),
-                                )
+                                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                                ) {
+                                    StoryFrame(
+                                        entry = entry,
+                                        resetToken = resetTokens.value[entry.path] ?: 0,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .fillMaxWidth(),
+                                    )
+                                    entry.documentation?.let { documentation ->
+                                        ComponentDocumentationPanel(documentation = documentation)
+                                    }
+                                }
                             }
                             Box(modifier = Modifier.width(20.dp))
                             ControlsPanel(

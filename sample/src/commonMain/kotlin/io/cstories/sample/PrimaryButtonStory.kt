@@ -1,17 +1,19 @@
 package io.cstories.sample
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import io.cstories.annotations.CStory
+import io.cstories.generated.CStoryComponentRefs
 import io.cstories.runtime.knobs.BooleanKnob
 import io.cstories.runtime.knobs.KnobPanel
 import io.cstories.runtime.knobs.TextKnob
 
-@CStory(collection = "DesignSystem", group = "Buttons", name = "Primary")
+@CStory(
+    collection = "DesignSystem",
+    group = "Buttons",
+    name = "Primary",
+    component = CStoryComponentRefs.PrimaryButton
+)
 @Composable
 fun PrimaryButtonStory() {
     var label by remember { mutableStateOf("Click me") }
