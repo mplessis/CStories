@@ -1,7 +1,7 @@
 <resources>
-    <string name="controls_title">CONTROLS</string>
+    <string name="controls_title">CONTROLES</string>
     <string name="controls_reset_button">Reset</string>
-    <string name="controls_empty_state">Aucun control pour cette story</string>
+    <string name="controls_empty_state">Aucun contrôle pour cette story</string>
 
     <string name="main_header_title">Story Preview</string>
 
