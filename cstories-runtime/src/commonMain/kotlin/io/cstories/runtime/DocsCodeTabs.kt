@@ -48,7 +48,7 @@ fun DocsCodeTabs(documentation: String?, usageCode: String?, modifier: Modifier 
     var selected by remember(documentation, usageCode) {
         mutableStateOf(if (documentation != null) DocsCodeTab.DOCS else DocsCodeTab.CODE)
     }
-    var expanded by remember(documentation, usageCode) { mutableStateOf(true) }
+    var expanded by remember(documentation, usageCode) { mutableStateOf(false) }
     val collapseDescription = stringResource(Res.string.docs_code_panel_collapse)
     val expandDescription = stringResource(Res.string.docs_code_panel_expand)
 
