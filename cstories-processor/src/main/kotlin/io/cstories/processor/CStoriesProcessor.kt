@@ -158,7 +158,11 @@ class CStoriesProcessor(
 
     private data class FunctionLocation(
         val packageName: String,
-        /** Display name only (e.g. `Companion`), used to group generated refs. */
+        /**
+         * Display name only, used to group generated refs (e.g. `LumenButton`
+         * for a function in a plain `object LumenButton` or in
+         * `LumenButton`'s companion object — never the literal `Companion`).
+         */
         val enclosingObjectName: String?,
         /**
          * Full dotted path of enclosing declarations relative to the package
@@ -182,9 +186,22 @@ class CStoriesProcessor(
                     .toList()
                     .asReversed()
                     .joinToString(".") { it.simpleName.asString() }
+                // A companion object's own `simpleName` is the synthetic
+                // "Companion" (or its custom name), which is meaningless as a
+                // grouping/display name shared across unrelated classes. Use
+                // the enclosing class name instead so generated refs read as
+                // `CStoryComponentRefs.NomClasse.Primary`, not
+                // `CStoryComponentRefs.Companion.Primary`. The real FQN
+                // (`enclosingQualifiedPath`) still needs the literal
+                // `Companion` segment to be resolvable at the call site.
+                val enclosingObjectName = if (parent.isCompanionObject) {
+                    parent.parentDeclaration?.simpleName?.asString() ?: parent.simpleName.asString()
+                } else {
+                    parent.simpleName.asString()
+                }
                 FunctionLocation(
                     packageName = packageName,
-                    enclosingObjectName = parent.simpleName.asString(),
+                    enclosingObjectName = enclosingObjectName,
                     enclosingQualifiedPath = enclosingQualifiedPath,
                 )
             }
