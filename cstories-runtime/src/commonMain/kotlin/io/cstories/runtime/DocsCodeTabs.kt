@@ -4,31 +4,44 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.cstories.runtime.resources.Res
+import io.cstories.runtime.resources.code_copy_button_copied_description
+import io.cstories.runtime.resources.code_copy_button_description
 import io.cstories.runtime.resources.code_tab_label
 import io.cstories.runtime.resources.docs_code_panel_collapse
 import io.cstories.runtime.resources.docs_code_panel_expand
 import io.cstories.runtime.resources.docs_tab_label
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 private enum class DocsCodeTab { DOCS, CODE }
@@ -60,6 +73,11 @@ fun DocsCodeTabs(
     }
     val collapseDescription = stringResource(Res.string.docs_code_panel_collapse)
     val expandDescription = stringResource(Res.string.docs_code_panel_expand)
+    val copyDescription = stringResource(Res.string.code_copy_button_description)
+    val copiedDescription = stringResource(Res.string.code_copy_button_copied_description)
+    val clipboard = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
+    var copied by remember(usageCode, knobValues) { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -119,13 +137,38 @@ fun DocsCodeTabs(
                 }
 
                 DocsCodeTab.CODE -> substitution?.let {
-                    CodeBlock(
-                        code = it.text,
-                        highlightRanges = it.highlightRanges,
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-                    )
+                    ) {
+                        CodeBlock(
+                            code = it.text,
+                            highlightRanges = it.highlightRanges,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        IconButton(
+                            onClick = {
+                                clipboard.setText(AnnotatedString(it.text))
+                                copied = true
+                                scope.launch {
+                                    delay(1500)
+                                    copied = false
+                                }
+                            },
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .semantics {
+                                    contentDescription = if (copied) copiedDescription else copyDescription
+                                },
+                        ) {
+                            Icon(
+                                imageVector = if (copied) Icons.Filled.Check else Icons.Filled.ContentCopy,
+                                contentDescription = null,
+                                tint = CStoriesColors.textFaint,
+                            )
+                        }
+                    }
                 }
             }
         }
