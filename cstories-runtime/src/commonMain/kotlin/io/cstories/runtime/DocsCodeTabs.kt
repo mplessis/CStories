@@ -69,14 +69,20 @@ fun DocsCodeTabs(documentation: String?, usageCode: String?, modifier: Modifier 
                 DocsCodeTabButton(
                     label = stringResource(Res.string.docs_tab_label),
                     selected = selected == DocsCodeTab.DOCS,
-                    onClick = { selected = DocsCodeTab.DOCS },
+                    onClick = {
+                        selected = DocsCodeTab.DOCS
+                        expanded = true
+                    },
                 )
             }
             if (usageCode != null) {
                 DocsCodeTabButton(
                     label = stringResource(Res.string.code_tab_label),
                     selected = selected == DocsCodeTab.CODE,
-                    onClick = { selected = DocsCodeTab.CODE },
+                    onClick = {
+                        selected = DocsCodeTab.CODE
+                        expanded = true
+                    },
                 )
             }
             Spacer(Modifier.weight(1f))
