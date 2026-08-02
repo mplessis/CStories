@@ -15,6 +15,7 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -125,6 +126,14 @@ private sealed interface MarkdownLine {
 }
 
 private val tableSeparatorRegex = Regex("^\\|(\\s*:?-+:?\\s*\\|)+$")
+
+/**
+ * Inline marker emitted by `KDocMarkdownParser` (in `cstories-processor`)
+ * right after a required parameter's name in the `Parameters` table.
+ * Rendered here as a red asterisk. Must stay in sync with
+ * `KDocMarkdownParser.REQUIRED_MARKER`.
+ */
+private const val REQUIRED_MARKER = "\u00A4req\u00A4"
 
 private fun classifyLine(line: String): MarkdownLine {
     if (line.isBlank()) return MarkdownLine.Blank
@@ -246,6 +255,13 @@ private fun renderInline(text: String): AnnotatedString = buildAnnotatedString {
     var i = 0
     while (i < text.length) {
         when {
+            text.startsWith(REQUIRED_MARKER, i) -> {
+                pushStyle(SpanStyle(color = Color.Red))
+                append("*")
+                pop()
+                i += REQUIRED_MARKER.length
+            }
+
             text.startsWith("**", i) -> {
                 val end = text.indexOf("**", i + 2)
                 if (end == -1) {
@@ -273,7 +289,11 @@ private fun renderInline(text: String): AnnotatedString = buildAnnotatedString {
             }
 
             else -> {
-                val candidates = listOf(text.indexOf("**", i), text.indexOf('`', i)).filter { it != -1 }
+                val candidates = listOf(
+                    text.indexOf("**", i),
+                    text.indexOf('`', i),
+                    text.indexOf(REQUIRED_MARKER, i),
+                ).filter { it != -1 }
                 val nextSpecial = candidates.minOrNull() ?: text.length
                 append(text.substring(i, nextSpecial))
                 i = nextSpecial
