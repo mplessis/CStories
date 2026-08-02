@@ -115,6 +115,56 @@ fun GroupIcon(
 }
 
 /**
+ * Sun (light mode) / crescent moon (dark mode) glyph for the canvas preview
+ * theme toggle in [CanvasToolbar]. Drawn rather than relying on emoji, for
+ * the same font-portability reasons as the other icons in this file.
+ */
+@Composable
+fun SunMoonIcon(
+    isDark: Boolean,
+    tint: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = 14.dp,
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val unit = this.size.width / 24f
+        if (isDark) {
+            val moon = Path().apply {
+                addOval(androidx.compose.ui.geometry.Rect(3f * unit, 3f * unit, 19f * unit, 19f * unit))
+            }
+            val cutout = Path().apply {
+                addOval(androidx.compose.ui.geometry.Rect(7f * unit, 1f * unit, 23f * unit, 17f * unit))
+            }
+            val crescent = androidx.compose.ui.graphics.Path.combine(
+                androidx.compose.ui.graphics.PathOperation.Difference,
+                moon,
+                cutout,
+            )
+            drawPath(path = crescent, color = tint)
+        } else {
+            drawCircle(color = tint, radius = 5f * unit, center = Offset(12f * unit, 12f * unit))
+            val rayLength = 3f * unit
+            val rayStart = 8.5f * unit
+            val stroke = Stroke(width = 1.6f * unit, cap = StrokeCap.Round)
+            val angles = listOf(0, 45, 90, 135, 180, 225, 270, 315)
+            for (angleDeg in angles) {
+                val angle = angleDeg * (kotlin.math.PI / 180.0)
+                val cos = kotlin.math.cos(angle).toFloat()
+                val sin = kotlin.math.sin(angle).toFloat()
+                val center = Offset(12f * unit, 12f * unit)
+                drawLine(
+                    color = tint,
+                    start = center + Offset(cos * rayStart, sin * rayStart),
+                    end = center + Offset(cos * (rayStart + rayLength), sin * (rayStart + rayLength)),
+                    strokeWidth = stroke.width,
+                    cap = stroke.cap,
+                )
+            }
+        }
+    }
+}
+
+/**
  * Drawn triangle chevron (rather than relying on a text glyph, which is
  * missing from some fonts on certain platforms and renders as a blank box).
  * Points down when [expanded], right otherwise.

@@ -29,10 +29,11 @@ import io.cstories.runtime.resources.empty_state_no_stories
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun CStoriesApp(stories: List<StoryEntry>) {
+fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = DefaultCStoriesThemeWrapper) {
     val tree = remember(stories) { buildTree(stories) }
     var selected by remember(stories) { mutableStateOf(stories.firstOrNull()) }
     val resetTokens = remember(stories) { mutableStateOf(mapOf<List<String>, Int>()) }
+    var isCanvasDark by remember { mutableStateOf(false) }
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = CStoriesColors.pageBg) {
@@ -80,6 +81,9 @@ fun CStoriesApp(stories: List<StoryEntry>) {
                                     StoryFrame(
                                         entry = entry,
                                         resetToken = resetToken,
+                                        isDark = isCanvasDark,
+                                        onToggleDark = { isCanvasDark = !isCanvasDark },
+                                        themeWrapper = themeWrapper,
                                         modifier = Modifier
                                             .weight(1f)
                                             .fillMaxWidth(),

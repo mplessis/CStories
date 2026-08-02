@@ -33,7 +33,7 @@ This approach also avoids runtime reflection, which is important for Kotlin/Wasm
 The project is designed around five modules:
 
 - `cstories-annotations`: a dependency-free Kotlin Multiplatform module containing the `@CStory` annotation with source retention only
-- `cstories-processor`: a JVM-only KSP processor that discovers stories, validates them, generates per-module registries, and emits manifests for aggregation
+- `cstories-processor`: a JVM-only KSP processor that discovers stories (and, optionally, a custom theme wrapper — see [Previewing Dark Mode](#previewing-dark-mode)), validates them, generates per-module registries, and emits manifests for aggregation
 - `cstories-runtime`: a Compose Multiplatform runtime module that provides the catalog application shell, navigation tree, story frame, and knob composables
 - `cstories-gradle-plugin`: a Gradle plugin that auto-detects the `jvm()`/`wasmJs()` targets already declared by the consumer, adds the required dependencies, generates the corresponding catalog entry point(s), and aggregates registries across modules
 - `sample`: a dogfooding module used to validate the end-to-end developer experience
@@ -249,6 +249,28 @@ The output lands in `build/dist/wasmJs/productionExecutable`. To package it as a
 ```
 
 The zip is written to `build/cstories/<project-name>-web.zip`.
+
+## Previewing Dark Mode
+
+Every story's canvas has a light/dark switch in its toolbar, letting you check how a component looks against both backgrounds without leaving the catalog.
+
+By default, toggling it wraps the previewed story in a plain Material3 `MaterialTheme` using `darkColorScheme()`/`lightColorScheme()` — enough for components that already rely on `MaterialTheme.colorScheme` for their colors.
+
+If your design system uses its own theme instead of Material3 (a `LumenTheme(isDark) { ... }`, for example), point the catalog at it by annotating a single top-level property with `@CStoryThemeWrapper`, anywhere in your project:
+
+```kotlin
+import io.cstories.annotations.CStoryThemeWrapper
+import io.cstories.runtime.CStoriesThemeWrapper
+
+@CStoryThemeWrapper
+val LumenCStoriesThemeWrapper: CStoriesThemeWrapper = { isDark, content ->
+    LumenTheme(isDark = isDark, content = content)
+}
+```
+
+`cstories-processor` picks this up via KSP — no Gradle configuration needed. The generated entry point then wraps every previewed story in `LumenTheme(isDark = ...)` instead of the Material3 default, so the actual rendered colors (not just the canvas backdrop) reflect the toggle.
+
+Only one `@CStoryThemeWrapper` property is allowed across the whole project; the build fails with a clear error if more than one is found, and KSP reports an error if it's applied to anything other than a top-level property.
 
 ## License
 

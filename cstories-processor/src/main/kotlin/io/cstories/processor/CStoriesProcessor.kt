@@ -64,10 +64,66 @@ class CStoriesProcessor(
     /** See [runStoriesPass] for why entries accumulate across rounds. */
     private val accumulatedEntries = mutableListOf<StoryDescriptor>()
 
+    /**
+     * `true` once a `@CStoryThemeWrapper` manifest entry has been written for
+     * this module — same one-shot-write constraint as [storyRegistryWritten].
+     */
+    private var themeWrapperWritten = false
+
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val deferredComponents = if (processComponents) runComponentsPass(resolver) else emptyList()
         val deferredStories = if (processStories) runStoriesPass(resolver) else emptyList()
-        return deferredComponents + deferredStories
+        val deferredThemeWrapper = if (processStories) runThemeWrapperPass(resolver) else emptyList()
+        return deferredComponents + deferredStories + deferredThemeWrapper
+    }
+
+    /**
+     * Scans for a top-level property annotated `@CStoryThemeWrapper` and
+     * writes its FQN to `META-INF/cstories/theme-wrapper.txt`, so
+     * `CStoriesAggregateTask` can wire it into the generated entry point's
+     * `CStoriesApp(themeWrapper = ...)` argument.
+     *
+     * Tied to [processStories] (rather than running unconditionally) since
+     * that's the same "platform mode" pass whose per-module manifest output
+     * ends up somewhere `CStoriesAggregateTask` actually scans.
+     */
+    private fun runThemeWrapperPass(resolver: Resolver): List<KSAnnotated> {
+        if (themeWrapperWritten) return emptyList()
+
+        val symbols = resolver
+            .getSymbolsWithAnnotation(CSTORY_THEME_WRAPPER_ANNOTATION_FQN)
+            .filterIsInstance<KSPropertyDeclaration>()
+            .toList()
+
+        val deferred = symbols.filterNot(KSAnnotated::validate)
+        if (deferred.isNotEmpty()) return deferred
+
+        val validProperties = symbols.filter { property ->
+            if (property.parentDeclaration != null) {
+                logger.error(
+                    "@CStoryThemeWrapper supports top-level properties only: ${property.simpleName.asString()}",
+                    property,
+                )
+                false
+            } else {
+                true
+            }
+        }
+
+        if (validProperties.size > 1) {
+            logger.error(
+                "Only one @CStoryThemeWrapper property is allowed per module, found ${validProperties.size}: " +
+                    validProperties.joinToString { it.simpleName.asString() },
+            )
+            return emptyList()
+        }
+
+        val property = validProperties.singleOrNull() ?: return emptyList()
+        val fqn = "${property.packageName.asString()}.${property.simpleName.asString()}"
+        themeWrapperWritten = true
+        ThemeWrapperManifestWriter.write(codeGenerator, fqn)
+
+        return emptyList()
     }
 
     private fun runComponentsPass(resolver: Resolver): List<KSAnnotated> {
@@ -402,6 +458,7 @@ class CStoriesProcessor(
 
 private const val CSTORY_ANNOTATION_FQN = "io.cstories.annotations.CStory"
 private const val CSTORY_COMPONENT_ANNOTATION_FQN = "io.cstories.annotations.CStoryComponent"
+private const val CSTORY_THEME_WRAPPER_ANNOTATION_FQN = "io.cstories.annotations.CStoryThemeWrapper"
 private const val COMPOSABLE_ANNOTATION_FQN = "androidx.compose.runtime.Composable"
 private const val GENERATED_DOC_ANNOTATION_FQN = "io.cstories.annotations.GeneratedComponentDocumentation"
 

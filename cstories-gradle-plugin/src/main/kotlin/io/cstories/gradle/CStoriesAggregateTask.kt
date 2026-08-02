@@ -1,6 +1,7 @@
 package io.cstories.gradle
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -44,9 +45,24 @@ abstract class CStoriesAggregateTask : DefaultTask() {
     @TaskAction
     fun generate() {
         val registries = runtimeClasspath.files
-            .flatMap(::readRegistries)
+            .flatMap { readManifest(it, REGISTRIES_MANIFEST_PATH) }
             .distinct()
             .sorted()
+
+        // A `@CStoryThemeWrapper` property is picked up by `cstories-processor`
+        // (see `CStoriesProcessor.runThemeWrapperPass`) wherever it's declared
+        // in the dependency graph, so at most one manifest entry should ever
+        // be found across the whole aggregated classpath.
+        val themeWrapperCandidates = runtimeClasspath.files
+            .flatMap { readManifest(it, THEME_WRAPPER_MANIFEST_PATH) }
+            .distinct()
+        if (themeWrapperCandidates.size > 1) {
+            throw GradleException(
+                "Only one @CStoryThemeWrapper property is allowed across the whole project, found " +
+                    "${themeWrapperCandidates.size}: ${themeWrapperCandidates.joinToString()}",
+            )
+        }
+        val themeWrapperReference = themeWrapperCandidates.singleOrNull()
 
         val packagePath = packageName.get().replace('.', '/')
         val registrySource = buildRegistrySource(registries)
@@ -54,7 +70,8 @@ abstract class CStoriesAggregateTask : DefaultTask() {
         if (generateWasmJsEntryPoint.get()) {
             val wasmJsKotlinDir = File(wasmJsOutputDirectory.get().asFile, packagePath).apply { mkdirs() }
             File(wasmJsKotlinDir, "AllStoriesRegistry.kt").writeText(registrySource)
-            File(wasmJsKotlinDir, "CStoriesWasmJsEntryPoint.kt").writeText(buildWasmJsEntryPointSource())
+            File(wasmJsKotlinDir, "CStoriesWasmJsEntryPoint.kt")
+                .writeText(buildWasmJsEntryPointSource(themeWrapperReference))
 
             val webResourcesDir = webResourcesDirectory.get().asFile.apply { mkdirs() }
             File(webResourcesDir, "index.html").writeText(buildIndexHtmlSource())
@@ -63,29 +80,30 @@ abstract class CStoriesAggregateTask : DefaultTask() {
         if (generateDesktopEntryPoint.get()) {
             val desktopKotlinDir = File(desktopOutputDirectory.get().asFile, packagePath).apply { mkdirs() }
             File(desktopKotlinDir, "AllStoriesRegistry.kt").writeText(registrySource)
-            File(desktopKotlinDir, "CStoriesDesktopEntryPoint.kt").writeText(buildDesktopEntryPointSource())
+            File(desktopKotlinDir, "CStoriesDesktopEntryPoint.kt")
+                .writeText(buildDesktopEntryPointSource(themeWrapperReference))
         }
     }
 
-    private fun readRegistries(file: File): List<String> {
+    private fun readManifest(file: File, manifestPath: String): List<String> {
         return when {
-            file.isDirectory -> readRegistriesFromDirectory(file)
-            file.extension == "jar" -> readRegistriesFromJar(file)
+            file.isDirectory -> readManifestFromDirectory(file, manifestPath)
+            file.extension == "jar" -> readManifestFromJar(file, manifestPath)
             else -> emptyList()
         }
     }
 
-    private fun readRegistriesFromDirectory(directory: File): List<String> {
-        val manifest = File(directory, MANIFEST_PATH)
+    private fun readManifestFromDirectory(directory: File, manifestPath: String): List<String> {
+        val manifest = File(directory, manifestPath)
         if (!manifest.exists()) {
             return emptyList()
         }
         return manifest.readLines().map(String::trim).filter(String::isNotBlank)
     }
 
-    private fun readRegistriesFromJar(file: File): List<String> {
+    private fun readManifestFromJar(file: File, manifestPath: String): List<String> {
         JarFile(file).use { jar ->
-            val entry = jar.getJarEntry(MANIFEST_PATH) ?: return emptyList()
+            val entry = jar.getJarEntry(manifestPath) ?: return emptyList()
             return jar.getInputStream(entry)
                 .bufferedReader()
                 .readLines()
@@ -113,24 +131,28 @@ abstract class CStoriesAggregateTask : DefaultTask() {
         """.trimMargin()
     }
 
-    private fun buildWasmJsEntryPointSource(): String {
+    private fun buildWasmJsEntryPointSource(themeWrapperReference: String?): String {
+        val themeWrapperImport = themeWrapperReference?.let { "\nimport $it" } ?: ""
+        val themeWrapperArg = themeWrapperArgument(themeWrapperReference)
         return """
             |package ${packageName.get()}
             |
             |import androidx.compose.ui.ExperimentalComposeUiApi
             |import androidx.compose.ui.window.CanvasBasedWindow
-            |import io.cstories.runtime.CStoriesApp
+            |import io.cstories.runtime.CStoriesApp$themeWrapperImport
             |
             |@OptIn(ExperimentalComposeUiApi::class)
             |fun main() {
             |    CanvasBasedWindow("CStories") {
-            |        CStoriesApp(AllStoriesRegistry.entries)
+            |        CStoriesApp(AllStoriesRegistry.entries$themeWrapperArg)
             |    }
             |}
         """.trimMargin()
     }
 
-    private fun buildDesktopEntryPointSource(): String {
+    private fun buildDesktopEntryPointSource(themeWrapperReference: String?): String {
+        val themeWrapperImport = themeWrapperReference?.let { "\nimport $it" } ?: ""
+        val themeWrapperArg = themeWrapperArgument(themeWrapperReference)
         return """
             |package ${packageName.get()}
             |
@@ -139,7 +161,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |import androidx.compose.ui.window.WindowState
             |import androidx.compose.ui.window.singleWindowApplication
             |import io.cstories.runtime.CStoriesApp
-            |import java.awt.Dimension
+            |import java.awt.Dimension$themeWrapperImport
             |
             |private val MinWindowSize = DpSize(1600.dp, 1200.dp)
             |
@@ -149,10 +171,16 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |        state = WindowState(size = MinWindowSize),
             |    ) {
             |        window.minimumSize = Dimension(1600, 1200)
-            |        CStoriesApp(AllStoriesRegistry.entries)
+            |        CStoriesApp(AllStoriesRegistry.entries$themeWrapperArg)
             |    }
             |}
         """.trimMargin()
+    }
+
+    /** Trailing `, themeWrapper = <SimpleName>` constructor argument, or an empty string when unset. */
+    private fun themeWrapperArgument(themeWrapperReference: String?): String {
+        val simpleName = themeWrapperReference?.substringAfterLast('.') ?: return ""
+        return ", themeWrapper = $simpleName"
     }
 
     private fun buildIndexHtmlSource(): String {
@@ -187,6 +215,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
     }
 
     private companion object {
-        const val MANIFEST_PATH = "META-INF/cstories/registries.txt"
+        const val REGISTRIES_MANIFEST_PATH = "META-INF/cstories/registries.txt"
+        const val THEME_WRAPPER_MANIFEST_PATH = "META-INF/cstories/theme-wrapper.txt"
     }
 }

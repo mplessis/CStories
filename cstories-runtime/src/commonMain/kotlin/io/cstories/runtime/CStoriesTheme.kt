@@ -19,7 +19,7 @@ object CStoriesColors {
     val textFaint = Color(0xFF9AA1AC)
     val primary = Color(0xFFC53364)
     val primarySoft = Color(0xFFE8F0FE)
-    val dark = Color(0xFF14161A)
+    val dark = Color(0xFF4d4d4d)
     val success = Color(0xFF16A34A)
     val successBg = Color(0xFFDCFCE7)
     val warning = Color(0xFFB45309)

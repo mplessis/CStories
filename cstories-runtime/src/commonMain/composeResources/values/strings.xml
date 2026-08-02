@@ -6,6 +6,8 @@
     <string name="main_header_title">Story Preview</string>
 
     <string name="canvas_live_preview">Live preview</string>
+    <string name="canvas_theme_toggle_to_dark">Mode sombre</string>
+    <string name="canvas_theme_toggle_to_light">Mode clair</string>
 
     <string name="sidebar_search_placeholder">Rechercher une story…</string>
 
