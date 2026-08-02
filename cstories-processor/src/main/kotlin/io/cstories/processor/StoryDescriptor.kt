@@ -6,6 +6,7 @@ internal data class StoryDescriptor(
     val name: String,
     val invoker: StoryInvoker,
     val documentation: String? = null,
+    val usageCode: String? = null,
 ) {
     val pathSegments: List<String>
         get() = collection.split('/') + group.split('/') + name

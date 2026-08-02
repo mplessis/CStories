@@ -256,6 +256,17 @@ class CStoriesProcessor(
     }
 
     /**
+     * Extracts, from [story]'s own source, the exact expression that calls
+     * the `@CStoryComponent` referenced by [fqn]. Unlike [resolveDocumentation],
+     * this never needs a cross-module fallback: the story's source is
+     * always local to the module currently being processed.
+     */
+    private fun resolveUsageCode(resolver: Resolver, fqn: String, story: KSFunctionDeclaration): String? {
+        val componentFunction = resolveComponentFunction(resolver, fqn) ?: return null
+        return StorySourceExtractor.extractUsageCode(story, componentFunction.simpleName.asString())
+    }
+
+    /**
      * Parses [function]'s own `docString` directly. Only ever returns
      * non-null when [function] was declared in the module currently being
      * processed — KSP never exposes `docString` for a symbol resolved from
@@ -357,6 +368,9 @@ class CStoriesProcessor(
         val documentation = component
             ?.takeIf { it.isNotBlank() }
             ?.let { fqn -> resolveDocumentation(resolver, fqn, function) }
+        val usageCode = component
+            ?.takeIf { it.isNotBlank() }
+            ?.let { fqn -> resolveUsageCode(resolver, fqn, function) }
 
         return StoryDescriptor(
             collection = validatedCollection,
@@ -364,6 +378,7 @@ class CStoriesProcessor(
             name = validatedName,
             invoker = invoker,
             documentation = documentation,
+            usageCode = usageCode,
         )
     }
 }

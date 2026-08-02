@@ -94,7 +94,8 @@ internal object StoryRegistryGenerator {
             }
             builder.add("),\n")
             builder.add("    composableInvoker = %L,\n", buildInvoker(entry.invoker))
-            builder.add("    documentation = %L\n", entry.documentation?.let { CodeBlock.of("%S", it) } ?: CodeBlock.of("null"))
+            builder.add("    documentation = %L,\n", entry.documentation?.let { CodeBlock.of("%S", it) } ?: CodeBlock.of("null"))
+            builder.add("    usageCode = %L\n", entry.usageCode?.let { CodeBlock.of("%S", it) } ?: CodeBlock.of("null"))
             builder.add("  )")
             if (index < entries.lastIndex) {
                 builder.add(",")
