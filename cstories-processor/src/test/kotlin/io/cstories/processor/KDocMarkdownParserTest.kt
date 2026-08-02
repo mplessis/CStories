@@ -90,6 +90,36 @@ class KDocMarkdownParserTest {
     }
 
     @Test
+    fun `preserves code indentation inside a fenced code block`() {
+        val result = KDocMarkdownParser.parse(
+            """
+            /**
+             * ## Example
+             *
+             * ```kotlin
+             * PrimaryButton(
+             *     text = "Ok",
+             * )
+             * ```
+             */
+            """.trimIndent(),
+        )
+
+        assertEquals(
+            """
+            ## Example
+
+            ```kotlin
+            PrimaryButton(
+                text = "Ok",
+            )
+            ```
+            """.trimIndent(),
+            result?.markdown,
+        )
+    }
+
+    @Test
     fun `enriches a param with enum values`() {
         val result = KDocMarkdownParser.parse(
             """

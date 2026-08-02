@@ -83,23 +83,41 @@ internal object KDocMarkdownParser {
         return KDocParseResult(markdown, unsupportedTags)
     }
 
+    /**
+     * Matches the leading KDoc continuation marker of a line: optional
+     * indentation, the `*`, and at most one following space. Any further
+     * whitespace after that single space is intentional content indentation
+     * (e.g. inside a fenced code block) and must be preserved as-is.
+     *
+     * Only used as a fallback for raw doc comments that still carry their
+     * literal `*` gutter (e.g. in unit tests). KSP's `KSDeclaration.docString`
+     * already strips the `/** */` delimiters and the `*` markers themselves,
+     * leaving each line with a single leading space (the former gutter gap)
+     * plus any original extra indentation — see [stripLeadingMarker].
+     */
+    private val kdocLinePrefixRegex = Regex("^\\s*\\*\\s?")
+
     /** Strips `/** */` delimiters and per-line ` * ` continuation markers from a raw doc comment. */
     internal fun cleanDocString(raw: String): String {
         var text = raw.trim()
         if (text.startsWith("/**")) text = text.removePrefix("/**")
         if (text.endsWith("*/")) text = text.removeSuffix("*/")
         return text.lineSequence()
-            .map { line ->
-                val trimmed = line.trim()
-                when {
-                    trimmed.startsWith("* ") -> trimmed.removePrefix("* ")
-                    trimmed == "*" -> ""
-                    trimmed.startsWith("*") -> trimmed.removePrefix("*")
-                    else -> trimmed
-                }
-            }
+            .map(::stripLeadingMarker)
             .joinToString("\n")
             .trim()
+    }
+
+    /**
+     * Removes a single KDoc line's leading marker, preserving any further
+     * indentation. Handles both a raw doc comment that still has its literal
+     * `*` gutter (e.g. `"* text"`, stripped via [kdocLinePrefixRegex]) and
+     * KSP's already-normalized `docString` (only a single leading space to
+     * drop, no `*` present).
+     */
+    private fun stripLeadingMarker(line: String): String {
+        val match = kdocLinePrefixRegex.find(line)
+        return if (match != null) line.substring(match.value.length).trimEnd() else line.removePrefix(" ").trimEnd()
     }
 
     private fun render(
