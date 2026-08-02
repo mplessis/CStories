@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
@@ -65,6 +66,13 @@ fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
                 }
 
                 is MarkdownBlock.Table -> MarkdownTable(block)
+
+                is MarkdownBlock.CodeBlock -> CodeBlock(
+                    code = block.code,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                )
             }
         }
     }
@@ -110,11 +118,14 @@ private fun MarkdownTableRow(cells: List<String>, bold: Boolean) {
     }
 }
 
-private sealed interface MarkdownBlock {
+internal sealed interface MarkdownBlock {
     data class Heading(val text: String) : MarkdownBlock
     data class Paragraph(val text: String) : MarkdownBlock
     data class ListItem(val indent: Int, val text: String) : MarkdownBlock
     data class Table(val headers: List<String>, val rows: List<List<String>>) : MarkdownBlock
+
+    /** A fenced ` ```language ` … ` ``` ` code block, rendered with [CodeBlock]'s Kotlin syntax highlighting. */
+    data class CodeBlock(val language: String?, val code: String) : MarkdownBlock
 }
 
 private sealed interface MarkdownLine {
@@ -126,6 +137,7 @@ private sealed interface MarkdownLine {
 }
 
 private val tableSeparatorRegex = Regex("^\\|(\\s*:?-+:?\\s*\\|)+$")
+private val codeFenceRegex = Regex("^```(\\w*)\\s*$")
 
 /**
  * Inline marker emitted by `KDocMarkdownParser` (in `cstories-processor`)
@@ -144,6 +156,13 @@ private fun classifyLine(line: String): MarkdownLine {
     }
     if (stripped.startsWith("**") && stripped.endsWith("**") && stripped.length > 4 && stripped.count { it == '*' } == 4) {
         return MarkdownLine.Heading(stripped.trim('*'))
+    }
+    if (stripped.startsWith("#")) {
+        val level = stripped.takeWhile { it == '#' }.length
+        val text = stripped.drop(level).trim()
+        if (level in 1..6 && text.isNotEmpty()) {
+            return MarkdownLine.Heading(text)
+        }
     }
     if (stripped.startsWith("|") && stripped.endsWith("|")) {
         return MarkdownLine.TableRow(splitTableCells(stripped))
@@ -175,7 +194,7 @@ private fun splitTableCells(row: String): List<String> {
     return cells
 }
 
-private fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
+internal fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
     val blocks = mutableListOf<MarkdownBlock>()
     val paragraphBuffer = mutableListOf<String>()
     val pendingTableHeader = mutableListOf<List<String>>()
@@ -199,7 +218,32 @@ private fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
         pendingTableHeader.clear()
     }
 
+    var codeFenceLanguage: String? = null
+    var codeFenceLines: MutableList<String>? = null
+
     markdown.lines().forEach { rawLine ->
+        val activeFenceLines = codeFenceLines
+        if (activeFenceLines != null) {
+            val closingMatch = codeFenceRegex.find(rawLine.trim())
+            if (closingMatch != null) {
+                blocks += MarkdownBlock.CodeBlock(codeFenceLanguage, activeFenceLines.joinToString("\n"))
+                codeFenceLines = null
+                codeFenceLanguage = null
+            } else {
+                activeFenceLines += rawLine
+            }
+            return@forEach
+        }
+
+        val openingMatch = codeFenceRegex.find(rawLine.trim())
+        if (openingMatch != null) {
+            flushParagraph()
+            flushTable()
+            codeFenceLanguage = openingMatch.groupValues[1].takeIf { it.isNotBlank() }
+            codeFenceLines = mutableListOf()
+            return@forEach
+        }
+
         when (val line = classifyLine(rawLine)) {
             is MarkdownLine.Blank -> {
                 flushParagraph()
@@ -246,6 +290,7 @@ private fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
     }
     flushParagraph()
     flushTable()
+    codeFenceLines?.let { blocks += MarkdownBlock.CodeBlock(codeFenceLanguage, it.joinToString("\n")) }
 
     return blocks
 }
