@@ -45,8 +45,11 @@ class KDocMarkdownParserTest {
             Does something useful.
 
             **Parameters**
-            - `label`: The label to display.
-            - `enabled`: Whether it is enabled.
+
+            | Name | Description | Possible values |
+            | --- | --- | --- |
+            | `label` | The label to display. |  |
+            | `enabled` | Whether it is enabled. |  |
 
             **Returns**
             A result value.
@@ -107,9 +110,10 @@ class KDocMarkdownParserTest {
         assertEquals(
             """
             **Parameters**
-            - `size`: The size.
-              - **Small**
-              - **Large** — The large variant.
+
+            | Name | Description | Possible values |
+            | --- | --- | --- |
+            | `size` | The size. | **Small**<br>**Large** — The large variant. |
             """.trimIndent(),
             result?.markdown,
         )
@@ -130,7 +134,7 @@ class KDocMarkdownParserTest {
             ),
         )
 
-        assertTrue(result?.markdown?.contains("- **Icon** — An icon adornment.") == true)
+        assertTrue(result?.markdown?.contains("**Icon** — An icon adornment.") == true)
     }
 
     @Test
@@ -144,6 +148,9 @@ class KDocMarkdownParserTest {
             mapOf("value" to ParamTypeInfo.Plain),
         )
 
-        assertEquals("**Parameters**\n- `value`: The value.", result?.markdown)
+        assertEquals(
+            "**Parameters**\n\n| Name | Description | Possible values |\n| --- | --- | --- |\n| `value` | The value. |  |",
+            result?.markdown,
+        )
     }
 }

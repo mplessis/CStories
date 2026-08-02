@@ -108,19 +108,21 @@ internal object KDocMarkdownParser {
 
         if (params.isNotEmpty()) {
             if (sb.isNotEmpty()) sb.append("\n\n")
-            sb.append("**Parameters**\n")
-            params.forEachIndexed { index, (name, desc) ->
-                sb.append("- `").append(name).append('`')
-                if (desc.isNotBlank()) {
-                    sb.append(": ").append(escapeLinks(desc))
+            sb.append("**Parameters**\n\n")
+            sb.append("| Name | Description | Possible values |\n")
+            sb.append("| --- | --- | --- |\n")
+            params.forEach { (name, desc) ->
+                val cellDescription = if (desc.isNotBlank()) escapeLinks(desc) else ""
+                val values = when (val info = paramTypes[name]) {
+                    is ParamTypeInfo.EnumValues -> entriesToCell(info.entries)
+                    is ParamTypeInfo.SealedSubtypes -> entriesToCell(info.subtypes)
+                    else -> ""
                 }
-                when (val info = paramTypes[name]) {
-                    is ParamTypeInfo.EnumValues -> appendEntries(sb, info.entries)
-                    is ParamTypeInfo.SealedSubtypes -> appendEntries(sb, info.subtypes)
-                    else -> Unit
-                }
-                if (index < params.lastIndex) sb.append('\n')
+                sb.append("| `").append(name).append("` | ")
+                    .append(escapeCell(cellDescription)).append(" | ")
+                    .append(escapeCell(values)).append(" |\n")
             }
+            sb.setLength(sb.length - 1)
         }
 
         if (!returns.isNullOrBlank()) {
@@ -131,15 +133,15 @@ internal object KDocMarkdownParser {
         return sb.toString().trim()
     }
 
-    private fun appendEntries(sb: StringBuilder, entries: List<DocumentedEntry>) {
-        entries.forEach { entry ->
-            sb.append("\n  - **").append(entry.name).append("**")
-            if (!entry.doc.isNullOrBlank()) {
-                sb.append(" — ").append(escapeLinks(entry.doc))
-            }
+    private fun entriesToCell(entries: List<DocumentedEntry>): String =
+        entries.joinToString("<br>") { entry ->
+            val name = "**${entry.name}**"
+            if (!entry.doc.isNullOrBlank()) "$name — ${escapeLinks(entry.doc)}" else name
         }
-    }
 
     private fun escapeLinks(text: String): String =
         kdocLinkRegex.replace(text) { match -> "`${match.groupValues[1]}`" }
+
+    /** Escapes literal `|` characters so they don't break the Markdown table cell boundaries. */
+    private fun escapeCell(text: String): String = text.replace("|", "\\|")
 }

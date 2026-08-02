@@ -1,10 +1,17 @@
 package io.cstories.runtime
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -19,9 +26,10 @@ import androidx.compose.ui.unit.sp
 /**
  * Minimal, dependency-free Markdown renderer supporting the subset produced
  * by the KDoc-to-Markdown processor: paragraphs, `**bold**` section titles,
- * `- ` bullet lists (with 2-space nested indentation), and inline `` `code` ``
- * / `**bold**` spans. Deliberately hand-rolled (no third-party lib) to stay
- * Kotlin/Wasm-friendly.
+ * `- ` bullet lists (with 2-space nested indentation), pipe tables
+ * (`| Header | ... |` with a `| --- | ... |` separator row, cells may embed
+ * `<br>` for multi-line content), and inline `` `code` `` / `**bold**` spans.
+ * Deliberately hand-rolled (no third-party lib) to stay Kotlin/Wasm-friendly.
  */
 @Composable
 fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
@@ -54,6 +62,48 @@ fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
                         color = CStoriesColors.textMuted,
                     )
                 }
+
+                is MarkdownBlock.Table -> MarkdownTable(block)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MarkdownTable(table: MarkdownBlock.Table) {
+    Column(
+        modifier = Modifier
+            .padding(vertical = 4.dp)
+            .border(1.dp, CStoriesColors.border),
+    ) {
+        MarkdownTableRow(table.headers, bold = true)
+        table.rows.forEach { row ->
+            HorizontalDivider(color = CStoriesColors.border)
+            MarkdownTableRow(row, bold = false)
+        }
+    }
+}
+
+@Composable
+private fun MarkdownTableRow(cells: List<String>, bold: Boolean) {
+    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+        cells.forEachIndexed { index, cell ->
+            if (index > 0) VerticalDivider(color = CStoriesColors.border, modifier = Modifier.fillMaxHeight())
+            Column(
+                modifier = Modifier
+                    .width(if (index == 0) 220.dp else 160.dp)
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                cell.split("<br>").forEach { line ->
+                    Text(
+                        text = renderInline(line),
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp,
+                        fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
+                        color = if (bold) CStoriesColors.text else CStoriesColors.textMuted,
+                    )
+                }
             }
         }
     }
@@ -63,14 +113,18 @@ private sealed interface MarkdownBlock {
     data class Heading(val text: String) : MarkdownBlock
     data class Paragraph(val text: String) : MarkdownBlock
     data class ListItem(val indent: Int, val text: String) : MarkdownBlock
+    data class Table(val headers: List<String>, val rows: List<List<String>>) : MarkdownBlock
 }
 
 private sealed interface MarkdownLine {
     data class Heading(val text: String) : MarkdownLine
     data class ListItem(val indent: Int, val text: String) : MarkdownLine
+    data class TableRow(val cells: List<String>) : MarkdownLine
     data class Text(val text: String) : MarkdownLine
     data object Blank : MarkdownLine
 }
+
+private val tableSeparatorRegex = Regex("^\\|(\\s*:?-+:?\\s*\\|)+$")
 
 private fun classifyLine(line: String): MarkdownLine {
     if (line.isBlank()) return MarkdownLine.Blank
@@ -82,12 +136,42 @@ private fun classifyLine(line: String): MarkdownLine {
     if (stripped.startsWith("**") && stripped.endsWith("**") && stripped.length > 4 && stripped.count { it == '*' } == 4) {
         return MarkdownLine.Heading(stripped.trim('*'))
     }
+    if (stripped.startsWith("|") && stripped.endsWith("|")) {
+        return MarkdownLine.TableRow(splitTableCells(stripped))
+    }
     return MarkdownLine.Text(stripped)
+}
+
+/** Splits a `| a | b |` row into `["a", "b"]`, honoring `\|` as an escaped pipe. */
+private fun splitTableCells(row: String): List<String> {
+    val inner = row.removePrefix("|").removeSuffix("|")
+    val cells = mutableListOf<String>()
+    val current = StringBuilder()
+    var i = 0
+    while (i < inner.length) {
+        val c = inner[i]
+        if (c == '\\' && i + 1 < inner.length && inner[i + 1] == '|') {
+            current.append('|')
+            i += 2
+        } else if (c == '|') {
+            cells += current.toString().trim()
+            current.clear()
+            i++
+        } else {
+            current.append(c)
+            i++
+        }
+    }
+    cells += current.toString().trim()
+    return cells
 }
 
 private fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
     val blocks = mutableListOf<MarkdownBlock>()
     val paragraphBuffer = mutableListOf<String>()
+    val pendingTableHeader = mutableListOf<List<String>>()
+    var tableHeaders: List<String>? = null
+    val tableRows = mutableListOf<List<String>>()
 
     fun flushParagraph() {
         if (paragraphBuffer.isNotEmpty()) {
@@ -96,26 +180,67 @@ private fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
         }
     }
 
+    fun flushTable() {
+        val headers = tableHeaders
+        if (headers != null) {
+            blocks += MarkdownBlock.Table(headers, tableRows.toList())
+        }
+        tableHeaders = null
+        tableRows.clear()
+        pendingTableHeader.clear()
+    }
+
     markdown.lines().forEach { rawLine ->
         when (val line = classifyLine(rawLine)) {
-            is MarkdownLine.Blank -> flushParagraph()
+            is MarkdownLine.Blank -> {
+                flushParagraph()
+                flushTable()
+            }
+
             is MarkdownLine.Heading -> {
                 flushParagraph()
+                flushTable()
                 blocks += MarkdownBlock.Heading(line.text)
             }
 
             is MarkdownLine.ListItem -> {
                 flushParagraph()
+                flushTable()
                 blocks += MarkdownBlock.ListItem(line.indent, line.text)
             }
 
-            is MarkdownLine.Text -> paragraphBuffer += line.text
+            is MarkdownLine.TableRow -> {
+                flushParagraph()
+                when {
+                    tableHeaders == null && pendingTableHeader.isEmpty() -> pendingTableHeader += line.cells
+                    tableHeaders == null && pendingTableHeader.isNotEmpty() -> {
+                        val separatorCandidate = rawLine.trim()
+                        if (tableSeparatorRegex.matches(separatorCandidate)) {
+                            tableHeaders = pendingTableHeader.first()
+                        } else {
+                            // Not a real table (no separator row): flush the pending header line as text.
+                            paragraphBuffer += pendingTableHeader.first().joinToString(" | ")
+                            pendingTableHeader.clear()
+                            paragraphBuffer += line.cells.joinToString(" | ")
+                        }
+                    }
+
+                    else -> tableRows += line.cells
+                }
+            }
+
+            is MarkdownLine.Text -> {
+                flushTable()
+                paragraphBuffer += line.text
+            }
         }
     }
     flushParagraph()
+    flushTable()
 
     return blocks
 }
+
 
 private fun renderInline(text: String): AnnotatedString = buildAnnotatedString {
     var i = 0
