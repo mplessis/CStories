@@ -256,8 +256,10 @@ private fun GroupHeaderRow(
             .clickable(onClick = onToggle)
             .padding(horizontal = 10.dp, vertical = 8.dp),
     ) {
+        val levelColors = CStoriesColors.groupLevelColors
+        val tint = levelColors[(depth - 1) % levelColors.size]
         ChevronIcon(expanded = expanded, tint = CStoriesColors.textFaint)
-        GroupIcon(tint = CStoriesColors.primary)
+        GroupIcon(tint = tint)
         Text(
             text = name,
             color = CStoriesColors.textMuted,

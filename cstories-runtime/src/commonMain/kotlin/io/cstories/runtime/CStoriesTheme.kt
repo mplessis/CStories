@@ -27,6 +27,19 @@ object CStoriesColors {
     val error = Color(0xFFDC2626)
     val errorBg = Color(0xFFFEE2E2)
 
+    /**
+     * Icon tint cycled by nesting depth for the sidebar's nested group
+     * headers (see `GroupHeaderRow` in Sidebar.kt), so groups within groups
+     * remain visually distinguishable. Index 0 is the first nested level;
+     * depths beyond the list size wrap around via modulo.
+     */
+    val groupLevelColors = listOf(
+        primary,
+        warning,
+        Color(0xFF0891B2),
+        Color(0xFF7C3AED),
+    )
+
     // Kotlin syntax highlighting (see KotlinSyntaxHighlighter / CodeBlock).
     val codeKeyword = Color(0xFF9B2393)
     val codeString = Color(0xFF1A7F37)
