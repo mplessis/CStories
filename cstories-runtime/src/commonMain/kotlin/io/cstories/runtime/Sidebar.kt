@@ -23,14 +23,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.cstories.runtime.resources.Res
-import io.cstories.runtime.resources.promo_copied_button
-import io.cstories.runtime.resources.promo_description
-import io.cstories.runtime.resources.promo_title
-import io.cstories.runtime.resources.promo_watch_button
-import io.cstories.runtime.resources.sidebar_search_placeholder
+import io.cstories.runtime.resources.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -47,7 +43,7 @@ fun Sidebar(
             .background(CStoriesColors.surface)
             .padding(horizontal = 14.dp, vertical = 20.dp),
     ) {
-        BrandRow()
+        Brand()
         Spacer(Modifier.height(18.dp))
         SearchField(
             value = query,
@@ -87,33 +83,12 @@ private fun nodeMatches(node: TreeNode, query: String): Boolean {
 }
 
 @Composable
-private fun BrandRow() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .clip(RoundedCornerShape(9.dp))
-                .background(CStoriesColors.primary),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = "C",
-                color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.ExtraBold,
-            )
-        }
-        Text(
-            text = "CStories",
-            color = CStoriesColors.text,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.ExtraBold,
-        )
-    }
+private fun Brand() {
+    Image(
+        painter = painterResource(Res.drawable.logo),
+        contentDescription = null,
+        modifier = Modifier.size(72.dp),
+    )
 }
 
 @Composable
