@@ -72,6 +72,35 @@ class StorySourceExtractorTest {
     }
 
     @Test
+    fun `includes a simple object qualifier before the function name`() {
+        val body = """
+            Column {
+                LumenButton.Primary(onClick = {}, label = label, enabled = enabled)
+            }
+        """.trimIndent()
+
+        val result = StorySourceExtractor.extractCall(body, "Primary")
+
+        assertEquals(
+            """LumenButton.Primary(onClick = {}, label = label, enabled = enabled)""",
+            result,
+        )
+    }
+
+    @Test
+    fun `includes a multi-segment qualifier chain before the function name`() {
+        val body = """
+            Column {
+                design.LumenButton.Primary(onClick = {})
+            }
+        """.trimIndent()
+
+        val result = StorySourceExtractor.extractCall(body, "Primary")
+
+        assertEquals("""design.LumenButton.Primary(onClick = {})""", result)
+    }
+
+    @Test
     fun `picks the first call when the component is invoked more than once`() {
         val body = """
             Column {

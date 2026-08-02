@@ -94,8 +94,25 @@ internal object StorySourceExtractor {
             while (afterIndex < body.length && body[afterIndex] == ' ') afterIndex++
             val isFollowedByParen = body.getOrNull(afterIndex) == '('
 
-            if (isWordBoundaryBefore && isFollowedByParen) return index
+            if (isWordBoundaryBefore && isFollowedByParen) return findQualifierStart(body, index)
             searchFrom = index + functionName.length
         }
+    }
+
+    /**
+     * Walks backward from [nameStart] over any dotted qualifier chain (e.g.
+     * `LumenButton.`) so the returned call start includes the receiver, not
+     * just the invoked function's own name.
+     */
+    private fun findQualifierStart(body: String, nameStart: Int): Int {
+        var i = nameStart
+        while (i > 0 && body[i - 1] == '.') {
+            val dotIndex = i - 1
+            var k = dotIndex - 1
+            while (k >= 0 && (body[k].isLetterOrDigit() || body[k] == '_')) k--
+            if (k == dotIndex - 1) break // no identifier before the dot, stop
+            i = k + 1
+        }
+        return i
     }
 }
