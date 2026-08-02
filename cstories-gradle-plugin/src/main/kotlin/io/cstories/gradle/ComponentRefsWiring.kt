@@ -65,6 +65,18 @@ internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExte
         }
     }
 
+    // A dedicated, stable lifecycle task so consumers can regenerate
+    // `CStoryComponentRefs` after adding/removing a `@CStoryComponent`
+    // without needing to run a full build. Depends only on whichever KSP
+    // task actually performs the processing (`kspCommonMainKotlinMetadata`
+    // for multi-target modules, wired here; the single-target "standalone"
+    // task is added below, once `afterEvaluate` knows which case applies).
+    val generateComponentRefs = tasks.register("cstoriesGenerateComponentRefs") {
+        group = "cstories"
+        description = "Generates CStoryComponentRefs for @CStoryComponent-annotated functions"
+        dependsOn(commonMetadataKspTasks)
+    }
+
     // The ksp Gradle plugin only wires `kspCommonMainKotlinMetadata`'s
     // output onto the metadata compile task itself, never onto the
     // `commonMain` source set — needed here so every platform target
@@ -89,11 +101,13 @@ internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExte
         // instead ("standalone" mode).
         val target = targets.single()
         val standaloneTaskName = "ksp" + "Kotlin" + target.name.replaceFirstChar(Char::uppercaseChar)
-        tasks.matching { it.name == standaloneTaskName }.configureEach {
+        val standaloneKspTasks = tasks.matching { it.name == standaloneTaskName }
+        standaloneKspTasks.configureEach {
             val provider = CommandLineArgumentProvider { listOf("$PROCESS_MODE_OPTION=standalone") }
             (this as? KspTask)?.commandLineArgumentProviders?.add(provider)
             (this as? KspAATask)?.commandLineArgumentProviders?.add(provider)
         }
+        generateComponentRefs.configure { dependsOn(standaloneKspTasks) }
 
         // The ksp Gradle plugin always wires that per-target run's output
         // onto the target's own platform source set — never onto
