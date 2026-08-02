@@ -48,7 +48,7 @@ fun DocsCodeTabs(
     if (documentation == null && usageCode == null) return
 
     var selected by remember(documentation, usageCode) {
-        mutableStateOf(if (documentation != null) DocsCodeTab.DOCS else DocsCodeTab.CODE)
+        mutableStateOf<DocsCodeTab?>(null)
     }
     var expanded by remember(documentation, usageCode) { mutableStateOf(false) }
     val substitution = remember(usageCode, knobValues) {
@@ -101,7 +101,12 @@ fun DocsCodeTabs(
                 tint = CStoriesColors.textFaint,
                 modifier = Modifier
                     .clip(RoundedCornerShape(CStoriesRadii.sm))
-                    .clickable(onClick = { expanded = !expanded })
+                    .clickable(onClick = {
+                        expanded = !expanded
+                        if (expanded && selected == null) {
+                            selected = if (documentation != null) DocsCodeTab.DOCS else DocsCodeTab.CODE
+                        }
+                    })
                     .semantics {
                         contentDescription = if (expanded) collapseDescription else expandDescription
                     }
@@ -110,6 +115,8 @@ fun DocsCodeTabs(
         }
         if (expanded) {
             when (selected) {
+                null -> Unit
+
                 DocsCodeTab.DOCS -> documentation?.let {
                     MarkdownText(
                         markdown = it,
