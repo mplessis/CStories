@@ -23,7 +23,15 @@ internal object KDocMarkdownParser {
     private val tagRegex = Regex("^@(\\w+)\\s*(.*)$")
     private val kdocLinkRegex = Regex("\\[([^]]+)]")
 
-    fun parse(docString: String?, paramTypes: Map<String, ParamTypeInfo> = emptyMap()): KDocParseResult? {
+    /**
+     * Inline marker emitted right after a required parameter's name in the
+     * `Parameters` table. Interpreted by `MarkdownText`'s inline renderer
+     * (in `cstories-runtime`) as a red asterisk; kept as a private token here
+     * so it never collides with user-authored Markdown/KDoc content.
+     */
+    internal const val REQUIRED_MARKER = "\u00A4req\u00A4"
+
+    fun parse(docString: String?, paramTypes: Map<String, ParamMetadata> = emptyMap()): KDocParseResult? {
         if (docString.isNullOrBlank()) return null
 
         val cleaned = cleanDocString(docString)
@@ -98,7 +106,7 @@ internal object KDocMarkdownParser {
         description: String,
         params: List<Pair<String, String>>,
         returns: String?,
-        paramTypes: Map<String, ParamTypeInfo>,
+        paramTypes: Map<String, ParamMetadata>,
     ): String {
         val sb = StringBuilder()
 
@@ -109,16 +117,22 @@ internal object KDocMarkdownParser {
         if (params.isNotEmpty()) {
             if (sb.isNotEmpty()) sb.append("\n\n")
             sb.append("**Parameters**\n\n")
-            sb.append("| Name | Description | Possible values |\n")
-            sb.append("| --- | --- | --- |\n")
+            sb.append("| Name | Type | Default | Description | Possible values |\n")
+            sb.append("| --- | --- | --- | --- | --- |\n")
             params.forEach { (name, desc) ->
                 val cellDescription = if (desc.isNotBlank()) escapeLinks(desc) else ""
-                val values = when (val info = paramTypes[name]) {
+                val metadata = paramTypes[name]
+                val values = when (val info = metadata?.structural) {
                     is ParamTypeInfo.EnumValues -> entriesToCell(info.entries)
                     is ParamTypeInfo.SealedSubtypes -> entriesToCell(info.subtypes)
                     else -> ""
                 }
-                sb.append("| `").append(name).append("` | ")
+                val requiredMarker = if (metadata?.required == true) REQUIRED_MARKER else ""
+                val typeName = metadata?.typeName ?: ""
+                val defaultCell = metadata?.defaultValue?.let { "`$it`" } ?: ""
+                sb.append("| `").append(name).append("`").append(requiredMarker).append(" | ")
+                    .append("`").append(typeName).append("` | ")
+                    .append(defaultCell).append(" | ")
                     .append(escapeCell(cellDescription)).append(" | ")
                     .append(escapeCell(values)).append(" |\n")
             }

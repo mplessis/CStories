@@ -46,10 +46,10 @@ class KDocMarkdownParserTest {
 
             **Parameters**
 
-            | Name | Description | Possible values |
-            | --- | --- | --- |
-            | `label` | The label to display. |  |
-            | `enabled` | Whether it is enabled. |  |
+            | Name | Type | Default | Description | Possible values |
+            | --- | --- | --- | --- | --- |
+            | `label` | `` |  | The label to display. |  |
+            | `enabled` | `` |  | Whether it is enabled. |  |
 
             **Returns**
             A result value.
@@ -98,10 +98,14 @@ class KDocMarkdownParserTest {
              */
             """.trimIndent(),
             mapOf(
-                "size" to ParamTypeInfo.EnumValues(
-                    listOf(
-                        DocumentedEntry("Small", null),
-                        DocumentedEntry("Large", "The large variant."),
+                "size" to ParamMetadata(
+                    typeName = "Size",
+                    required = false,
+                    structural = ParamTypeInfo.EnumValues(
+                        listOf(
+                            DocumentedEntry("Small", null),
+                            DocumentedEntry("Large", "The large variant."),
+                        ),
                     ),
                 ),
             ),
@@ -111,9 +115,9 @@ class KDocMarkdownParserTest {
             """
             **Parameters**
 
-            | Name | Description | Possible values |
-            | --- | --- | --- |
-            | `size` | The size. | **Small**<br>**Large** — The large variant. |
+            | Name | Type | Default | Description | Possible values |
+            | --- | --- | --- | --- | --- |
+            | `size` | `Size` |  | The size. | **Small**<br>**Large** — The large variant. |
             """.trimIndent(),
             result?.markdown,
         )
@@ -128,8 +132,12 @@ class KDocMarkdownParserTest {
              */
             """.trimIndent(),
             mapOf(
-                "adornment" to ParamTypeInfo.SealedSubtypes(
-                    listOf(DocumentedEntry("Icon", "An icon adornment.")),
+                "adornment" to ParamMetadata(
+                    typeName = "Adornment",
+                    required = false,
+                    structural = ParamTypeInfo.SealedSubtypes(
+                        listOf(DocumentedEntry("Icon", "An icon adornment.")),
+                    ),
                 ),
             ),
         )
@@ -145,12 +153,64 @@ class KDocMarkdownParserTest {
              * @param value The value.
              */
             """.trimIndent(),
-            mapOf("value" to ParamTypeInfo.Plain),
+            mapOf("value" to ParamMetadata(typeName = "String", required = false, structural = ParamTypeInfo.Plain)),
         )
 
         assertEquals(
-            "**Parameters**\n\n| Name | Description | Possible values |\n| --- | --- | --- |\n| `value` | The value. |  |",
+            "**Parameters**\n\n| Name | Type | Default | Description | Possible values |\n| --- | --- | --- | --- | --- |\n| `value` | `String` |  | The value. |  |",
             result?.markdown,
         )
+    }
+
+    @Test
+    fun `renders the default value column when available`() {
+        val result = KDocMarkdownParser.parse(
+            """
+            /**
+             * @param enabled Whether it is enabled.
+             */
+            """.trimIndent(),
+            mapOf(
+                "enabled" to ParamMetadata(
+                    typeName = "Boolean",
+                    required = false,
+                    structural = ParamTypeInfo.Plain,
+                    defaultValue = "true",
+                ),
+            ),
+        )
+
+        assertEquals(
+            "**Parameters**\n\n| Name | Type | Default | Description | Possible values |\n| --- | --- | --- | --- | --- |\n| `enabled` | `Boolean` | `true` | Whether it is enabled. |  |",
+            result?.markdown,
+        )
+    }
+
+    @Test
+    fun `omits the default value cell when there is none`() {
+        val result = KDocMarkdownParser.parse(
+            """
+            /**
+             * @param value The value.
+             */
+            """.trimIndent(),
+            mapOf("value" to ParamMetadata(typeName = "String", required = true, structural = ParamTypeInfo.Plain)),
+        )
+
+        assertTrue(result?.markdown?.contains("| `value`${KDocMarkdownParser.REQUIRED_MARKER} | `String` |  | The value.") == true)
+    }
+
+    @Test
+    fun `marks a required param with the red asterisk marker`() {
+        val result = KDocMarkdownParser.parse(
+            """
+            /**
+             * @param label The label.
+             */
+            """.trimIndent(),
+            mapOf("label" to ParamMetadata(typeName = "String", required = true, structural = ParamTypeInfo.Plain)),
+        )
+
+        assertTrue(result?.markdown?.contains("`label`${KDocMarkdownParser.REQUIRED_MARKER} | `String`") == true)
     }
 }
