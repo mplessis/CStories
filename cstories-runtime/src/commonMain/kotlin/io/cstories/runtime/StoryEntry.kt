@@ -6,4 +6,5 @@ data class StoryEntry(
     val path: List<String>,
     val composableInvoker: @Composable () -> Unit,
     val documentation: String? = null,
+    val usageCode: String? = null,
 )

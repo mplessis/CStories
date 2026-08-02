@@ -17,5 +17,6 @@
 
     <string name="empty_state_no_stories">Aucune story définie</string>
 
-    <string name="documentation_panel_title">Component usage</string>
+    <string name="docs_tab_label">Docs</string>
+    <string name="code_tab_label">Code</string>
 </resources>

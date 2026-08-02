@@ -76,8 +76,8 @@ fun CStoriesApp(stories: List<StoryEntry>) {
                                             .weight(1f)
                                             .fillMaxWidth(),
                                     )
-                                    entry.documentation?.let { documentation ->
-                                        ComponentDocumentationPanel(documentation = documentation)
+                                    if (entry.documentation != null || entry.usageCode != null) {
+                                        DocsCodeTabs(documentation = entry.documentation, usageCode = entry.usageCode)
                                     }
                                 }
                             }

@@ -26,6 +26,15 @@ object CStoriesColors {
     val warningBg = Color(0xFFFEF3C7)
     val error = Color(0xFFDC2626)
     val errorBg = Color(0xFFFEE2E2)
+
+    // Kotlin syntax highlighting (see KotlinSyntaxHighlighter / CodeBlock).
+    val codeKeyword = Color(0xFF9B2393)
+    val codeString = Color(0xFF1A7F37)
+    val codeStringInterpolation = Color(0xFF0550AE)
+    val codeNumber = Color(0xFF0550AE)
+    val codeComment = Color(0xFF6E7781)
+    val codeAnnotation = Color(0xFFB35900)
+    val codeType = Color(0xFF953800)
 }
 
 object CStoriesRadii {
