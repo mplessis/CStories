@@ -58,9 +58,10 @@ fun StoryFrame(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(start = 1.dp, bottom = 3.dp, end = 1.dp)
-                .background(
-                    if (isDark) CStoriesColors.dark else CStoriesColors.surface,
-                    RoundedCornerShape(bottomStart = CStoriesRadii.md, bottomEnd = CStoriesRadii.md),
+                .clip(RoundedCornerShape(bottomStart = CStoriesRadii.md, bottomEnd = CStoriesRadii.md))
+                .checkerboardBackground(
+                    colorA = if (isDark) CStoriesColors.checkerDarkA else CStoriesColors.checkerLightA,
+                    colorB = if (isDark) CStoriesColors.checkerDarkB else CStoriesColors.checkerLightB,
                 )
                 .padding(if (isDark) 24.dp else 0.dp),
             contentAlignment = Alignment.Center,

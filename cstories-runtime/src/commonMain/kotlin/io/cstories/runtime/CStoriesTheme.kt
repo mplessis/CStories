@@ -27,6 +27,12 @@ object CStoriesColors {
     val error = Color(0xFFDC2626)
     val errorBg = Color(0xFFFEE2E2)
 
+    /** Checkerboard background for the canvas stage (mimics Photoshop's transparency grid). */
+    val checkerLightA = Color(0xFFFFFFFF)
+    val checkerLightB = Color(0xFFF0F1F4)
+    val checkerDarkA = Color(0xFF454545)
+    val checkerDarkB = Color(0xFF3A3A3A)
+
     /**
      * Icon tint cycled by nesting depth for the sidebar's nested group
      * headers (see `GroupHeaderRow` in Sidebar.kt), so groups within groups
