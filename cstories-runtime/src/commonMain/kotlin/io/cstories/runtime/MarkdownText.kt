@@ -80,27 +80,35 @@ fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun MarkdownTable(table: MarkdownBlock.Table) {
+    val growIndex = table.headers.indexOf("Description").takeIf { it >= 0 }
     Column(
         modifier = Modifier
+            .fillMaxWidth()
             .padding(vertical = 4.dp)
             .border(1.dp, CStoriesColors.border),
     ) {
-        MarkdownTableRow(table.headers, bold = true)
+        MarkdownTableRow(table.headers, bold = true, growIndex = growIndex)
         table.rows.forEach { row ->
             HorizontalDivider(color = CStoriesColors.border)
-            MarkdownTableRow(row, bold = false)
+            MarkdownTableRow(row, bold = false, growIndex = growIndex)
         }
     }
 }
 
 @Composable
-private fun MarkdownTableRow(cells: List<String>, bold: Boolean) {
-    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+private fun MarkdownTableRow(cells: List<String>, bold: Boolean, growIndex: Int?) {
+    Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         cells.forEachIndexed { index, cell ->
             if (index > 0) VerticalDivider(color = CStoriesColors.border, modifier = Modifier.fillMaxHeight())
             Column(
                 modifier = Modifier
-                    .width(if (index == 0) 220.dp else 160.dp)
+                    .then(
+                        if (index == growIndex) {
+                            Modifier.weight(1f)
+                        } else {
+                            Modifier.width(if (index == 0) 220.dp else 160.dp)
+                        },
+                    )
                     .padding(horizontal = 10.dp, vertical = 6.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {

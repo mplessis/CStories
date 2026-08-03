@@ -19,12 +19,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.cstories.runtime.resources.Res
-import io.cstories.runtime.resources.canvas_background_toggle_to_checkerboard
-import io.cstories.runtime.resources.canvas_background_toggle_to_solid
-import io.cstories.runtime.resources.canvas_live_preview
-import io.cstories.runtime.resources.canvas_theme_toggle_to_dark
-import io.cstories.runtime.resources.canvas_theme_toggle_to_light
+import io.cstories.runtime.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 /** Background rendering mode for the canvas preview stage. */
@@ -80,12 +75,13 @@ fun StoryFrame(
                             colorA = if (isDark) CStoriesColors.checkerDarkA else CStoriesColors.checkerLightA,
                             colorB = if (isDark) CStoriesColors.checkerDarkB else CStoriesColors.checkerLightB,
                         )
+
                         CanvasBackgroundStyle.Solid -> base.background(
                             if (isDark) CStoriesColors.dark else CStoriesColors.surface,
                         )
                     }
                 }
-                .padding(if (isDark) 24.dp else 0.dp),
+                .padding(24.dp),
             contentAlignment = Alignment.Center,
         ) {
             themeWrapper(isDark) {
