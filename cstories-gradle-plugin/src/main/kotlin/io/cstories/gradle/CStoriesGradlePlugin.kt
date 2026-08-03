@@ -45,6 +45,18 @@ class CStoriesGradlePlugin : Plugin<Project> {
                     kspConfigurationName,
                     localProjectOrCoordinates(project, "cstories-processor"),
                 )
+
+                // KSP's per-target task (kspKotlinJvm/kspKotlinWasmJs) reads
+                // kspCommonMainKotlinMetadata's output directory but, with
+                // multiple non-JVM-metadata targets declared, Gradle can't
+                // always infer that dependency automatically — surfacing as
+                // an "implicit dependency" validation failure. Order the
+                // tasks explicitly; `matching` keeps this lazy so it's a
+                // no-op if either task never gets registered.
+                val kspTaskName = "kspKotlin" + name.replaceFirstChar(Char::uppercaseChar)
+                project.tasks.matching { it.name == kspTaskName }.configureEach {
+                    dependsOn(project.tasks.matching { it.name == "kspCommonMainKotlinMetadata" })
+                }
             }
         }
 

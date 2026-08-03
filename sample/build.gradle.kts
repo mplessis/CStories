@@ -10,6 +10,10 @@ plugins {
 @OptIn(ExperimentalWasmDsl::class)
 kotlin {
     jvm()
+    wasmJs {
+        browser()
+        binaries.executable()
+    }
 
     sourceSets {
         commonMain.dependencies {
