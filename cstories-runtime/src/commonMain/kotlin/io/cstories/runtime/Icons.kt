@@ -197,3 +197,40 @@ fun ChevronIcon(
         drawPath(path = path, color = tint)
     }
 }
+
+/**
+ * Canvas background style toggle glyph for [CanvasToolbar]: a 2x2 checker
+ * grid when [checkerboard] is true, a plain filled rounded square otherwise.
+ */
+@Composable
+fun BackgroundStyleIcon(
+    checkerboard: Boolean,
+    tint: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = 14.dp,
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val w = this.size.width
+        val h = this.size.height
+        if (checkerboard) {
+            val half = w / 2f
+            val corner = CornerRadius(1.5f)
+            drawRoundRect(color = tint, topLeft = Offset(0f, 0f), size = Size(half - 1f, half - 1f), cornerRadius = corner)
+            drawRoundRect(color = tint, topLeft = Offset(half + 1f, half + 1f), size = Size(half - 1f, half - 1f), cornerRadius = corner)
+            drawRoundRect(
+                color = tint.copy(alpha = 0.35f),
+                topLeft = Offset(half + 1f, 0f),
+                size = Size(half - 1f, half - 1f),
+                cornerRadius = corner,
+            )
+            drawRoundRect(
+                color = tint.copy(alpha = 0.35f),
+                topLeft = Offset(0f, half + 1f),
+                size = Size(half - 1f, half - 1f),
+                cornerRadius = corner,
+            )
+        } else {
+            drawRoundRect(color = tint, topLeft = Offset(0f, 0f), size = Size(w, h), cornerRadius = CornerRadius(3f))
+        }
+    }
+}

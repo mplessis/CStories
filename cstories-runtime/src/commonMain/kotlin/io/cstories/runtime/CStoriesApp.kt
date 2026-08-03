@@ -34,6 +34,7 @@ fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = 
     var selected by remember(stories) { mutableStateOf(stories.firstOrNull()) }
     val resetTokens = remember(stories) { mutableStateOf(mapOf<List<String>, Int>()) }
     var isCanvasDark by remember { mutableStateOf(false) }
+    var canvasBackgroundStyle by remember { mutableStateOf(CanvasBackgroundStyle.Checkerboard) }
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = CStoriesColors.pageBg) {
@@ -83,6 +84,14 @@ fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = 
                                         resetToken = resetToken,
                                         isDark = isCanvasDark,
                                         onToggleDark = { isCanvasDark = !isCanvasDark },
+                                        backgroundStyle = canvasBackgroundStyle,
+                                        onToggleBackgroundStyle = {
+                                            canvasBackgroundStyle = if (canvasBackgroundStyle == CanvasBackgroundStyle.Checkerboard) {
+                                                CanvasBackgroundStyle.Solid
+                                            } else {
+                                                CanvasBackgroundStyle.Checkerboard
+                                            }
+                                        },
                                         themeWrapper = themeWrapper,
                                         modifier = Modifier
                                             .weight(1f)

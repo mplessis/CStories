@@ -20,10 +20,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.cstories.runtime.resources.Res
+import io.cstories.runtime.resources.canvas_background_toggle_to_checkerboard
+import io.cstories.runtime.resources.canvas_background_toggle_to_solid
 import io.cstories.runtime.resources.canvas_live_preview
 import io.cstories.runtime.resources.canvas_theme_toggle_to_dark
 import io.cstories.runtime.resources.canvas_theme_toggle_to_light
 import org.jetbrains.compose.resources.stringResource
+
+/** Background rendering mode for the canvas preview stage. */
+enum class CanvasBackgroundStyle {
+    Checkerboard,
+    Solid,
+}
 
 /**
  * The canvas card hosting the live preview of the currently selected story,
@@ -45,6 +53,8 @@ fun StoryFrame(
     resetToken: Int,
     isDark: Boolean,
     onToggleDark: () -> Unit,
+    backgroundStyle: CanvasBackgroundStyle,
+    onToggleBackgroundStyle: () -> Unit,
     themeWrapper: CStoriesThemeWrapper,
     modifier: Modifier = Modifier,
 ) {
@@ -53,16 +63,28 @@ fun StoryFrame(
             .background(CStoriesColors.surface, RoundedCornerShape(CStoriesRadii.lg))
             .border(1.dp, CStoriesColors.borderSoft, RoundedCornerShape(CStoriesRadii.lg)),
     ) {
-        CanvasToolbar(isDark = isDark, onToggleDark = onToggleDark)
+        CanvasToolbar(
+            isDark = isDark,
+            onToggleDark = onToggleDark,
+            backgroundStyle = backgroundStyle,
+            onToggleBackgroundStyle = onToggleBackgroundStyle,
+        )
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(start = 1.dp, bottom = 3.dp, end = 1.dp)
                 .clip(RoundedCornerShape(bottomStart = CStoriesRadii.md, bottomEnd = CStoriesRadii.md))
-                .checkerboardBackground(
-                    colorA = if (isDark) CStoriesColors.checkerDarkA else CStoriesColors.checkerLightA,
-                    colorB = if (isDark) CStoriesColors.checkerDarkB else CStoriesColors.checkerLightB,
-                )
+                .let { base ->
+                    when (backgroundStyle) {
+                        CanvasBackgroundStyle.Checkerboard -> base.checkerboardBackground(
+                            colorA = if (isDark) CStoriesColors.checkerDarkA else CStoriesColors.checkerLightA,
+                            colorB = if (isDark) CStoriesColors.checkerDarkB else CStoriesColors.checkerLightB,
+                        )
+                        CanvasBackgroundStyle.Solid -> base.background(
+                            if (isDark) CStoriesColors.dark else CStoriesColors.surface,
+                        )
+                    }
+                }
                 .padding(if (isDark) 24.dp else 0.dp),
             contentAlignment = Alignment.Center,
         ) {
@@ -76,7 +98,12 @@ fun StoryFrame(
 }
 
 @Composable
-private fun CanvasToolbar(isDark: Boolean, onToggleDark: () -> Unit) {
+private fun CanvasToolbar(
+    isDark: Boolean,
+    onToggleDark: () -> Unit,
+    backgroundStyle: CanvasBackgroundStyle,
+    onToggleBackgroundStyle: () -> Unit,
+) {
     Column {
         Row(
             modifier = Modifier
@@ -98,6 +125,11 @@ private fun CanvasToolbar(isDark: Boolean, onToggleDark: () -> Unit) {
                 fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.weight(1f))
+            BackgroundStyleSwitch(
+                backgroundStyle = backgroundStyle,
+                onStyleChange = { style -> if (style != backgroundStyle) onToggleBackgroundStyle() },
+            )
+            Spacer(Modifier.width(10.dp))
             ThemeSwitch(isDark = isDark, onDarkChange = { dark -> if (dark != isDark) onToggleDark() })
         }
         androidx.compose.material3.HorizontalDivider(color = CStoriesColors.borderSoft)
@@ -139,6 +171,49 @@ private fun ThemeSwitch(isDark: Boolean, onDarkChange: (Boolean) -> Unit) {
             SunMoonIcon(
                 isDark = true,
                 tint = if (isDark) androidx.compose.ui.graphics.Color.White else CStoriesColors.textFaint,
+            )
+        }
+    }
+}
+
+/**
+ * Two-sided checkerboard/solid pill switch for the canvas preview background
+ * style, mirroring [ThemeSwitch]'s selected-side highlighting behavior.
+ */
+@Composable
+private fun BackgroundStyleSwitch(
+    backgroundStyle: CanvasBackgroundStyle,
+    onStyleChange: (CanvasBackgroundStyle) -> Unit,
+) {
+    val checkerboardDescription = stringResource(Res.string.canvas_background_toggle_to_checkerboard)
+    val solidDescription = stringResource(Res.string.canvas_background_toggle_to_solid)
+    val isCheckerboard = backgroundStyle == CanvasBackgroundStyle.Checkerboard
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(CStoriesRadii.sm))
+            .background(CStoriesColors.surfaceSunken)
+            .border(1.dp, CStoriesColors.borderSoft, RoundedCornerShape(CStoriesRadii.sm))
+            .padding(2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ThemeSwitchSide(
+            selected = isCheckerboard,
+            onClick = { onStyleChange(CanvasBackgroundStyle.Checkerboard) },
+            contentDescription = checkerboardDescription,
+        ) {
+            BackgroundStyleIcon(
+                checkerboard = true,
+                tint = if (isCheckerboard) androidx.compose.ui.graphics.Color.White else CStoriesColors.textFaint,
+            )
+        }
+        ThemeSwitchSide(
+            selected = !isCheckerboard,
+            onClick = { onStyleChange(CanvasBackgroundStyle.Solid) },
+            contentDescription = solidDescription,
+        ) {
+            BackgroundStyleIcon(
+                checkerboard = false,
+                tint = if (!isCheckerboard) androidx.compose.ui.graphics.Color.White else CStoriesColors.textFaint,
             )
         }
     }

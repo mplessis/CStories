@@ -8,6 +8,8 @@
     <string name="canvas_live_preview">Live preview</string>
     <string name="canvas_theme_toggle_to_dark">Mode sombre</string>
     <string name="canvas_theme_toggle_to_light">Mode clair</string>
+    <string name="canvas_background_toggle_to_checkerboard">Fond damier</string>
+    <string name="canvas_background_toggle_to_solid">Fond uni</string>
 
     <string name="sidebar_search_placeholder">Rechercher une story…</string>
 
