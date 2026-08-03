@@ -1,0 +1,30 @@
+{
+  "link.title.Docs": {
+    "message": "Documentation",
+    "description": "The title of the footer links column with title=Docs in the footer"
+  },
+  "link.title.More": {
+    "message": "Plus",
+    "description": "The title of the footer links column with title=More in the footer"
+  },
+  "link.item.label.Getting Started": {
+    "message": "Démarrage",
+    "description": "The label of footer link with label=Getting Started linking to /getting-started/overview"
+  },
+  "link.item.label.Guides": {
+    "message": "Guides",
+    "description": "The label of footer link with label=Guides linking to /guides/desktop-catalog"
+  },
+  "link.item.label.Reference": {
+    "message": "Référence",
+    "description": "The label of footer link with label=Reference linking to /reference/annotations"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/mplessis/CStories"
+  },
+  "copyright": {
+    "message": "Copyright © 2026 CStories.",
+    "description": "The footer copyright"
+  }
+}
