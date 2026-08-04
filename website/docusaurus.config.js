@@ -10,7 +10,6 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'CStories',
   tagline: 'A component cataloging solution for Compose Multiplatform',
   favicon: 'img/favicon.ico',
 
