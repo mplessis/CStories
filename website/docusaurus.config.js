@@ -85,12 +85,6 @@ const config = {
         },
         items: [
           {
-            type: 'docSidebar',
-            sidebarId: 'docsSidebar',
-            position: 'left',
-            label: 'Docs',
-          },
-          {
             type: 'localeDropdown',
             position: 'right',
           },
