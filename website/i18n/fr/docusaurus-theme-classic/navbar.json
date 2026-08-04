@@ -1,8 +1,4 @@
 {
-  "title": {
-    "message": "CStories",
-    "description": "The title in the navbar"
-  },
   "logo.alt": {
     "message": "CStories",
     "description": "The alt text of navbar logo"
