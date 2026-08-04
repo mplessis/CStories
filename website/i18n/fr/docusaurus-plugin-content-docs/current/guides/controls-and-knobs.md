@@ -114,5 +114,5 @@ supplémentaire de votre part.
 ## Bonnes pratiques
 
 - exposez des contrôles pour les props qui comptent réellement pour explorer les états du composant
-- gardez une story ciblée : quelques contrôles bien choisis valent mieux qu'une douzaine de tout
+- gardez une story ciblée : quelques contrôles bien choisis valent mieux qu'une douzaine
 - privilégiez la surcharge `SelectKnob` typée enum dès que la prop repose sur un enum

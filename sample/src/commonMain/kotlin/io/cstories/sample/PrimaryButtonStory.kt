@@ -19,26 +19,24 @@ fun PrimaryButtonStory() {
     var label by remember { mutableStateOf("Click me") }
     var enabled by remember { mutableStateOf(true) }
 
-    Column {
-        KnobPanel {
-            TextKnob(
-                label = "Label",
-                value = label,
-                onValueChange = { label = it },
-                codeKey = "label",
-            )
-            BooleanKnob(
-                label = "Enabled",
-                value = enabled,
-                onValueChange = { enabled = it },
-                codeKey = "enabled",
-            )
-        }
-
-        PrimaryButton(
-            text = label,
-            enabled = enabled,
-            onClick = {},
+    KnobPanel {
+        TextKnob(
+            label = "Label",
+            value = label,
+            onValueChange = { label = it },
+            codeKey = "label",
+        )
+        BooleanKnob(
+            label = "Enabled",
+            value = enabled,
+            onValueChange = { enabled = it },
+            codeKey = "enabled",
         )
     }
+
+    PrimaryButton(
+        text = label,
+        enabled = enabled,
+        onClick = {},
+    )
 }

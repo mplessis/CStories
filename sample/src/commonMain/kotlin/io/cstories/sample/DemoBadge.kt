@@ -5,10 +5,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.cstories.annotations.CStoryComponent
+import io.cstories.runtime.knobs.BooleanKnob
+import io.cstories.runtime.knobs.KnobPanel
+import io.cstories.runtime.knobs.TextKnob
 
 /**
  * A pill-shaped status badge used to highlight the state of an item.
@@ -18,7 +25,8 @@ import io.cstories.annotations.CStoryComponent
  */
 @CStoryComponent
 @Composable
-fun DemoBadge(text: String, tone: BadgeTone) {
+fun DemoBadge(text: String, tone: BadgeTone) { 
+
     val color = when (tone) {
         BadgeTone.Success -> Color(0xFF16A34A)
         BadgeTone.Warning -> Color(0xFFB45309)

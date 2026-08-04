@@ -15,7 +15,7 @@ Par défaut, l'activer enveloppe la story prévisualisée dans un `MaterialTheme
 
 ## Utiliser votre propre thème
 
-Si votre design system utilise son propre thème plutôt que Material3 (un `LumenTheme(isDark) { ... }`, par exemple),
+Si votre design system utilise son propre thème plutôt que Material3 (un `MyCustomTheme(isDark) { ... }`, par exemple),
 indiquez-le au catalogue en annotant une unique propriété top-level avec `@CStoryThemeWrapper`, n'importe où dans
 votre projet :
 
@@ -24,14 +24,14 @@ import io.cstories.annotations.CStoryThemeWrapper
 import io.cstories.runtime.CStoriesThemeWrapper
 
 @CStoryThemeWrapper
-val LumenCStoriesThemeWrapper: CStoriesThemeWrapper = { isDark, content ->
-    LumenTheme(isDark = isDark, content = content)
+val MyCustomCStoriesThemeWrapper: CStoriesThemeWrapper = { isDark, content ->
+    MyCustomTheme(isDark = isDark, content = content)
 }
 ```
 
 `cstories-processor` le détecte via KSP — aucune configuration Gradle nécessaire. Le point d'entrée généré enveloppe
-alors chaque story prévisualisée dans `LumenTheme(isDark = ...)` au lieu du fallback Material3, afin que les
-couleurs réellement rendues (pas seulement le fond du canvas) reflètent l'interrupteur.
+alors chaque story prévisualisée dans `MyCustomTheme(isDark = ...)` au lieu du fallback Material3, afin que les
+couleurs réellement rendues (pas seulement le fond du canvas) reflètent le thème.
 
 ## Contraintes
 

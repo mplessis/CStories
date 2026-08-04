@@ -23,7 +23,8 @@ kotlin {
 }
 ```
 
-:::info Why does `wasmJs` need this declared explicitly?
+:::info 
+Why does `wasmJs` need this declared explicitly?
 Kotlin finalizes a `wasmJs` target's binary/output-file conventions as soon as the target is configured. The
 CStories plugin only detects declared targets after your own `kotlin { }` block has run, so it can't safely
 reconfigure `browser()`/`binaries.executable()` afterwards. Declaring it yourself — standard practice for any

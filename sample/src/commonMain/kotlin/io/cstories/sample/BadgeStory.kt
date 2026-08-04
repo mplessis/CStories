@@ -23,17 +23,15 @@ fun BadgeStory() {
     var text by remember { mutableStateOf("Nouveau") }
     var tone by remember { mutableStateOf(BadgeTone.Success) }
 
-    Column {
-        KnobPanel {
-            TextKnob(label = "Text", value = text, onValueChange = { text = it }, codeKey = "text")
-            SelectKnob(
-                label = "Tone",
-                value = tone,
-                onValueChange = { tone = it },
-                codeKey = "tone",
-            )
-        }
-
-        DemoBadge(text = text, tone = tone)
+    KnobPanel {
+        TextKnob(label = "Text", value = text, onValueChange = { text = it }, codeKey = "text")
+        SelectKnob(
+            label = "Tone",
+            value = tone,
+            onValueChange = { tone = it },
+            codeKey = "tone",
+        )
     }
+
+    DemoBadge(text = text, tone = tone)
 }
