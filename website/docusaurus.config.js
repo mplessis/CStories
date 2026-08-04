@@ -10,6 +10,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
+  title: 'CStories',
   tagline: 'A component cataloging solution for Compose Multiplatform',
   favicon: 'img/favicon.ico',
 
@@ -78,7 +79,6 @@ const config = {
         respectPrefersColorScheme: true,
       },
       navbar: {
-        title: 'CStories',
         logo: {
           alt: 'CStories',
           src: 'img/logo-inline.png',
