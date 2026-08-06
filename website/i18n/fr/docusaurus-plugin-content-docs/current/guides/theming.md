@@ -7,6 +7,8 @@ title: Personnaliser le thème du catalogue
 Le canvas de chaque story dispose d'un interrupteur light/dark dans sa barre d'outils, permettant de vérifier
 l'apparence d'un composant sur les deux fonds sans quitter le catalogue.
 
+![Dark theme](../assets/dark-background.png)
+
 ## Comportement par défaut
 
 Par défaut, l'activer enveloppe la story prévisualisée dans un `MaterialTheme` Material3 simple utilisant
@@ -35,6 +37,8 @@ couleurs réellement rendues (pas seulement le fond du canvas) reflètent le th�
 
 ## Contraintes
 
+:::warning
 Une seule propriété `@CStoryThemeWrapper` est autorisée dans tout le projet. Le build échoue avec une erreur claire
 si plusieurs sont trouvées, et KSP signale une erreur si l'annotation est appliquée à autre chose qu'une propriété
 top-level.
+:::

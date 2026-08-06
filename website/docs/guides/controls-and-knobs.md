@@ -7,6 +7,8 @@ title: Add controls to a story
 Stories become much more useful when they let you explore a component's states interactively. CStories provides a
 small set of knobs for this, declared inside a `KnobPanel`.
 
+![Code](../assets/code.png)
+
 ## `KnobPanel`
 
 `KnobPanel` declares the controls for a story. Call it from within a `@CStory` composable, alongside the actual
@@ -112,6 +114,8 @@ without any extra work on your part.
 
 ## Best practices
 
+:::tip
 - expose knobs for the props that actually matter for exploring the component's states
 - keep a story focused: a handful of well-chosen knobs beats a dozen of everything
 - prefer the enum-typed `SelectKnob` overload whenever the prop is backed by an enum
+:::

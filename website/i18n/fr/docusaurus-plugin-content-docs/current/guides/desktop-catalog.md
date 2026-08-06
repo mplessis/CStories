@@ -33,6 +33,8 @@ Pour un développement actif, utilisez plutôt la variante avec hot reload :
 ./gradlew runCStoriesDesktopHotReload
 ```
 
+![Desktop in hot reload mode](../assets/desktop-default.png)
+
 Cela garde le catalogue desktop en cours d'exécution et injecte les changements de code dans le processus actif,
 sans redémarrage complet — bien plus rapide que de relancer l'application à chaque modification.
 

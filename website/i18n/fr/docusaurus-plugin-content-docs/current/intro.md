@@ -9,6 +9,8 @@ sidebar_label: Accueil
 
 **CStories** est une solution de catalogage de composants pour Compose Multiplatform.
 
+![Wasm banner](./assets/wasm.png)
+
 Pensé pour les équipes qui conçoivent et maintiennent un design system, CStories permet de centraliser les
 démonstrations UI dans un catalogue dédié, inspiré des usages popularisés par Storybook, tout en respectant les
 contraintes propres à l'écosystème Kotlin Multiplatform.

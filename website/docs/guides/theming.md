@@ -7,6 +7,8 @@ title: Customize the catalog theme
 Every story's canvas has a light/dark switch in its toolbar, letting you check how a component looks against both
 backgrounds without leaving the catalog.
 
+![Dark theme](../assets/dark-background.png)
+
 ## Default behavior
 
 By default, toggling it wraps the previewed story in a plain Material3 `MaterialTheme` using
@@ -34,6 +36,8 @@ every previewed story in `LumenTheme(isDark = ...)` instead of the Material3 def
 
 ## Constraints
 
+:::warning
 Only one `@CStoryThemeWrapper` property is allowed across the whole project. The build fails with a clear error if
 more than one is found, and KSP reports an error if the annotation is applied to anything other than a top-level
 property.
+:::

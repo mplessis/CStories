@@ -7,6 +7,8 @@ title: Document a component
 When a component is annotated with `@CStoryComponent`, its KDoc becomes the source of truth for the catalog's
 documentation panel — no separate documentation to maintain.
 
+![Documentation](../assets/documentation.png)
+
 ## Writing useful KDoc
 
 ```kotlin
@@ -26,9 +28,11 @@ live preview.
 
 ## Best practices
 
+:::tip
 - describe the component's **intent**, not just what it renders
 - document parameters that actually influence behavior or appearance
 - keep the description short — the documentation panel favors clarity over exhaustiveness
+:::
 
 ## Across module boundaries
 

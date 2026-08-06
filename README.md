@@ -1,7 +1,7 @@
 # CStories
 
 <p align="center">
-  <img src="docs/assets/logo-inline.png" alt="CStories" width="400" />
+  <img src="docs/assets/header.png" alt="CStories" width="600" />
 </p>
 <br/>
 

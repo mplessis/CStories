@@ -8,6 +8,8 @@ Les stories deviennent bien plus utiles lorsqu'elles permettent d'explorer les �
 interactive. CStories fournit un petit ensemble de knobs (contrôles) pour cela, déclarés à l'intérieur d'un
 `KnobPanel`.
 
+![Code](../assets/code.png)
+
 ## `KnobPanel`
 
 `KnobPanel` déclare les contrôles d'une story. Appelez-le depuis une composable `@CStory`, à côté de l'aperçu réel :
@@ -111,8 +113,10 @@ Pour la surcharge enum, cela affiche automatiquement la constante entièrement q
 `BadgeTone.Success`) plutôt qu'une chaîne entre guillemets, afin que l'extrait reste du Kotlin valide sans travail
 supplémentaire de votre part.
 
-## Bonnes pratiques
+## Bonnes pratique
 
+:::tip
 - exposez des contrôles pour les props qui comptent réellement pour explorer les états du composant
 - gardez une story ciblée : quelques contrôles bien choisis valent mieux qu'une douzaine
 - privilégiez la surcharge `SelectKnob` typée enum dès que la prop repose sur un enum
+:::

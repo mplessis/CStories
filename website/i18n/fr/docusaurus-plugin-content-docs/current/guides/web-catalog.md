@@ -37,6 +37,8 @@ une pratique standard pour toute application Kotlin/Wasm — évite complètemen
 ./gradlew runCStoriesWasm
 ```
 
+![Wasm mode](../assets/wasm.png)
+
 Cela lance le catalogue web une fois et démarre un serveur de développement dans le navigateur.
 
 ## Mode watch

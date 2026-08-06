@@ -7,9 +7,11 @@ title: Documenter un composant
 Lorsqu'un composant est annoté avec `@CStoryComponent`, son KDoc devient la source de vérité pour le panneau de
 documentation du catalogue — aucune documentation séparée à maintenir.
 
+![Documentation](../assets/documentation.png)
+
 ## Rédiger un KDoc utile
 
-```kotlin
+```kotlin 
 /**
  * High-emphasis filled button, used for the main call-to-action.
  *
@@ -26,9 +28,11 @@ de l'aperçu en direct.
 
 ## Bonnes pratiques
 
+:::tip
 - décrivez l'**intention** du composant, pas seulement ce qu'il affiche
 - documentez les paramètres qui influencent réellement le comportement ou l'apparence
 - gardez la description courte — le panneau de documentation privilégie la clarté à l'exhaustivité
+:::
 
 ## À travers les frontières de modules
 

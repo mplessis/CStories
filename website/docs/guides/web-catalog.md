@@ -36,6 +36,7 @@ Kotlin/Wasm app — avoids the issue entirely.
 ```bash
 ./gradlew runCStoriesWasm
 ```
+![Wasm mode](../assets/wasm.png)
 
 This runs the web catalog once and starts a browser dev server.
 
