@@ -158,20 +158,28 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |
             |import androidx.compose.ui.unit.DpSize
             |import androidx.compose.ui.unit.dp
+            |import androidx.compose.ui.window.Window
             |import androidx.compose.ui.window.WindowState
-            |import androidx.compose.ui.window.singleWindowApplication
+            |import androidx.compose.ui.window.application
             |import io.cstories.runtime.CStoriesApp
+            |import io.cstories.runtime.cstoriesDesktopWindowIcon
+            |import io.cstories.runtime.configureDesktopAppIcon
             |import java.awt.Dimension$themeWrapperImport
             |
             |private val MinWindowSize = DpSize(1600.dp, 1200.dp)
             |
             |fun main() {
-            |    singleWindowApplication(
-            |        title = "CStories",
-            |        state = WindowState(size = MinWindowSize),
-            |    ) {
-            |        window.minimumSize = Dimension(1600, 1200)
-            |        CStoriesApp(AllStoriesRegistry.entries$themeWrapperArg)
+            |    configureDesktopAppIcon()
+            |    application {
+            |        Window(
+            |            onCloseRequest = ::exitApplication,
+            |            title = "CStories",
+            |            state = WindowState(size = MinWindowSize),
+            |            icon = cstoriesDesktopWindowIcon(),
+            |        ) {
+            |            window.minimumSize = Dimension(1600, 1200)
+            |            CStoriesApp(AllStoriesRegistry.entries$themeWrapperArg)
+            |        }
             |    }
             |}
         """.trimMargin()
