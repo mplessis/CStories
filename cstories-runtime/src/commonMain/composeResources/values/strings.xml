@@ -1,30 +1,30 @@
 <resources>
-    <string name="controls_title">CONTROLES</string>
+    <string name="controls_title">KNOBS</string>
     <string name="controls_reset_button">Reset</string>
-    <string name="controls_empty_state">Aucun contrôle pour cette story</string>
+    <string name="controls_empty_state">No knobs for this story</string>
 
     <string name="main_header_title">Story Preview</string>
 
     <string name="canvas_live_preview">Live preview</string>
-    <string name="canvas_theme_toggle_to_dark">Mode sombre</string>
-    <string name="canvas_theme_toggle_to_light">Mode clair</string>
-    <string name="canvas_background_toggle_to_checkerboard">Fond damier</string>
-    <string name="canvas_background_toggle_to_solid">Fond uni</string>
+    <string name="canvas_theme_toggle_to_dark">Dark mode</string>
+    <string name="canvas_theme_toggle_to_light">Light mode</string>
+    <string name="canvas_background_toggle_to_checkerboard">Checkered background</string>
+    <string name="canvas_background_toggle_to_solid">Solid background</string>
 
-    <string name="sidebar_search_placeholder">Rechercher une story…</string>
+    <string name="sidebar_search_placeholder">Search for a story…</string>
 
     <string name="promo_title">Watch mode</string>
-    <string name="promo_description">La commande %1$s, permet de rebuild automatiquement le catalogue à chaque changement de story. Copiez et lancez-la dans votre terminal, à la racine du projet.
+    <string name="promo_description">The %1$s command automatically rebuilds the catalog whenever a story changes. Copy and run it in your terminal from the project's root directory.
     </string>
-    <string name="promo_copied_button">Copié !</string>
+    <string name="promo_copied_button">Copied !</string>
     <string name="promo_watch_button">Watch !</string>
 
-    <string name="empty_state_no_stories">Aucune story définie</string>
+    <string name="empty_state_no_stories">No story defined</string>
 
     <string name="docs_tab_label">Docs</string>
     <string name="code_tab_label">Code</string>
-    <string name="docs_code_panel_collapse">Réduire le panel</string>
-    <string name="docs_code_panel_expand">Agrandir le panel</string>
-    <string name="code_copy_button_description">Copier le code</string>
-    <string name="code_copy_button_copied_description">Code copié</string>
+    <string name="docs_code_panel_collapse">Collapse the panel</string>
+    <string name="docs_code_panel_expand">Expand the panel</string>
+    <string name="code_copy_button_description">Copy the code</string>
+    <string name="code_copy_button_copied_description">Copied code</string>
 </resources>
