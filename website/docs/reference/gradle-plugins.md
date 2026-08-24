@@ -4,7 +4,7 @@ title: Gradle plugins
 
 # Gradle plugins
 
-## `io.cstories.gradle`
+## `dev.cstories.gradle`
 
 The main catalog plugin. Applies to the module that hosts your stories.
 
@@ -15,7 +15,7 @@ The main catalog plugin. Applies to the module that hosts your stories.
 
 Applying it with neither `jvm()` nor `wasmJs` declared fails fast with a clear error.
 
-## `io.cstories.gradle.components`
+## `dev.cstories.gradle.components`
 
 A lightweight plugin for plain component/design-system library modules. Applies to the module that declares your
 components, when it's different from the module that declares the stories demonstrating them.
@@ -31,5 +31,5 @@ See [Reference a component in a story](/guides/component-references) for when th
 
 | Situation | Plugin to apply |
 |---|---|
-| Components and stories live in the same module | `io.cstories.gradle` only |
-| Components and stories live in different modules | `io.cstories.gradle` on the stories module, `io.cstories.gradle.components` on the components module |
+| Components and stories live in the same module | `dev.cstories.gradle` only |
+| Components and stories live in different modules | `dev.cstories.gradle` on the stories module, `dev.cstories.gradle.components` on the components module |

@@ -11,7 +11,7 @@ needs `mavenLocal()` declared in both `pluginManagement` and `dependencyResoluti
 
 ## Target requirements
 
-Applying `io.cstories.gradle` requires at least one of `jvm()` or `wasmJs` to be declared on the module. Applying it
+Applying `dev.cstories.gradle` requires at least one of `jvm()` or `wasmJs` to be declared on the module. Applying it
 with neither fails fast with a clear error, instead of silently defaulting to one.
 
 ## `wasmJs` specifics
@@ -32,6 +32,6 @@ build to fail with a clear error.
 ## Multi-module component references
 
 `@CStoryComponent` is only visible to KSP within the module it's declared in. When components and stories live in
-different modules, the components module must also apply `io.cstories.gradle.components` for
+different modules, the components module must also apply `dev.cstories.gradle.components` for
 `CStoryComponentRefs` to be generated. See
 [Reference a component in a story](/guides/component-references).

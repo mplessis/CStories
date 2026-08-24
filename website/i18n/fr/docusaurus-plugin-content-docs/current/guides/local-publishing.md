@@ -23,11 +23,11 @@ prise en compte par celle du projet racine — cette tâche agrégée relie les 
 - `cstories-processor`
 - `cstories-runtime`
 - `cstories-gradle-plugin`, ainsi que l'artefact marker de plugin nécessaire pour résoudre
-  `id("io.cstories.gradle")` depuis `mavenLocal()`
+  `id("dev.cstories.gradle")` depuis `mavenLocal()`
 
 ## Versioning
 
-Le groupe et la version publiés (`io.cstories` / `0.1.0-SNAPSHOT` par défaut) proviennent du `gradle.properties`
+Le groupe et la version publiés (`dev.cstories` / `1.0.0` actuellement) proviennent du `gradle.properties`
 racine (`cstoriesGroup` / `cstoriesVersion`), qui constitue la source de vérité unique.
 
 ## Quand republier

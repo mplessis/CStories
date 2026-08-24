@@ -29,13 +29,13 @@ dependencies {
 gradlePlugin {
     plugins {
         create("cstories") {
-            id = "io.cstories.gradle"
+            id = "dev.cstories.gradle"
             implementationClass = "io.cstories.gradle.CStoriesGradlePlugin"
             displayName = "CStories Gradle Plugin"
             description = "Configures CStories for Compose Multiplatform projects"
         }
         create("cstoriesComponents") {
-            id = "io.cstories.gradle.components"
+            id = "dev.cstories.gradle.components"
             implementationClass = "io.cstories.gradle.CStoriesComponentsGradlePlugin"
             displayName = "CStories Components Gradle Plugin"
             description = "Generates CStoryComponentRefs for @CStoryComponent-annotated functions " +
@@ -50,7 +50,7 @@ kotlin {
 
 /**
  * The plugin needs to know, at runtime in a *consumer's* build, which
- * version of the published `io.cstories:*` artifacts to depend on when no
+ * version of the published `dev.cstories:*` artifacts to depend on when no
  * local sibling subproject is found (see `CStoriesGradlePlugin`'s
  * `localProjectOrCoordinates`). That value has to be baked into the
  * compiled plugin at build time — a consumer's build has no access to this

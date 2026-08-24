@@ -135,7 +135,7 @@ internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExte
 
 internal fun localProjectOrCoordinates(project: Project, moduleName: String): Any {
     return project.rootProject.findProject(":$moduleName")
-        ?: "io.cstories:$moduleName:$CSTORIES_VERSION"
+        ?: "dev.cstories:$moduleName:$CSTORIES_VERSION"
 }
 
 internal const val PROCESS_MODE_OPTION = "cstories.processMode"

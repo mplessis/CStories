@@ -41,7 +41,7 @@ dependencyResolutionManagement {
 ```
 
 These are two separate repository blocks: `pluginManagement` resolves the plugin itself, while
-`dependencyResolutionManagement` resolves the actual `io.cstories:*` library artifacts. Missing either one causes
+`dependencyResolutionManagement` resolves the actual `dev.cstories:*` library artifacts. Missing either one causes
 resolution errors.
 
 ## 3. Apply the CStories plugin
@@ -53,7 +53,7 @@ plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
-    id("io.cstories.gradle") version "0.1.0-SNAPSHOT"
+    id("dev.cstories.gradle") version "1.0.0"
 }
 
 kotlin {

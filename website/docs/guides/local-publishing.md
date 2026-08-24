@@ -21,12 +21,12 @@ picked up by the root project's — this aggregate task wires both together. It 
 - `cstories-annotations`
 - `cstories-processor`
 - `cstories-runtime`
-- `cstories-gradle-plugin`, along with the plugin marker artifact needed to resolve `id("io.cstories.gradle")` from
+- `cstories-gradle-plugin`, along with the plugin marker artifact needed to resolve `id("dev.cstories.gradle")` from
   `mavenLocal()`
 
 ## Versioning
 
-The published group and version (`io.cstories` / `0.1.0-SNAPSHOT` by default) come from the root `gradle.properties`
+The published group and version (`dev.cstories` / `1.0.0` currently) come from the root `gradle.properties`
 (`cstoriesGroup` / `cstoriesVersion`), which is the single source of truth.
 
 ## When to republish

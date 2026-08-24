@@ -20,7 +20,7 @@ plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
-    id("io.cstories.gradle") version "0.1.0-SNAPSHOT"
+    id("dev.cstories.gradle") version "1.0.0"
 }
 
 kotlin {
@@ -69,7 +69,7 @@ plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
-    id("io.cstories.gradle") version "0.1.0-SNAPSHOT"
+    id("dev.cstories.gradle") version "1.0.0"
 }
 
 @OptIn(ExperimentalWasmDsl::class)

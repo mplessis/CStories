@@ -12,7 +12,7 @@ projet consommateur doit déclarer `mavenLocal()` à la fois dans `pluginManagem
 
 ## Cibles requises
 
-Appliquer `io.cstories.gradle` requiert qu'au moins l'une des cibles `jvm()` ou `wasmJs` soit déclarée sur le
+Appliquer `dev.cstories.gradle` requiert qu'au moins l'une des cibles `jvm()` ou `wasmJs` soit déclarée sur le
 module. L'appliquer sans aucune des deux échoue immédiatement avec une erreur claire, plutôt que d'en imposer une
 silencieusement.
 
@@ -35,6 +35,6 @@ build avec une erreur claire.
 ## Références de composants multi-modules
 
 `@CStoryComponent` n'est visible par KSP que dans le module où il est déclaré. Lorsque composants et stories vivent
-dans des modules différents, le module de composants doit également appliquer `io.cstories.gradle.components` pour
+dans des modules différents, le module de composants doit également appliquer `dev.cstories.gradle.components` pour
 que `CStoryComponentRefs` soit généré. Voir
 [Référencer un composant dans une story](/guides/component-references).

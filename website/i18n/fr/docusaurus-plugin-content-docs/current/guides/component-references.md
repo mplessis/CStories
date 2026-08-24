@@ -30,7 +30,7 @@ fun PrimaryButton(text: String, onClick: () -> Unit) { /* ... */ }
 ## Appliquer le plugin components
 
 Cela nécessite d'appliquer un plugin supplémentaire, léger, **directement sur le module qui déclare le composant**
-(`:lib`, pas `:lib:stories`) : `id("io.cstories.gradle.components")`. Contrairement à `id("io.cstories.gradle")` (le
+(`:lib`, pas `:lib:stories`) : `id("dev.cstories.gradle.components")`. Contrairement à `id("dev.cstories.gradle")` (le
 plugin de catalogue), celui-ci n'applique pas Compose Multiplatform, ne requiert aucune cible `jvm()`/`wasmJs()`, et
 ne câble aucune tâche de catalogue/point d'entrée — il ne fait que câbler KSP pour traiter `@CStoryComponent` et
 générer `io.cstories.generated.CStoryComponentRefs`, un objet exposant une constante FQN par fonction annotée :
@@ -39,7 +39,7 @@ générer `io.cstories.generated.CStoryComponentRefs`, un objet exposant une con
 // lib/build.gradle.kts
 plugins {
     kotlin("multiplatform") version "2.2.0"
-    id("io.cstories.gradle.components") version "0.1.0-SNAPSHOT"
+    id("dev.cstories.gradle.components") version "1.0.0"
 }
 ```
 
@@ -47,7 +47,7 @@ Ceci est nécessaire chaque fois que le composant et la story qui le démontre v
 différents** (le découpage `:lib` / `:lib:stories` — voir
 [Structurer un projet multi-modules](/guides/multi-module-setup)) : KSP ne scanne jamais que les symboles annotés
 dans le module qu'il traite actuellement, jamais au-delà d'une frontière de dépendance. Appliquer
-`io.cstories.gradle.components` directement sur `:lib` génère `CStoryComponentRefs` localement, dans la même
+`dev.cstories.gradle.components` directement sur `:lib` génère `CStoryComponentRefs` localement, dans la même
 compilation où le KDoc du composant est encore visible en tant que source.
 
 ## Référencer le composant depuis une story
@@ -66,7 +66,7 @@ fun PrimaryButtonStory() {
 ## Quand ce n'est pas nécessaire
 
 Si votre composant et sa story vivent dans le **même module** (un setup mono-module, en appliquant uniquement
-`io.cstories.gradle`), `@CStoryComponent` et `id("io.cstories.gradle.components")` ne sont pas du tout nécessaires —
+`dev.cstories.gradle`), `@CStoryComponent` et `id("dev.cstories.gradle.components")` ne sont pas du tout nécessaires —
 `component = "..."` peut être omis, ou `@CStoryComponent` peut tout de même être utilisé uniquement pour le
 bénéfice de la référence sûre, sans le plugin supplémentaire (le plugin de catalogue câble déjà le même traitement
 KSP pour les composants déclarés dans son propre module).
