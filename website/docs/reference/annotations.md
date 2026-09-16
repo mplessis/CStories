@@ -24,6 +24,10 @@ Marks a design-system function as a documentable component, making it available 
 `CStoryComponentRefs` object so a `@CStory` can safely reference it, and surfacing its KDoc in the catalog's
 documentation panel.
 
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `namespace` | `String` | no | Optional Kotlin-identifier namespace used to nest the generated reference under `CStoryComponentRefs.<namespace>...`. Leave it blank to preserve the historical root-level reference. |
+
 Applies to: top-level functions, or object/companion object member functions.
 
 ## `@CStoryThemeWrapper`

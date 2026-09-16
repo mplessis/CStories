@@ -19,4 +19,7 @@ package io.cstories.annotations
  */
 @Target(AnnotationTarget.PROPERTY, AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.BINARY)
-public annotation class GeneratedComponentDocumentation(val markdown: String)
+public annotation class GeneratedComponentDocumentation(
+    val markdown: String,
+    val componentFqn: String = "",
+)

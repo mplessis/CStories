@@ -22,10 +22,45 @@ import io.cstories.annotations.CStoryComponent
  */
 @CStoryComponent
 @Composable
-fun PrimaryButton(text: String, onClick: () -> Unit) { /* ... */ }
+fun PrimaryButton(text: String, onClick: () -> Unit) { /* ... */
+}
 ```
 
 `@CStoryComponent` can be applied to a top-level function or an object/companion object member function.
+
+By default, generated references stay at the root of `CStoryComponentRefs`.
+Only components that need an explicit version should opt into a namespace.
+
+```kotlin
+@CStoryComponent
+@Composable
+fun Primary() { /* ... */
+}
+
+// Generates CStoryComponentRefs.Button.Primary
+```
+
+When two components share the same simple reference path but come from different packages, you can opt one of them
+into a namespace:
+
+```kotlin
+object LumenIconOnBackground {
+    @CStoryComponent(namespace = "v2")
+    @Composable
+    fun Brand() { /* ... */
+    }
+
+    @CStoryComponent(namespace = "v2")
+    @Composable
+    fun Warning() { /* ... */
+    }
+}
+
+// Generates CStoryComponentRefs.v2.LumenIconOnBackground.Brand
+// and       CStoryComponentRefs.v2.LumenIconOnBackground.Warning
+```
+
+The namespace must be a single valid Kotlin identifier. CStories does not derive it from the package name.
 
 ## Applying the components plugin
 
@@ -59,6 +94,24 @@ import io.cstories.generated.CStoryComponentRefs
 @Composable
 fun PrimaryButtonStory() {
     PrimaryButton(text = "Click me", onClick = {})
+}
+```
+
+For a namespaced component, reference the nested object explicitly:
+
+```kotlin
+import io.cstories.annotations.CStory
+import io.cstories.generated.CStoryComponentRefs
+
+@CStory(
+    collection = "v2/Components",
+    group = "Content Display/LumenIconOnBackground",
+    name = "Brand",
+    component = CStoryComponentRefs.v2.LumenIconOnBackground.Brand,
+)
+@Composable
+fun LumenIconOnBackgroundBrandV2Story() {
+    LumenIconOnBackground.Brand()
 }
 ```
 

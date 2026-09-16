@@ -51,6 +51,7 @@ class CStoriesProcessor(
 ) : SymbolProcessor {
 
     private val processedComponentKeys = mutableSetOf<String>()
+    private val processedComponents = mutableListOf<ComponentDescriptor>()
 
     /**
      * KSP throws `FileAlreadyExistsException` if the same generated file
@@ -133,12 +134,21 @@ class CStoriesProcessor(
             .toList()
 
         val deferredComponents = componentSymbols.filterNot(KSAnnotated::validate)
-        val newComponents = componentSymbols
+        val validComponents = componentSymbols
             .filter(KSAnnotated::validate)
             .mapNotNull(::validateAndBuildComponent)
-            .filter { processedComponentKeys.add(it.refKey) }
+
+        val newCandidates = validComponents.filter { it.refKey !in processedComponentKeys }
+        val structureErrors = ComponentRefsGenerator.validateStructure(processedComponents + newCandidates)
+        if (structureErrors.isNotEmpty()) {
+            structureErrors.forEach { error -> logger.error(error) }
+            return deferredComponents
+        }
+
+        val newComponents = validComponents.filter { processedComponentKeys.add(it.refKey) }
 
         if (newComponents.isNotEmpty()) {
+            processedComponents += newComponents
             ComponentRefsGenerator.generate(codeGenerator, newComponents)
         }
 
@@ -283,7 +293,18 @@ class CStoriesProcessor(
             append(function.simpleName.asString())
         }
 
+        val annotation = function.annotations
+            .firstOrNull { it.annotationType.resolve().declaration.qualifiedNameAsString() == CSTORY_COMPONENT_ANNOTATION_FQN }
+            ?: return null
+        val namespace = annotation.stringArgument("namespace") ?: ""
+        val namespaceValidationError = ComponentNamespaceValidation.validate(namespace)
+        if (namespaceValidationError != null) {
+            logger.error(namespaceValidationError, function)
+            return null
+        }
+
         val descriptor = ComponentDescriptor(
+            namespace = namespace,
             enclosingObjectName = location.enclosingObjectName,
             functionName = function.simpleName.asString(),
             fqn = fqn,
@@ -368,19 +389,36 @@ class CStoriesProcessor(
      * boundary.
      */
     private fun resolveDocumentationFromGeneratedRefs(resolver: Resolver, function: KSFunctionDeclaration): String? {
-        val location = resolveFunctionLocation(function) ?: return null
-        val refsClassName = location.enclosingObjectName
-            ?.let { "${ComponentRefsGenerator.QUALIFIED_NAME}.$it" }
-            ?: ComponentRefsGenerator.QUALIFIED_NAME
-        val refsClass = resolver.getClassDeclarationByName(refsClassName) ?: return null
-        val property = refsClass.declarations
-            .filterIsInstance<KSPropertyDeclaration>()
-            .firstOrNull { it.simpleName.asString() == function.simpleName.asString() }
-            ?: return null
+        val refsClass = resolver.getClassDeclarationByName(ComponentRefsGenerator.QUALIFIED_NAME) ?: return null
+        val property = findGeneratedComponentProperty(refsClass, function.qualifiedNameAsString() ?: return null) ?: return null
         val annotation = property.annotations
             .firstOrNull { it.annotationType.resolve().declaration.qualifiedNameAsString() == GENERATED_DOC_ANNOTATION_FQN }
             ?: return null
         return annotation.stringArgument("markdown")
+    }
+
+    private fun findGeneratedComponentProperty(
+        declaration: KSClassDeclaration,
+        componentFqn: String,
+    ): KSPropertyDeclaration? {
+        declaration.declarations
+            .filterIsInstance<KSPropertyDeclaration>()
+            .forEach { property ->
+                val annotation = property.annotations
+                    .firstOrNull { it.annotationType.resolve().declaration.qualifiedNameAsString() == GENERATED_DOC_ANNOTATION_FQN }
+                    ?: return@forEach
+                if (annotation.stringArgument("componentFqn") == componentFqn) {
+                    return property
+                }
+            }
+
+        declaration.declarations
+            .filterIsInstance<KSClassDeclaration>()
+            .forEach { nested ->
+                findGeneratedComponentProperty(nested, componentFqn)?.let { return it }
+            }
+
+        return null
     }
 
     private fun validateAndBuildEntry(function: KSFunctionDeclaration, resolver: Resolver): StoryDescriptor? {

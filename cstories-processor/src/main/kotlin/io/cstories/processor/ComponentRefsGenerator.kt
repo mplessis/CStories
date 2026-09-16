@@ -34,34 +34,30 @@ internal object ComponentRefsGenerator {
     fun generate(codeGenerator: CodeGenerator, components: List<ComponentDescriptor>) {
         if (components.isEmpty()) return
 
-        val topLevel = components.filter { it.enclosingObjectName == null }
-        val nested = components
-            .filter { it.enclosingObjectName != null }
-            .groupBy { it.enclosingObjectName!! }
-
-        val rootBuilder = TypeSpec.objectBuilder(OBJECT_NAME)
-
-        topLevel.forEach { component ->
-            rootBuilder.addProperty(constProperty(component.functionName, component.fqn, component.documentation))
-        }
-
-        nested.forEach { (enclosingName, entries) ->
-            val nestedBuilder = TypeSpec.objectBuilder(enclosingName)
-            entries.forEach { component ->
-                nestedBuilder.addProperty(constProperty(component.functionName, component.fqn, component.documentation))
-            }
-            rootBuilder.addType(nestedBuilder.build())
-        }
-
-        val fileSpec = FileSpec.builder(GENERATED_PACKAGE, OBJECT_NAME)
-            .addType(rootBuilder.build())
-            .build()
+        val fileSpec = buildFileSpec(components)
 
         fileSpec.writeTo(
             codeGenerator = codeGenerator,
             aggregating = false,
             originatingKSFiles = components.mapNotNull { it.originatingFile },
         )
+    }
+
+    internal fun buildFileSpec(components: List<ComponentDescriptor>): FileSpec {
+        val rootNode = buildReferenceTree(components)
+        val rootBuilder = TypeSpec.objectBuilder(OBJECT_NAME)
+
+        rootNode.properties.forEach { component ->
+            rootBuilder.addProperty(constProperty(component.functionName, component.fqn, component.documentation))
+        }
+
+        rootNode.children.values.forEach { child ->
+            rootBuilder.addType(child.toTypeSpec())
+        }
+
+        return FileSpec.builder(GENERATED_PACKAGE, OBJECT_NAME)
+            .addType(rootBuilder.build())
+            .build()
     }
 
     private fun constProperty(name: String, value: String, documentation: String?): PropertySpec {
@@ -72,9 +68,73 @@ internal object ComponentRefsGenerator {
             builder.addAnnotation(
                 AnnotationSpec.builder(documentationAnnotation)
                     .addMember("%S", documentation)
+                    .addMember("componentFqn = %S", value)
                     .build(),
             )
         }
         return builder.build()
+    }
+
+    internal fun validateStructure(components: List<ComponentDescriptor>): List<String> {
+        val rootNode = RefNode(name = null, path = emptyList())
+        val errors = mutableListOf<String>()
+        components.forEach { component ->
+            rootNode.insert(component, errors)
+        }
+        return errors.distinct()
+    }
+
+    private fun buildReferenceTree(components: List<ComponentDescriptor>): RefNode {
+        val rootNode = RefNode(name = null, path = emptyList())
+        val errors = mutableListOf<String>()
+        components.forEach { component -> rootNode.insert(component, errors) }
+        check(errors.isEmpty()) {
+            "Invalid component reference structure: ${errors.joinToString()}"
+        }
+        return rootNode
+    }
+
+    private data class RefNode(
+        val name: String?,
+        val path: List<String>,
+        val children: LinkedHashMap<String, RefNode> = linkedMapOf(),
+        val properties: MutableList<ComponentDescriptor> = mutableListOf(),
+    ) {
+        fun insert(component: ComponentDescriptor, errors: MutableList<String>) {
+            val parentSegments = component.refPathSegments.dropLast(1)
+            var node = this
+            parentSegments.forEach { segment ->
+                if (node.properties.any { it.functionName == segment }) {
+                    errors += "@CStoryComponent reference collision for '${(node.path + segment).joinToString(".")}': a property already exists at that path"
+                    return
+                }
+                node = node.children.getOrPut(segment) {
+                    RefNode(name = segment, path = node.path + segment)
+                }
+            }
+
+            if (node.children.containsKey(component.functionName)) {
+                errors += "@CStoryComponent reference collision for '${component.refKey}': an object already exists at that path"
+                return
+            }
+
+            if (node.properties.any { it.functionName == component.functionName }) {
+                errors += "@CStoryComponent reference collision for '${component.refKey}': another component already uses this reference name"
+                return
+            }
+
+            node.properties += component
+        }
+
+        fun toTypeSpec(): TypeSpec {
+            val nestedBuilder = TypeSpec.objectBuilder(checkNotNull(name))
+            properties.forEach { component ->
+                nestedBuilder.addProperty(constProperty(component.functionName, component.fqn, component.documentation))
+            }
+            children.values.forEach { child ->
+                nestedBuilder.addType(child.toTypeSpec())
+            }
+            return nestedBuilder.build()
+        }
     }
 }

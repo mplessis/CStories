@@ -22,10 +22,46 @@ import io.cstories.annotations.CStoryComponent
  */
 @CStoryComponent
 @Composable
-fun PrimaryButton(text: String, onClick: () -> Unit) { /* ... */ }
+fun PrimaryButton(text: String, onClick: () -> Unit) { /* ... */
+}
 ```
 
 `@CStoryComponent` peut être appliqué à une fonction top-level ou à une fonction membre d'un objet/companion object.
+
+Par défaut, les références générées restent à la racine de `CStoryComponentRefs`. Les composants ayant besoin d'une
+version explicite doivent utiliser le namespace.
+
+```kotlin
+@CStoryComponent
+@Composable
+fun Primary() { /* ... */
+}
+
+// Génère CStoryComponentRefs.Button.Primary
+```
+
+Lorsque deux composants partagent le même chemin de référence simple mais proviennent de packages différents, vous
+pouvez préciser l'un d'eux à l'aide d'un namespace :
+
+```kotlin
+object LumenIconOnBackground {
+    @CStoryComponent(namespace = "v2")
+    @Composable
+    fun Brand() { /* ... */
+    }
+
+    @CStoryComponent(namespace = "v2")
+    @Composable
+    fun Warning() { /* ... */
+    }
+}
+
+// Génère CStoryComponentRefs.v2.LumenIconOnBackground.Brand
+// et      CStoryComponentRefs.v2.LumenIconOnBackground.Warning
+```
+
+Le namespace doit être un identifiant Kotlin unique et valide. CStories ne le déduit jamais automatiquement du nom de
+package.
 
 ## Appliquer le plugin components
 
@@ -60,6 +96,24 @@ import io.cstories.generated.CStoryComponentRefs
 @Composable
 fun PrimaryButtonStory() {
     PrimaryButton(text = "Click me", onClick = {})
+}
+```
+
+Pour un composant namespacé, référencez explicitement l'objet imbriqué :
+
+```kotlin
+import io.cstories.annotations.CStory
+import io.cstories.generated.CStoryComponentRefs
+
+@CStory(
+    collection = "v2/Components",
+    group = "Content Display/LumenIconOnBackground",
+    name = "Brand",
+    component = CStoryComponentRefs.v2.LumenIconOnBackground.Brand,
+)
+@Composable
+fun LumenIconOnBackgroundBrandV2Story() {
+    LumenIconOnBackground.Brand()
 }
 ```
 
