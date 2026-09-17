@@ -4,13 +4,20 @@ title: Structurer un projet multi-modules
 
 # Structurer un projet multi-modules
 
-Pour un premier projet, garder les composants et les stories dans le même module fonctionne très bien. À mesure que
-votre design system grandit, vous voudrez peut-être garder les stories dans un module dédié à la place.
+Pour une bibliothèque de composants réutilisable ou publiée, gardez les composants et les stories dans des modules
+séparés.
 
-## Quand un seul module suffit
+Le plugin `dev.cstories.gradle` ajoute `cstories-runtime` et l'infrastructure du catalogue au module auquel il est
+appliqué. Si ce module est la bibliothèque publiée de composants, les consommateurs peuvent être obligés de résoudre
+les dépendances runtime de CStories même lorsqu'ils n'utilisent que les composants.
 
-Si votre module de design system cible déjà `jvm()` (ou que vous êtes prêt à l'ajouter), vous pouvez appliquer le
-plugin CStories **directement dessus**. Un catalogue uniquement `jvm()` n'a besoin d'aucune cible `wasmJs`, donc il
+Un setup mono-module convient uniquement à un design system appartenant à une application ou à un module qui n'est pas
+publié comme bibliothèque réutilisable.
+
+## Quand un seul module est acceptable
+
+Si votre module de design system non publié cible déjà `jvm()` (ou que vous êtes prêt à l'ajouter), vous pouvez
+appliquer le plugin CStories **directement dessus**. Un catalogue uniquement `jvm()` n'a besoin d'aucune cible `wasmJs`, donc il
 ne force jamais Gradle à résoudre les dépendances `commonMain` pour une plateforme que votre module ne supporte pas
 par ailleurs :
 
@@ -20,7 +27,7 @@ plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
-    id("dev.cstories.gradle") version "1.0.0"
+    id("dev.cstories.gradle") version "1.1.5"
 }
 
 kotlin {
@@ -28,7 +35,15 @@ kotlin {
 }
 ```
 
-## Quand séparer composants et stories
+## Structure recommandée pour les bibliothèques publiées
+
+Le module de composants ne doit pas appliquer `dev.cstories.gradle`. Il peut uniquement appliquer
+`dev.cstories.gradle.components` lorsqu'il a besoin de références de composants générées.
+
+Le module de stories est le seul module qui applique `dev.cstories.gradle`. Ainsi, `cstories-runtime`, les tâches du
+catalogue et les dépendances spécifiques à CStories restent en dehors de la bibliothèque publiée de composants.
+
+## Pourquoi séparer composants et stories
 
 Si vous voulez aussi (ou seulement) le catalogue web, et que votre module de design system cible déjà d'autres
 plateformes et embarque des dépendances qui ne sont pas publiées pour `wasmJs` (une bibliothèque d'icônes privée, un
@@ -42,7 +57,7 @@ Required by:
     project :lib
 ```
 
-La solution recommandée reflète le principe central de CStories (`@CStory` ne vit jamais sur le composant du design
+La structure recommandée reflète le principe central de CStories (`@CStory` ne vit jamais sur le composant du design
 system lui-même) au niveau du module : garder un **module de stories séparé** qui dépend de `:lib` comme une
 dépendance normale, et qui est le seul endroit où `wasmJs` et le plugin CStories sont appliqués. `:lib` lui-même
 reste complètement inchangé — aucune nouvelle cible, aucune nouvelle contrainte de résolution de dépendances.
@@ -69,7 +84,7 @@ plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
-    id("dev.cstories.gradle") version "1.0.0"
+    id("dev.cstories.gradle") version "1.1.5"
 }
 
 @OptIn(ExperimentalWasmDsl::class)
@@ -93,7 +108,8 @@ démontrant. `:lib` ne dépend jamais de CStories, et `:lib:stories` n'a jamais 
 `:lib` non publiées pour `wasmJs`, pour aucune autre cible que `wasmJs`.
 
 Le plugin se charge du reste pour la ou les cibles déclarées : il câble `cstories-annotations`, `cstories-runtime`,
-et la dépendance KSP `cstories-processor`, et génère le ou les points d'entrée du catalogue.
+et la dépendance KSP `cstories-processor`, et génère le ou les points d'entrée du catalogue. Ces dépendances restent
+dans le module de stories et ne sont pas nécessaires aux consommateurs de `:lib`.
 
 ## Et ensuite ?
 

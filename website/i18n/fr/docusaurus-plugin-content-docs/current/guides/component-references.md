@@ -75,7 +75,7 @@ générer `io.cstories.generated.CStoryComponentRefs`, un objet exposant une con
 // lib/build.gradle.kts
 plugins {
     kotlin("multiplatform") version "2.2.0"
-    id("dev.cstories.gradle.components") version "1.0.0"
+    id("dev.cstories.gradle.components") version "1.1.5"
 }
 ```
 
@@ -119,11 +119,13 @@ fun LumenIconOnBackgroundBrandV2Story() {
 
 ## Quand ce n'est pas nécessaire
 
-Si votre composant et sa story vivent dans le **même module** (un setup mono-module, en appliquant uniquement
-`dev.cstories.gradle`), `@CStoryComponent` et `id("dev.cstories.gradle.components")` ne sont pas du tout nécessaires —
-`component = "..."` peut être omis, ou `@CStoryComponent` peut tout de même être utilisé uniquement pour le
-bénéfice de la référence sûre, sans le plugin supplémentaire (le plugin de catalogue câble déjà le même traitement
-KSP pour les composants déclarés dans son propre module).
+Si votre composant et sa story vivent dans le **même module**, le plugin de catalogue peut traiter les deux
+directement. Ce setup est recommandé uniquement pour les modules appartenant à une application ou les modules non
+publiés.
+
+Pour une bibliothèque réutilisable publiée, gardez la story dans un module séparé. Appliquez
+`dev.cstories.gradle.components` au module de composants et `dev.cstories.gradle` au module de stories afin que
+`cstories-runtime` ne devienne pas une dépendance des consommateurs de la bibliothèque.
 
 ## Et ensuite ?
 

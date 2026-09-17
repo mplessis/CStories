@@ -38,3 +38,22 @@ build avec une erreur claire.
 dans des modules différents, le module de composants doit également appliquer `dev.cstories.gradle.components` pour
 que `CStoryComponentRefs` soit généré. Voir
 [Référencer un composant dans une story](/guides/component-references).
+
+## Modules de bibliothèques publiées
+
+Un module publié comme bibliothèque réutilisable de composants ne doit pas également héberger le catalogue CStories.
+
+Appliquer `dev.cstories.gradle` ajoute `cstories-runtime` et les dépendances du catalogue à ce module. Comme Gradle
+publie les métadonnées de dépendances du module, les consommateurs peuvent être obligés de résoudre des artefacts
+CStories même s'ils n'utilisent que les composants.
+
+Utilisez plutôt deux modules :
+
+```text
+:design-system          // bibliothèque publiée de composants
+:design-system:stories  // catalogue et stories, non consommé par les utilisateurs de la bibliothèque
+```
+
+Le module de composants peut utiliser `dev.cstories.gradle.components`, qui conserve `cstories-annotations` en
+dépendance de compilation uniquement. Le module de stories applique `dev.cstories.gradle` et possède le runtime
+CStories.

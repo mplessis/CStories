@@ -48,12 +48,16 @@ resolution errors.
 
 In the module that will host your stories:
 
+If the project is a reusable library, this must be a dedicated stories module. Do not apply the plugin to the
+published component library itself, because it adds `cstories-runtime` and catalog dependencies to that module. See
+[Structure a multi-module project](/guides/multi-module-setup).
+
 ```kotlin
 plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
-    id("dev.cstories.gradle") version "1.0.0"
+    id("dev.cstories.gradle") version "1.1.5"
 }
 
 kotlin {

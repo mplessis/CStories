@@ -4,13 +4,19 @@ title: Structure a multi-module project
 
 # Structure a multi-module project
 
-For a first project, keeping components and stories in the same module is perfectly fine. As your design system
-grows, though, you may want to keep stories in a dedicated module instead.
+For a reusable or published component library, keep components and stories in separate modules.
 
-## When a single module is enough
+The `dev.cstories.gradle` plugin adds `cstories-runtime` and the catalog infrastructure to the module where it is
+applied. If that module is the published component library, consumers may be required to resolve CStories runtime
+dependencies even when they only use the components.
 
-If your design system module already targets `jvm()` (or you're fine adding it), you can apply the CStories plugin
-**directly on it**. A `jvm()`-only catalog needs no `wasmJs` target at all, so it never forces Gradle to resolve
+A single-module setup is appropriate only for an application-owned design system or a module that is not published as
+a reusable library.
+
+## When a single module is acceptable
+
+If your non-published design system module already targets `jvm()` (or you're fine adding it), you can apply the
+CStories plugin **directly on it**. A `jvm()`-only catalog needs no `wasmJs` target at all, so it never forces Gradle to resolve
 `commonMain` dependencies for a platform your module doesn't otherwise support:
 
 ```kotlin
@@ -19,7 +25,7 @@ plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
-    id("dev.cstories.gradle") version "1.0.0"
+    id("dev.cstories.gradle") version "1.1.5"
 }
 
 kotlin {
@@ -27,7 +33,15 @@ kotlin {
 }
 ```
 
-## When to split components and stories
+## Recommended structure for published libraries
+
+The component module must not apply `dev.cstories.gradle`. It should only apply `dev.cstories.gradle.components` when
+it needs generated component references.
+
+The stories module is the only module that applies `dev.cstories.gradle`. This keeps `cstories-runtime`, catalog tasks,
+and CStories-specific dependencies outside the published component library.
+
+## Why split components and stories
 
 If you also want (or only want) the web catalog, and your design system module already targets other platforms and
 pulls in dependencies that aren't published for `wasmJs` (a private icon library, a platform-specific SDK, ...),
@@ -40,7 +54,7 @@ Required by:
     project :lib
 ```
 
-The recommended fix mirrors CStories' own core principle (`@CStory` never lives on the design system component
+The recommended structure mirrors CStories' own core principle (`@CStory` never lives on the design system component
 itself) at the module level: keep a **separate stories module** that depends on `:lib` as a regular dependency, and
 is the only place `wasmJs` and the CStories plugin get applied. `:lib` itself stays completely untouched — no new
 target, no new dependency resolution constraints.
@@ -67,7 +81,7 @@ plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
-    id("dev.cstories.gradle") version "1.0.0"
+    id("dev.cstories.gradle") version "1.1.5"
 }
 
 @OptIn(ExperimentalWasmDsl::class)
@@ -91,7 +105,8 @@ depends on CStories, and `:lib:stories` never needs to resolve `:lib`'s non-`was
 target other than `wasmJs`.
 
 The plugin takes care of the rest for whichever target(s) you declared: it wires `cstories-annotations`,
-`cstories-runtime`, and the `cstories-processor` KSP dependency, and generates the catalog's entry point(s).
+`cstories-runtime`, and the `cstories-processor` KSP dependency, and generates the catalog's entry point(s). These
+dependencies belong to the stories module and are not required by consumers of `:lib`.
 
 ## What's next
 

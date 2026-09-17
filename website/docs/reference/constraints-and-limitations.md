@@ -35,3 +35,21 @@ build to fail with a clear error.
 different modules, the components module must also apply `dev.cstories.gradle.components` for
 `CStoryComponentRefs` to be generated. See
 [Reference a component in a story](/guides/component-references).
+
+## Published library modules
+
+A module that is published as a reusable component library must not also host the CStories catalog.
+
+Applying `dev.cstories.gradle` adds `cstories-runtime` and catalog dependencies to that module. Because Gradle
+publishes the module's dependency metadata, consumers may be required to resolve CStories artifacts even if they only
+use the components.
+
+Use two modules instead:
+
+```text
+:design-system          // published component library
+:design-system:stories  // catalog and stories, not consumed by library users
+```
+
+The component module may use `dev.cstories.gradle.components`, which keeps `cstories-annotations` compile-only. The
+stories module applies `dev.cstories.gradle` and owns the CStories runtime.

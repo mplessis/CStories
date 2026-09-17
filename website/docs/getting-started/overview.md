@@ -47,7 +47,22 @@ Both can be declared side by side; use whichever fits your workflow.
 
 ## Recommended path to get started
 
-For a first setup, we recommend starting with a single module targeting `jvm()` only. It's the simplest path: no
-browser tooling, no extra module split, just a Gradle plugin and a first story.
+For an application-owned design system or a non-published prototype, stories can live in the same module as the
+components.
+
+For a reusable or published component library, stories should live in a separate module. The catalog plugin adds
+`cstories-runtime` and the catalog infrastructure to the module where it is applied. Applying it to the published
+component library can therefore expose CStories runtime dependencies to every consumer, even when they only use the
+components.
+
+The recommended structure for a published library is:
+
+```text
+:lib          // reusable components, published to consumers
+:lib:stories  // stories and catalog, not used by library consumers
+```
+
+Continue to [Structure a multi-module project](/guides/multi-module-setup) for the setup details, then follow
+[Installation](/getting-started/installation) to configure CStories.
 
 Continue to [Installation](/getting-started/installation) to set this up.

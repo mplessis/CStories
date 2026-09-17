@@ -32,5 +32,20 @@ See [Reference a component in a story](/guides/component-references) for when th
 
 | Situation | Plugin to apply |
 |---|---|
-| Components and stories live in the same module | `dev.cstories.gradle` only |
+| Published reusable library | `dev.cstories.gradle.components` on the component module, `dev.cstories.gradle` on a separate stories module |
+| Application-owned design system | `dev.cstories.gradle` may be applied to the single module |
 | Components and stories live in different modules | `dev.cstories.gradle` on the stories module, `dev.cstories.gradle.components` on the components module |
+
+## Publication rule
+
+Do not apply `dev.cstories.gradle` to a reusable component library that is published for external consumers.
+
+That plugin adds `cstories-runtime` and catalog-related dependencies to the module where it is applied. Those
+dependencies can therefore become part of the published dependency graph.
+
+For a published library:
+
+- the component module contains the reusable components;
+- the component module may apply `dev.cstories.gradle.components`;
+- a separate stories module depends on the component module;
+- only the stories module applies `dev.cstories.gradle`.

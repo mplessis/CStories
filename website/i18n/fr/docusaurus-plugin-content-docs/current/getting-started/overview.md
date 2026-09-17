@@ -50,8 +50,21 @@ Les deux peuvent être déclarées côte à côte ; utilisez celle qui convient 
 
 ## Parcours recommandé pour démarrer
 
-Pour une première installation, nous recommandons de commencer avec un seul module ciblant uniquement `jvm()`.
-C'est le chemin le plus simple : pas d'outillage navigateur, pas de découpage en modules supplémentaire, juste un
-plugin Gradle et une première story.
+Pour une application ou un prototype non publié, les stories peuvent vivre dans le même module que les composants.
+
+Pour une bibliothèque de composants réutilisable ou publiée, les stories doivent vivre dans un module séparé. Le
+plugin de catalogue ajoute `cstories-runtime` et l'infrastructure du catalogue au module auquel il est appliqué.
+L'appliquer à la bibliothèque publiée peut donc exposer les dépendances runtime de CStories à tous ses consommateurs,
+même lorsqu'ils n'utilisent que les composants.
+
+La structure recommandée pour une bibliothèque publiée est la suivante :
+
+```text
+:lib          // composants réutilisables, publiés pour les consommateurs
+:lib:stories  // stories et catalogue, non utilisé par les consommateurs de la bibliothèque
+```
+
+Consultez [Structurer un projet multi-modules](/guides/multi-module-setup) pour la mise en place, puis
+[Installation](/getting-started/installation) pour configurer CStories.
 
 Poursuivez avec [Installation](/getting-started/installation) pour mettre cela en place.

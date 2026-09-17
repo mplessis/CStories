@@ -49,12 +49,16 @@ des deux provoque des erreurs de résolution.
 
 Dans le module qui hébergera vos stories :
 
+Si le projet est une bibliothèque réutilisable, ce doit être un module de stories dédié. N'appliquez pas le plugin à
+la bibliothèque publiée de composants : il y ajouterait `cstories-runtime` et les dépendances du catalogue. Voir
+[Structurer un projet multi-modules](/guides/multi-module-setup).
+
 ```kotlin
 plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
-    id("dev.cstories.gradle") version "1.0.0"
+    id("dev.cstories.gradle") version "1.1.5"
 }
 
 kotlin {

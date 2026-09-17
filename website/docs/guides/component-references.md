@@ -74,7 +74,7 @@ any catalog/entry-point task — it only wires KSP to process `@CStoryComponent`
 // lib/build.gradle.kts
 plugins {
     kotlin("multiplatform") version "2.2.0"
-    id("dev.cstories.gradle.components") version "1.0.0"
+    id("dev.cstories.gradle.components") version "1.1.5"
 }
 ```
 
@@ -117,11 +117,12 @@ fun LumenIconOnBackgroundBrandV2Story() {
 
 ## When this isn't needed
 
-If your component and its story live in the **same module** (a single-module setup, applying only
-`dev.cstories.gradle`), `@CStoryComponent` and `id("dev.cstories.gradle.components")` aren't required at all —
-`component = "..."` can be omitted, or `@CStoryComponent` can still be used purely for the safe-reference benefit,
-without the extra plugin (the catalog plugin already wires the same KSP processing for components declared in its
-own module).
+If your component and its story live in the **same module**, the catalog plugin can process both directly. This setup
+is only recommended for application-owned or non-published modules.
+
+For a reusable published library, keep the story in a separate module. Apply `dev.cstories.gradle.components` to the
+component module and `dev.cstories.gradle` to the stories module so that `cstories-runtime` does not become a
+dependency of library consumers.
 
 ## What's next
 

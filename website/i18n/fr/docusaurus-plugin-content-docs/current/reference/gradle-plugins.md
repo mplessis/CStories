@@ -34,5 +34,21 @@ nécessaire.
 
 | Situation | Plugin à appliquer |
 |---|---|
-| Composants et stories vivent dans le même module | `dev.cstories.gradle` uniquement |
+| Bibliothèque réutilisable publiée | `dev.cstories.gradle.components` sur le module de composants, `dev.cstories.gradle` sur un module de stories séparé |
+| Design system appartenant à une application | `dev.cstories.gradle` peut être appliqué au module unique |
 | Composants et stories vivent dans des modules différents | `dev.cstories.gradle` sur le module de stories, `dev.cstories.gradle.components` sur le module de composants |
+
+## Règle de publication
+
+N'appliquez pas `dev.cstories.gradle` à une bibliothèque réutilisable de composants publiée pour des consommateurs
+externes.
+
+Ce plugin ajoute `cstories-runtime` et les dépendances du catalogue au module auquel il est appliqué. Ces dépendances
+peuvent donc faire partie du graphe de dépendances publié.
+
+Pour une bibliothèque publiée :
+
+- le module de composants contient les composants réutilisables ;
+- le module de composants peut appliquer `dev.cstories.gradle.components` ;
+- un module de stories séparé dépend du module de composants ;
+- seul le module de stories applique `dev.cstories.gradle`.
