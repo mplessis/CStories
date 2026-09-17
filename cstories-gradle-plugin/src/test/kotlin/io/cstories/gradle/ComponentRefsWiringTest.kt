@@ -5,10 +5,31 @@ import org.gradle.api.tasks.bundling.Jar
 import org.gradle.testfixtures.ProjectBuilder
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ComponentRefsWiringTest {
+    @Test
+    fun `components plugin keeps annotations compile only`() {
+        val project = ProjectBuilder.builder().build()
+
+        project.pluginManager.apply("dev.cstories.gradle.components")
+
+        val compileOnlyDependencies = project.configurations
+            .getByName("commonMainCompileOnly")
+            .dependencies
+            .map { it.group to it.name }
+        val implementationDependencies = project.configurations
+            .getByName("commonMainImplementation")
+            .dependencies
+            .map { it.group to it.name }
+
+        assertTrue("dev.cstories" to "cstories-annotations" in compileOnlyDependencies)
+        assertFalse("dev.cstories" to "cstories-annotations" in implementationDependencies)
+        assertEquals(1, compileOnlyDependencies.count { it == "dev.cstories" to "cstories-annotations" })
+    }
+
     @Test
     fun `android release sources jar depends on metadata ksp task when both exist`() {
         val project = ProjectBuilder.builder().build()

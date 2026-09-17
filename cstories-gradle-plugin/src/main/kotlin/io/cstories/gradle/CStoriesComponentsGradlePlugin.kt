@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
  * Unlike [CStoriesGradlePlugin], this plugin does not apply Compose
  * Multiplatform, does not require specific `jvm()`/`wasmJs()` targets, and
  * does not wire any catalog/entry-point/aggregation task — it only adds the
- * `cstories-annotations` dependency and wires KSP to process
+ * `cstories-annotations` compile-only dependency and wires KSP to process
  * `@CStoryComponent`.
  */
 class CStoriesComponentsGradlePlugin : Plugin<Project> {
@@ -36,7 +36,7 @@ class CStoriesComponentsGradlePlugin : Plugin<Project> {
         }
 
         project.dependencies.add(
-            "commonMainImplementation",
+            "commonMainCompileOnly",
             localProjectOrCoordinates(project, "cstories-annotations"),
         )
 

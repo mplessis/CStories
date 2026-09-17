@@ -24,6 +24,7 @@ déclare vos composants, lorsqu'il est différent du module qui déclare les sto
 - n'applique pas Compose Multiplatform
 - ne requiert aucune cible `jvm()`/`wasmJs()`
 - ne câble aucune tâche de catalogue/point d'entrée
+- rend `cstories-annotations` disponible uniquement à la compilation, sans la publier comme dépendance runtime
 - câble KSP pour traiter `@CStoryComponent` et générer `io.cstories.generated.CStoryComponentRefs`
 
 Voir [Référencer un composant dans une story](/guides/component-references) pour savoir quand ce plugin est

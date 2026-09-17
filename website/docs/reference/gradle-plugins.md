@@ -23,6 +23,7 @@ components, when it's different from the module that declares the stories demons
 - does not apply Compose Multiplatform
 - does not require a `jvm()`/`wasmJs()` target
 - does not wire any catalog/entry-point task
+- makes `cstories-annotations` available at compile time without publishing it as a runtime dependency
 - wires KSP to process `@CStoryComponent` and generate `io.cstories.generated.CStoryComponentRefs`
 
 See [Reference a component in a story](/guides/component-references) for when this plugin is needed.
