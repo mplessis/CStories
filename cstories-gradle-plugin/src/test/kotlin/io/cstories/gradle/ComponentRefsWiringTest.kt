@@ -29,6 +29,25 @@ class ComponentRefsWiringTest {
     }
 
     @Test
+    fun `desktop sources jar depends on metadata ksp task when both exist`() {
+        val project = ProjectBuilder.builder().build()
+        project.pluginManager.apply("org.jetbrains.kotlin.multiplatform")
+        project.pluginManager.apply("com.google.devtools.ksp")
+
+        val kotlin = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
+        kotlin.jvm()
+        kotlin.iosX64()
+
+        val metadataTask = project.tasks.register("kspCommonMainKotlinMetadata")
+        val sourcesJarTask = project.tasks.register("desktopSourcesJar", Jar::class.java)
+
+        project.wireComponentRefsGeneration(kotlin)
+
+        val dependencies = taskDependenciesOf(sourcesJarTask.get())
+        assertTrue(metadataTask.get() in dependencies)
+    }
+
+    @Test
     fun `missing android sources jar task does not fail configuration`() {
         val project = ProjectBuilder.builder().build()
         project.pluginManager.apply("org.jetbrains.kotlin.multiplatform")
