@@ -77,6 +77,15 @@ internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExte
         dependsOn(commonMetadataKspTasks)
     }
 
+    // Once the generated metadata directory is added onto `commonMain`
+    // below, Android's release sources jar reads that same directory too.
+    // Gradle 8.13 validates that such cross-task file usage is backed by an
+    // explicit dependency, which KSP/AGP do not infer automatically here.
+    val androidReleaseSourcesJarTasks = tasks.matching { it.name == "androidReleaseSourcesJar" }
+    androidReleaseSourcesJarTasks.configureEach {
+        dependsOn(commonMetadataKspTasks)
+    }
+
     // The ksp Gradle plugin only wires `kspCommonMainKotlinMetadata`'s
     // output onto the metadata compile task itself, never onto the
     // `commonMain` source set — needed here so every platform target
@@ -108,6 +117,11 @@ internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExte
             (this as? KspAATask)?.commandLineArgumentProviders?.add(provider)
         }
         generateComponentRefs.configure { dependsOn(standaloneKspTasks) }
+        if (target.name == "android") {
+            androidReleaseSourcesJarTasks.configureEach {
+                dependsOn(standaloneKspTasks)
+            }
+        }
 
         // The ksp Gradle plugin always wires that per-target run's output
         // onto the target's own platform source set — never onto

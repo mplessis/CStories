@@ -24,6 +24,9 @@ dependencies {
     implementation("org.jetbrains.compose:compose-gradle-plugin:${libs.versions.compose.multiplatform.get()}")
     implementation("org.jetbrains.compose.hot-reload:org.jetbrains.compose.hot-reload.gradle.plugin:${libs.versions.compose.hot.reload.get()}")
     implementation("com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:${libs.versions.ksp.get()}")
+
+    testImplementation(kotlin("test"))
+    testImplementation(gradleTestKit())
 }
 
 gradlePlugin {
@@ -76,3 +79,7 @@ val generateCstoriesVersion = tasks.register("generateCstoriesVersion") {
 }
 
 kotlin.sourceSets.getByName("main").kotlin.srcDir(generateCstoriesVersion.map { it.outputs.files.singleFile })
+
+tasks.test {
+    useJUnitPlatform()
+}
