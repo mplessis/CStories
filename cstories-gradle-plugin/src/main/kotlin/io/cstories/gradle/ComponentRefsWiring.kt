@@ -89,7 +89,9 @@ internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExte
     // below, every platform sources jar reads that same directory too.
     // Gradle 8.13 validates that such cross-task file usage is backed by an
     // explicit dependency, which KSP/Kotlin do not infer automatically here.
-    val sourcesJarTasks = tasks.matching { it.name.endsWith("SourcesJar") }
+    val sourcesJarTasks = tasks.matching {
+        it.name == "sourcesJar" || it.name.endsWith("SourcesJar")
+    }
     sourcesJarTasks.configureEach {
         dependsOn(commonMetadataKspTasks)
     }
