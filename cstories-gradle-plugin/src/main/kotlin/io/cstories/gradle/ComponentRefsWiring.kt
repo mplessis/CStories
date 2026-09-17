@@ -3,9 +3,11 @@ package io.cstories.gradle
 import com.google.devtools.ksp.gradle.KspAATask
 import com.google.devtools.ksp.gradle.KspTask
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.withType
 import org.gradle.process.CommandLineArgumentProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 /**
  * Wires KSP so that `@CStoryComponent`-annotated functions declared in
@@ -62,6 +64,12 @@ internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExte
             if (name == "main") {
                 compileTaskProvider.configure { dependsOn(commonMetadataKspTasks) }
             }
+        }
+    }
+
+    tasks.withType<KotlinCompile>().configureEach {
+        if (name.endsWith("KotlinAndroid")) {
+            dependsOn(commonMetadataKspTasks)
         }
     }
 
