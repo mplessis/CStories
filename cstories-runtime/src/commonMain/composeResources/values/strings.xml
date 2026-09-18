@@ -27,4 +27,6 @@
     <string name="docs_code_panel_expand">Expand the panel</string>
     <string name="code_copy_button_description">Copy the code</string>
     <string name="code_copy_button_copied_description">Copied code</string>
+    <string name="docs_example_copy_button_description">Copy the example</string>
+    <string name="docs_example_copy_button_copied_description">Copied example</string>
 </resources>

@@ -2,6 +2,7 @@ package io.cstories.runtime
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
@@ -11,12 +12,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -24,6 +37,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.cstories.runtime.resources.Res
+import io.cstories.runtime.resources.docs_example_copy_button_copied_description
+import io.cstories.runtime.resources.docs_example_copy_button_description
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Minimal, dependency-free Markdown renderer supporting the subset produced
@@ -67,13 +87,49 @@ fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
 
                 is MarkdownBlock.Table -> MarkdownTable(block)
 
-                is MarkdownBlock.CodeBlock -> CodeBlock(
-                    code = block.code,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                )
+                is MarkdownBlock.CodeBlock -> MarkdownExampleCodeBlock(block.code)
             }
+        }
+    }
+}
+
+@Composable
+private fun MarkdownExampleCodeBlock(code: String) {
+    val clipboard = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
+    var copied by remember(code) { mutableStateOf(false) }
+    val copyDescription = stringResource(Res.string.docs_example_copy_button_description)
+    val copiedDescription = stringResource(Res.string.docs_example_copy_button_copied_description)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+    ) {
+        CodeBlock(
+            code = code,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        IconButton(
+            onClick = {
+                clipboard.setText(AnnotatedString(code))
+                copied = true
+                scope.launch {
+                    delay(1500)
+                    copied = false
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .semantics {
+                    contentDescription = if (copied) copiedDescription else copyDescription
+                },
+        ) {
+            Icon(
+                imageVector = if (copied) Icons.Filled.Check else Icons.Filled.ContentCopy,
+                contentDescription = null,
+                tint = CStoriesColors.primary,
+            )
         }
     }
 }
