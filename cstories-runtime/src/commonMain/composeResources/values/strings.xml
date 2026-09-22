@@ -10,6 +10,8 @@
     <string name="canvas_theme_toggle_to_light">Light mode</string>
     <string name="canvas_background_toggle_to_checkerboard">Checkered background</string>
     <string name="canvas_background_toggle_to_solid">Solid background</string>
+    <string name="device_preview_mobile">Mobile</string>
+    <string name="device_preview_desktop">Desktop</string>
 
     <string name="sidebar_search_placeholder">Search for a story…</string>
 

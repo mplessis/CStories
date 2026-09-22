@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,6 +51,10 @@ fun StoryFrame(
     themeWrapper: CStoriesThemeWrapper,
     modifier: Modifier = Modifier,
 ) {
+    val devicePreviewSlot = remember(entry.path) {
+        mutableStateOf<DevicePreviewRegistration?>(null)
+    }
+
     Column(
         modifier = modifier
             .background(CStoriesColors.surface, RoundedCornerShape(CStoriesRadii.lg))
@@ -63,6 +65,7 @@ fun StoryFrame(
             onToggleDark = onToggleDark,
             backgroundStyle = backgroundStyle,
             onToggleBackgroundStyle = onToggleBackgroundStyle,
+            devicePreviewRegistration = devicePreviewSlot.value,
         )
         Box(
             modifier = Modifier
@@ -84,9 +87,11 @@ fun StoryFrame(
                 .padding(24.dp),
             contentAlignment = Alignment.Center,
         ) {
-            themeWrapper(isDark) {
-                key(entry.path, resetToken) {
-                    entry.composableInvoker()
+            CompositionLocalProvider(LocalDevicePreviewSlot provides devicePreviewSlot) {
+                themeWrapper(isDark) {
+                    key(entry.path, resetToken) {
+                        entry.composableInvoker()
+                    }
                 }
             }
         }
@@ -99,6 +104,7 @@ private fun CanvasToolbar(
     onToggleDark: () -> Unit,
     backgroundStyle: CanvasBackgroundStyle,
     onToggleBackgroundStyle: () -> Unit,
+    devicePreviewRegistration: DevicePreviewRegistration?,
 ) {
     Column {
         Row(
@@ -120,6 +126,13 @@ private fun CanvasToolbar(
                 fontSize = 12.5.sp,
                 fontWeight = FontWeight.Bold,
             )
+            devicePreviewRegistration?.let { registration ->
+                Spacer(Modifier.width(20.dp))
+                DevicePreviewSelector(
+                    selectedDevice = registration.selectedDevice,
+                    onDeviceSelected = registration.onDeviceSelected,
+                )
+            }
             Spacer(Modifier.weight(1f))
             BackgroundStyleSwitch(
                 backgroundStyle = backgroundStyle,

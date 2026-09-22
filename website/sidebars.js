@@ -23,6 +23,7 @@ const sidebars = {
         'guides/component-references',
         'guides/component-documentation',
         'guides/controls-and-knobs',
+        'guides/device-preview',
         'guides/theming',
         'guides/web-export',
         'guides/local-publishing',
