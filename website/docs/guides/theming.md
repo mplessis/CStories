@@ -34,6 +34,25 @@ val LumenCStoriesThemeWrapper: CStoriesThemeWrapper = { isDark, content ->
 every previewed story in `LumenTheme(isDark = ...)` instead of the Material3 default, so the actual rendered colors
 (not just the canvas backdrop) reflect the toggle.
 
+## Device previews
+
+When a story uses `DevicePreview`, `MobileDevicePreview`, or `DesktopDevicePreview`, the light/dark selection is applied
+inside the simulated viewport. The phone or desktop window content is therefore rendered with the selected theme, while
+the surrounding canvas keep the catalog UI theme.
+
+```kotlin
+@CStory(collection = "Screens", group = "Profile", name = "Responsive")
+@Composable
+fun ResponsiveProfileStory() {
+    DevicePreview {
+        ProfileScreen()
+    }
+}
+```
+
+For a direct `MobileDevicePreview` or `DesktopDevicePreview`, the same rule applies: only the content inside the
+simulated device is wrapped by the selected theme.
+
 ## Constraints
 
 :::warning

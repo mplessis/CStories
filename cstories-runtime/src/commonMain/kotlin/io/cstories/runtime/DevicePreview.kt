@@ -120,7 +120,12 @@ private fun DevicePreviewContent(
             content = content
         )
 
-        PreviewDevice.Desktop -> DesktopDevicePreview(modifier = modifier, device = desktopDevice, content = content)
+        PreviewDevice.Desktop -> DesktopDevicePreview(
+            modifier = modifier,
+            device = desktopDevice,
+            registerInToolbar = false,
+            content = content,
+        )
     }
 }
 

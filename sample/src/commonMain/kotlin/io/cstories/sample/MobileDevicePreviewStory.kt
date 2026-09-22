@@ -20,7 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.cstories.annotations.CStory
 import io.cstories.runtime.MobileDevicePreview
@@ -44,17 +43,25 @@ fun MobileDevicePreviewStory() {
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text("9:41", style = MaterialTheme.typography.labelSmall)
-            Text(title, style = MaterialTheme.typography.headlineMedium)
+            Text("9:41", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.labelSmall)
+            Text(title, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.headlineMedium)
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE8DEF8)),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                 shape = RoundedCornerShape(20.dp),
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    Text("Weekly progress", style = MaterialTheme.typography.titleMedium)
-                    Text("You are on track", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        "Weekly progress",
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        "You are on track",
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                 }
             }
 
@@ -83,12 +90,12 @@ private fun ActivityRow(title: String, detail: String) {
     ) {
         androidx.compose.foundation.layout.Box(
             modifier = Modifier
-                .background(Color(0xFFD0BCFF), CircleShape)
+                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
                 .padding(7.dp),
         )
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(detail, style = MaterialTheme.typography.bodySmall)
+            Text(title, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyLarge)
+            Text(detail, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import io.cstories.annotations.CStory
 import io.cstories.runtime.DesktopDevice
@@ -59,7 +58,11 @@ private fun DevicePreviewDemoScreen(title: String, showAction: Boolean) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        Text(title, style = MaterialTheme.typography.headlineLarge)
+        Text(
+            text = title,
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.headlineLarge,
+        )
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -69,11 +72,12 @@ private fun DevicePreviewDemoScreen(title: String, showAction: Boolean) {
             SummaryCard("Coverage", "86%")
         }
         repeat(5) { index ->
-            Text(
-                text = "Recent activity ${index + 1}",
-                modifier = Modifier
+                Text(
+                    text = "Recent activity ${index + 1}",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF1F3F4), MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)
                     .padding(16.dp),
             )
         }
@@ -90,11 +94,11 @@ private fun DevicePreviewDemoScreen(title: String, showAction: Boolean) {
 private fun SummaryCard(label: String, value: String) {
     Card(
         modifier = Modifier.width(150.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8DEF8)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
-            Text(label, style = MaterialTheme.typography.labelMedium)
-            Text(value, style = MaterialTheme.typography.headlineSmall)
+            Text(label, color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.labelMedium)
+            Text(value, color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.headlineSmall)
         }
     }
 }

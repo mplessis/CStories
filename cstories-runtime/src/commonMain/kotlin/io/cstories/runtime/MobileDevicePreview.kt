@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -50,29 +51,34 @@ fun MobileDevicePreview(
         }
     }
 
-    val screenShape = remember(selectedDevice.cornerRadius) {
+    val deviceShape = remember(selectedDevice.cornerRadius) {
         RoundedCornerShape(selectedDevice.cornerRadius)
+    }
+    val screenShape = remember(selectedDevice.cornerRadius) {
+        RoundedCornerShape((selectedDevice.cornerRadius - 5.dp).coerceAtLeast(0.dp))
     }
 
     Box(
         modifier = modifier
-            .shadow(18.dp, screenShape, ambientColor = Color.Black.copy(alpha = 0.24f), spotColor = Color.Black.copy(alpha = 0.32f))
-            .clip(screenShape)
+            .shadow(18.dp, deviceShape, ambientColor = Color.Black.copy(alpha = 0.24f), spotColor = Color.Black.copy(alpha = 0.32f))
+            .clip(deviceShape)
             .background(Color(0xFF202124))
-            .border(1.dp, Color.Black.copy(alpha = 0.2f), screenShape)
+            .border(1.dp, Color.Black.copy(alpha = 0.2f), deviceShape)
             .padding(5.dp)
-            .background(Color(0xFFFDFBFF), screenShape)
             .size(selectedDevice.width, selectedDevice.height),
         contentAlignment = Alignment.TopCenter,
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(screenShape)
-                .verticalScroll(rememberScrollState())
-                .padding(top = 22.dp, start = 18.dp, end = 18.dp, bottom = 18.dp),
-            content = content,
-        )
+        PreviewThemedContent {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(screenShape)
+                    .background(MaterialTheme.colorScheme.background)
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = 22.dp, start = 18.dp, end = 18.dp, bottom = 18.dp),
+                content = content,
+            )
+        }
 
         Box(
             modifier = Modifier

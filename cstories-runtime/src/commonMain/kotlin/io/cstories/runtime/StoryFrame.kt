@@ -34,8 +34,7 @@ enum class CanvasBackgroundStyle {
  * story composable to remount, reinitializing any internal `remember{}` knob
  * state back to its defaults.
  *
- * [isDark] toggles the background of the preview stage AND passes through
- * [themeWrapper], which wraps the story composable so components relying
+ * [isDark] is passed through [themeWrapper], which wraps the story composable so components relying
  * on the consumer's own design system (or [DefaultCStoriesThemeWrapper]'s
  * Material3 `colorScheme`) actually re-render with dark colors rather than
  * just sitting on a dark backdrop.
@@ -60,6 +59,7 @@ fun StoryFrame(
             .background(CStoriesColors.surface, RoundedCornerShape(CStoriesRadii.lg))
             .border(1.dp, CStoriesColors.borderSoft, RoundedCornerShape(CStoriesRadii.lg)),
     ) {
+        val hasDevicePreview = devicePreviewSlot.value != null
         CanvasToolbar(
             isDark = isDark,
             onToggleDark = onToggleDark,
@@ -75,20 +75,29 @@ fun StoryFrame(
                 .let { base ->
                     when (backgroundStyle) {
                         CanvasBackgroundStyle.Checkerboard -> base.checkerboardBackground(
-                            colorA = if (isDark) CStoriesColors.checkerDarkA else CStoriesColors.checkerLightA,
-                            colorB = if (isDark) CStoriesColors.checkerDarkB else CStoriesColors.checkerLightB,
+                            colorA = if (!hasDevicePreview && isDark) CStoriesColors.checkerDarkA else CStoriesColors.checkerLightA,
+                            colorB = if (!hasDevicePreview && isDark) CStoriesColors.checkerDarkB else CStoriesColors.checkerLightB,
                         )
 
                         CanvasBackgroundStyle.Solid -> base.background(
-                            if (isDark) CStoriesColors.dark else CStoriesColors.surface,
+                            if (!hasDevicePreview && isDark) CStoriesColors.dark else CStoriesColors.surface,
                         )
                     }
                 }
                 .padding(24.dp),
             contentAlignment = Alignment.Center,
         ) {
-            CompositionLocalProvider(LocalDevicePreviewSlot provides devicePreviewSlot) {
-                themeWrapper(isDark) {
+            CompositionLocalProvider(
+                LocalDevicePreviewSlot provides devicePreviewSlot,
+                LocalPreviewTheme provides PreviewTheme(isDark = isDark, wrapper = themeWrapper),
+            ) {
+                if (devicePreviewSlot.value == null) {
+                    themeWrapper(isDark) {
+                        key(entry.path, resetToken) {
+                            entry.composableInvoker()
+                        }
+                    }
+                } else {
                     key(entry.path, resetToken) {
                         entry.composableInvoker()
                     }

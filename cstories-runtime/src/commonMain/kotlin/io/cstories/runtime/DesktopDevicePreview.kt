@@ -15,8 +15,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,8 +52,18 @@ data class DesktopDevice(
 fun DesktopDevicePreview(
     modifier: Modifier = Modifier,
     device: DesktopDevice = DesktopDevice.Default,
+    registerInToolbar: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
+    val previewSlot = LocalDevicePreviewSlot.current
+    if (previewSlot != null && registerInToolbar) {
+        SideEffect {
+            previewSlot.value = DevicePreviewRegistration(
+                supportsDeviceTypeSelection = false,
+            )
+        }
+    }
+
     val windowShape = remember(device.cornerRadius) {
         RoundedCornerShape(device.cornerRadius)
     }
@@ -70,13 +82,15 @@ fun DesktopDevicePreview(
             .width(device.width),
     ) {
         DesktopWindowTitleBar(title = device.title)
-        Box(
-            modifier = Modifier
-                .size(width = device.width, height = device.height)
-                .background(DesktopPreviewColors.screen)
-                .verticalScroll(rememberScrollState()),
-            content = content,
-        )
+        PreviewThemedContent {
+            Box(
+                modifier = Modifier
+                    .size(width = device.width, height = device.height)
+                    .background(MaterialTheme.colorScheme.background)
+                    .verticalScroll(rememberScrollState()),
+                content = content,
+            )
+        }
     }
 }
 

@@ -35,6 +35,25 @@ val MyCustomCStoriesThemeWrapper: CStoriesThemeWrapper = { isDark, content ->
 alors chaque story prévisualisée dans `MyCustomTheme(isDark = ...)` au lieu du fallback Material3, afin que les
 couleurs réellement rendues (pas seulement le fond du canvas) reflètent le thème.
 
+## Previews d'appareils
+
+Lorsqu'une story utilise `DevicePreview`, `MobileDevicePreview` ou `DesktopDevicePreview`, le choix light/dark est
+appliqué à l'intérieur du viewport simulé. Le contenu du téléphone ou de la fenêtre desktop est donc rendu avec le
+thème sélectionné, tandis que le canvas environnant conserve le thème de l'interface du catalogue.
+
+```kotlin
+@CStory(collection = "Screens", group = "Profile", name = "Responsive")
+@Composable
+fun ResponsiveProfileStory() {
+    DevicePreview {
+        ProfileScreen()
+    }
+}
+```
+
+Avec `MobileDevicePreview` ou `DesktopDevicePreview` utilisé directement, la même règle s'applique : seul le contenu
+à l'intérieur de l'appareil simulé est enveloppé par le thème sélectionné.
+
 ## Contraintes
 
 :::warning
