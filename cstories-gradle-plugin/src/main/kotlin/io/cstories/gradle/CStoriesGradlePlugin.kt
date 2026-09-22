@@ -116,6 +116,7 @@ class CStoriesGradlePlugin : Plugin<Project> {
     ): TaskProvider<CStoriesAggregateTask> {
         return project.tasks.register<CStoriesAggregateTask>("cstoriesAggregateRegistries") {
             packageName.set("io.cstories.generated")
+            applicationName.set("CStories - ${project.rootProject.name}")
             jsBundleBaseName.set(project.name)
             generateWasmJsEntryPoint.set(hasWasmJs)
             generateDesktopEntryPoint.set(hasJvm)

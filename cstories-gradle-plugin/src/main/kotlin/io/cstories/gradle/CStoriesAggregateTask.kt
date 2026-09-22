@@ -32,6 +32,9 @@ abstract class CStoriesAggregateTask : DefaultTask() {
     @get:Input
     abstract val packageName: Property<String>
 
+    @get:Input
+    abstract val applicationName: Property<String>
+
     @get:Optional
     @get:Input
     abstract val jsBundleBaseName: Property<String>
@@ -134,6 +137,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
     private fun buildWasmJsEntryPointSource(themeWrapperReference: String?): String {
         val themeWrapperImport = themeWrapperReference?.let { "\nimport $it" } ?: ""
         val themeWrapperArg = themeWrapperArgument(themeWrapperReference)
+        val escapedApplicationName = applicationName.get().escapeKotlinString()
         return """
             |package ${packageName.get()}
             |
@@ -143,7 +147,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |
             |@OptIn(ExperimentalComposeUiApi::class)
             |fun main() {
-            |    CanvasBasedWindow("CStories") {
+            |    CanvasBasedWindow("$escapedApplicationName") {
             |        CStoriesApp(AllStoriesRegistry.entries$themeWrapperArg)
             |    }
             |}
@@ -153,6 +157,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
     private fun buildDesktopEntryPointSource(themeWrapperReference: String?): String {
         val themeWrapperImport = themeWrapperReference?.let { "\nimport $it" } ?: ""
         val themeWrapperArg = themeWrapperArgument(themeWrapperReference)
+        val escapedApplicationName = applicationName.get().escapeKotlinString()
         return """
             |package ${packageName.get()}
             |
@@ -169,11 +174,12 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |private val MinWindowSize = DpSize(1600.dp, 1200.dp)
             |
             |fun main() {
+            |    System.setProperty("apple.awt.application.name", "$escapedApplicationName")
             |    configureDesktopAppIcon()
             |    application {
             |        Window(
             |            onCloseRequest = ::exitApplication,
-            |            title = "CStories",
+            |            title = "$escapedApplicationName",
             |            state = WindowState(size = MinWindowSize),
             |            icon = cstoriesDesktopWindowIcon(),
             |        ) {
@@ -191,14 +197,28 @@ abstract class CStoriesAggregateTask : DefaultTask() {
         return ", themeWrapper = $simpleName"
     }
 
+    private fun String.escapeKotlinString(): String =
+        replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+
+    private fun String.escapeHtml(): String =
+        replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;")
+
     private fun buildIndexHtmlSource(): String {
+        val escapedApplicationName = applicationName.get().escapeHtml()
         return """
             |<!DOCTYPE html>
             |<html lang="en">
             |<head>
             |    <meta charset="UTF-8">
             |    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            |    <title>CStories</title>
+            |    <title>$escapedApplicationName</title>
             |    <style>
             |        html, body {
             |            margin: 0;
