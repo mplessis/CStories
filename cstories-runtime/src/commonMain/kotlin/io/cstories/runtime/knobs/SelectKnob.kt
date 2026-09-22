@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.cstories.runtime.CStoriesColors
 import io.cstories.runtime.CStoriesRadii
+import io.cstories.runtime.formatAsKotlinLiteral
 
 /**
  * A dropdown/select-style knob, mirroring the mockup's `<select>` controls
@@ -56,6 +57,23 @@ fun SelectKnob(
     literalValue: String? = null,
 ) {
     PublishKnobValue(codeKey, value, literalValue)
+    SelectKnobControl(
+        label = label,
+        selectedValue = value,
+        selectedIndex = options.indexOf(value),
+        options = options,
+        onValueChange = { selectedIndex -> onValueChange(options[selectedIndex]) },
+    )
+}
+
+@Composable
+private fun SelectKnobControl(
+    label: String,
+    selectedValue: String,
+    selectedIndex: Int,
+    options: List<String>,
+    onValueChange: (Int) -> Unit,
+) {
     Knob(label = label) {
         var expanded by remember { mutableStateOf(false) }
         val density = LocalDensity.current
@@ -74,7 +92,7 @@ fun SelectKnob(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(text = value, color = CStoriesColors.text, fontSize = 13.sp)
+                Text(text = selectedValue, color = CStoriesColors.text, fontSize = 13.sp)
                 Icon(
                     imageVector = Icons.Filled.ArrowDropDown,
                     contentDescription = null,
@@ -100,8 +118,8 @@ fun SelectKnob(
                     )
                     .background(CStoriesColors.surface),
             ) {
-                options.forEach { option ->
-                    val isSelected = option == value
+                options.forEachIndexed { optionIndex, option ->
+                    val isSelected = optionIndex == selectedIndex
                     DropdownMenuItem(
                         text = {
                             Text(
@@ -124,7 +142,7 @@ fun SelectKnob(
                             null
                         },
                         onClick = {
-                            onValueChange(option)
+                            onValueChange(optionIndex)
                             expanded = false
                         },
                         colors = MenuDefaults.itemColors(
@@ -138,6 +156,37 @@ fun SelectKnob(
             }
         }
     }
+}
+
+/**
+ * Typed select knob for a list of values. The values are displayed using
+ * [Any.toString]. [codeLiteralOf] can provide the Kotlin expression written
+ * to the story's Code tab when the default literal formatting is not suitable.
+ */
+@Composable
+fun <T> SelectKnob(
+    label: String,
+    value: T,
+    options: List<T>,
+    onValueChange: (T) -> Unit,
+    codeKey: String? = null,
+    codeLiteralOf: ((T) -> String)? = null,
+) {
+    PublishKnobValue(
+        codeKey = codeKey,
+        value = value,
+        literalValue = codeLiteralOf?.invoke(value) ?: formatAsKotlinLiteral(value),
+    )
+    val displayOptions = options.map(Any?::toString)
+    SelectKnobControl(
+        label = label,
+        selectedValue = displayOptions.getOrNull(options.indexOf(value)).orEmpty(),
+        selectedIndex = options.indexOf(value),
+        options = displayOptions,
+        onValueChange = { selectedIndex ->
+            onValueChange(options[selectedIndex])
+        },
+    )
 }
 
 /**
