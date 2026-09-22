@@ -1,0 +1,31 @@
+{
+  "devices": [
+    { "id": "iphone-se-2", "name": "iPhone SE (2nd generation)", "platform": "ios", "width": 375, "height": 667, "cornerRadius": 28 },
+    { "id": "iphone-13", "name": "iPhone 13", "platform": "ios", "width": 390, "height": 844, "cornerRadius": 36 },
+    { "id": "iphone-14", "name": "iPhone 14", "platform": "ios", "width": 390, "height": 844, "cornerRadius": 36 },
+    { "id": "iphone-15", "name": "iPhone 15", "platform": "ios", "width": 390, "height": 844, "cornerRadius": 36 },
+    { "id": "iphone-16", "name": "iPhone 16", "platform": "ios", "width": 393, "height": 852, "cornerRadius": 36 },
+    { "id": "iphone-17", "name": "iPhone 17", "platform": "ios", "width": 393, "height": 852, "cornerRadius": 36 },
+    { "id": "iphone-18", "name": "iPhone 18", "platform": "ios", "width": 393, "height": 852, "cornerRadius": 36 },
+    { "id": "iphone-duo", "name": "iPhone DUO", "platform": "ios", "width": 816, "height": 874, "cornerRadius": 38 },
+    { "id": "pixel-7", "name": "Pixel 7", "platform": "android", "width": 412, "height": 915, "cornerRadius": 32 },
+    { "id": "pixel-7a", "name": "Pixel 7a", "platform": "android", "width": 412, "height": 915, "cornerRadius": 28 },
+    { "id": "pixel-7-pro", "name": "Pixel 7 Pro", "platform": "android", "width": 412, "height": 915, "cornerRadius": 32 },
+    { "id": "pixel-7-xl", "name": "Pixel 7 XL", "platform": "android", "width": 428, "height": 926, "cornerRadius": 34 },
+    { "id": "pixel-8", "name": "Pixel 8", "platform": "android", "width": 412, "height": 915, "cornerRadius": 32 },
+    { "id": "pixel-8a", "name": "Pixel 8a", "platform": "android", "width": 412, "height": 915, "cornerRadius": 28 },
+    { "id": "pixel-8-pro", "name": "Pixel 8 Pro", "platform": "android", "width": 448, "height": 998, "cornerRadius": 34 },
+    { "id": "pixel-8-xl", "name": "Pixel 8 XL", "platform": "android", "width": 428, "height": 926, "cornerRadius": 34 },
+    { "id": "pixel-9", "name": "Pixel 9", "platform": "android", "width": 412, "height": 915, "cornerRadius": 32 },
+    { "id": "pixel-9a", "name": "Pixel 9a", "platform": "android", "width": 412, "height": 915, "cornerRadius": 28 },
+    { "id": "pixel-9-pro", "name": "Pixel 9 Pro", "platform": "android", "width": 448, "height": 998, "cornerRadius": 34 },
+    { "id": "pixel-9-xl", "name": "Pixel 9 XL", "platform": "android", "width": 428, "height": 926, "cornerRadius": 34 },
+    { "id": "pixel-9-pro-fold", "name": "Pixel 9 Pro Fold", "platform": "android", "width": 673, "height": 841, "cornerRadius": 28 },
+    { "id": "pixel-10", "name": "Pixel 10", "platform": "android", "width": 412, "height": 915, "cornerRadius": 32 },
+    { "id": "pixel-10a", "name": "Pixel 10a", "platform": "android", "width": 412, "height": 915, "cornerRadius": 28 },
+    { "id": "pixel-10-pro", "name": "Pixel 10 Pro", "platform": "android", "width": 448, "height": 998, "cornerRadius": 34 },
+    { "id": "pixel-10-xl", "name": "Pixel 10 XL", "platform": "android", "width": 428, "height": 926, "cornerRadius": 34 },
+    { "id": "pixel-10-pro-fold", "name": "Pixel 10 Pro Fold", "platform": "android", "width": 673, "height": 841, "cornerRadius": 28 },
+    { "id": "pixel-fold", "name": "Pixel Fold", "platform": "android", "width": 673, "height": 841, "cornerRadius": 28 }
+  ]
+}

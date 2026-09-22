@@ -82,6 +82,46 @@ DevicePreview(
 The default dimensions are `390.dp x 844.dp` for mobile and `1280.dp x 800.dp` for desktop. Both previews scroll
 vertically when their content is taller than the simulated viewport.
 
+## Use the built-in mobile catalog
+
+The runtime ships a versioned JSON catalog of common mobile devices. It is used automatically by `DevicePreview` when
+the mobile format is active, so no device configuration is required in a story.
+
+The built-in catalog currently includes:
+
+- iPhone SE (2nd generation), iPhone 13 through iPhone 18, and iPhone DUO;
+- Pixel 7 through Pixel 10;
+- Pixel `a`, `Pro`, `XL`, `Pro Fold` and `Fold` variants where available in the catalog.
+
+The catalog is part of the CStories runtime and can evolve with new CStories versions.
+
+## Add devices in Kotlin
+
+Projects can extend the built-in catalog with a Kotlin list. No JSON file is required in the consuming project:
+
+```kotlin
+import androidx.compose.ui.unit.dp
+import io.cstories.runtime.DevicePreview
+import io.cstories.runtime.MobileDevice
+
+DevicePreview(
+    additionalMobileDevices = listOf(
+        MobileDevice(
+            id = "company-phone",
+            name = "Company Phone",
+            width = 393.dp,
+            height = 852.dp,
+            cornerRadius = 34.dp,
+        ),
+    ),
+) {
+    DashboardScreen()
+}
+```
+
+Additional devices are appended to the built-in catalog. If an additional device uses an existing `id`, it replaces the
+built-in entry with that id.
+
 ## Use the mobile preview directly
 
 Use `MobileDevicePreview` when a story should always render as a mobile screen and does not need a format switch:
@@ -114,6 +154,37 @@ MobileDevicePreview(
 ```
 
 The content scrolls vertically inside the simulated screen when it is taller than the viewport.
+
+When `MobileDevicePreview` is used directly inside a catalog story, the story toolbar automatically shows the mobile
+device selector. It displays the selected model and opens the built-in device catalog, without showing the
+`Mobile`/`Desktop` switch because the story is already fixed to the mobile format.
+
+```kotlin
+@CStory(collection = "Screens", group = "Profile", name = "Mobile")
+@Composable
+fun MobileProfileStory() {
+    MobileDevicePreview {
+        ProfileScreen()
+    }
+}
+```
+
+To add project-specific devices to this selector, pass them with `additionalMobileDevices`:
+
+```kotlin
+MobileDevicePreview(
+    additionalMobileDevices = listOf(
+        MobileDevice(
+            id = "company-phone",
+            name = "Company Phone",
+            width = 393.dp,
+            height = 852.dp,
+        ),
+    ),
+) {
+    ProfileScreen()
+}
+```
 
 ![Preview mobile](../assets/preview-mobile.png)
 

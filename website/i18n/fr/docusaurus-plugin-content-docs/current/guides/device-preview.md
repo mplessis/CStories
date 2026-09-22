@@ -82,6 +82,47 @@ DevicePreview(
 Les dimensions par défaut sont `390.dp x 844.dp` pour le mobile et `1280.dp x 800.dp` pour le desktop. Les deux
 prévisualisations défilent verticalement lorsque leur contenu dépasse la hauteur du viewport simulé.
 
+## Utiliser le catalogue mobile intégré
+
+Le runtime fournit un catalogue JSON versionné contenant des appareils mobiles courants. `DevicePreview` l'utilise
+automatiquement lorsque le format mobile est actif ; aucune configuration n'est donc nécessaire dans une story.
+
+Le catalogue intégré contient actuellement :
+
+- iPhone SE (2e génération), iPhone 13 à iPhone 18 et iPhone DUO ;
+- Pixel 7 à Pixel 10 ;
+- les variantes `a`, `Pro`, `XL`, `Pro Fold` et `Fold` des Pixel présentes dans le catalogue.
+
+Le catalogue fait partie du runtime CStories et peut évoluer avec les nouvelles versions de CStories.
+
+## Ajouter des appareils en Kotlin
+
+Un projet peut compléter le catalogue intégré avec une liste Kotlin. Aucun fichier JSON n'est nécessaire dans le projet
+consommateur :
+
+```kotlin
+import androidx.compose.ui.unit.dp
+import io.cstories.runtime.DevicePreview
+import io.cstories.runtime.MobileDevice
+
+DevicePreview(
+    additionalMobileDevices = listOf(
+        MobileDevice(
+            id = "company-phone",
+            name = "Company Phone",
+            width = 393.dp,
+            height = 852.dp,
+            cornerRadius = 34.dp,
+        ),
+    ),
+) {
+    DashboardScreen()
+}
+```
+
+Les appareils additionnels sont ajoutés au catalogue intégré. Si un appareil additionnel utilise un `id` déjà présent,
+il remplace l'entrée intégrée correspondante.
+
 ## Utiliser directement la preview mobile
 
 Utilisez `MobileDevicePreview` lorsqu'une story doit toujours être rendue comme un écran mobile et n'a pas besoin d'un
@@ -115,6 +156,37 @@ MobileDevicePreview(
 ```
 
 Le contenu défile verticalement à l'intérieur de l'écran simulé lorsqu'il dépasse la hauteur du viewport.
+
+Lorsque `MobileDevicePreview` est utilisé directement dans une story du catalogue, la barre d'outils affiche
+automatiquement le sélecteur de modèle mobile. Celui-ci affiche le modèle sélectionné et ouvre le catalogue intégré,
+sans afficher le switch `Mobile`/`Desktop`, puisque la story est déjà limitée au format mobile.
+
+```kotlin
+@CStory(collection = "Screens", group = "Profile", name = "Mobile")
+@Composable
+fun MobileProfileStory() {
+    MobileDevicePreview {
+        ProfileScreen()
+    }
+}
+```
+
+Pour ajouter des appareils propres au projet dans ce sélecteur, fournissez-les avec `additionalMobileDevices` :
+
+```kotlin
+MobileDevicePreview(
+    additionalMobileDevices = listOf(
+        MobileDevice(
+            id = "company-phone",
+            name = "Company Phone",
+            width = 393.dp,
+            height = 852.dp,
+        ),
+    ),
+) {
+    ProfileScreen()
+}
+```
 
 ![Preview mobile](../assets/preview-mobile.png)
 

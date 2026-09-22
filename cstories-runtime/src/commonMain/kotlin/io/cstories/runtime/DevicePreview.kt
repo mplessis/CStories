@@ -5,26 +5,21 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -34,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import io.cstories.runtime.resources.Res
 import io.cstories.runtime.resources.device_preview_desktop
 import io.cstories.runtime.resources.device_preview_mobile
+import io.cstories.runtime.resources.device_preview_mobile_model
 import org.jetbrains.compose.resources.stringResource
 
 /** The viewport chrome used by [DevicePreview]. */
@@ -52,10 +48,13 @@ fun DevicePreview(
     initialDevice: PreviewDevice = PreviewDevice.Mobile,
     mobileDevice: MobileDevice = MobileDevice.Default,
     desktopDevice: DesktopDevice = DesktopDevice.Default,
+    additionalMobileDevices: List<MobileDevice> = emptyList(),
     onDeviceChanged: (PreviewDevice) -> Unit = {},
     content: @Composable BoxScope.() -> Unit,
 ) {
     var selectedDevice by remember { mutableStateOf(initialDevice) }
+    var selectedMobileDevice by remember(mobileDevice.id) { mutableStateOf(mobileDevice) }
+    val mobileDevices = rememberMobileDevices(additionalMobileDevices)
     val devicePreviewSlot = LocalDevicePreviewSlot.current
 
     LaunchedEffect(selectedDevice) {
@@ -73,12 +72,16 @@ fun DevicePreview(
             devicePreviewSlot.value = DevicePreviewRegistration(
                 selectedDevice = selectedDevice,
                 onDeviceSelected = ::selectDevice,
+                selectedMobileDevice = selectedMobileDevice,
+                mobileDevices = mobileDevices,
+                onMobileDeviceSelected = { selectedMobileDevice = it },
+                supportsDeviceTypeSelection = true,
             )
         }
         DevicePreviewContent(
             selectedDevice = selectedDevice,
-            mobileDevice = mobileDevice,
             desktopDevice = desktopDevice,
+            selectedMobileDevice = selectedMobileDevice,
             modifier = modifier,
             content = content,
         )
@@ -87,11 +90,14 @@ fun DevicePreview(
             DevicePreviewSelector(
                 selectedDevice = selectedDevice,
                 onDeviceSelected = ::selectDevice,
+                selectedMobileDevice = selectedMobileDevice,
+                mobileDevices = mobileDevices,
+                onMobileDeviceSelected = { selectedMobileDevice = it },
             )
             DevicePreviewContent(
                 selectedDevice = selectedDevice,
-                mobileDevice = mobileDevice,
                 desktopDevice = desktopDevice,
+                selectedMobileDevice = selectedMobileDevice,
                 content = content,
             )
         }
@@ -101,13 +107,19 @@ fun DevicePreview(
 @Composable
 private fun DevicePreviewContent(
     selectedDevice: PreviewDevice,
-    mobileDevice: MobileDevice,
     desktopDevice: DesktopDevice,
+    selectedMobileDevice: MobileDevice,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit,
 ) {
     when (selectedDevice) {
-        PreviewDevice.Mobile -> MobileDevicePreview(modifier = modifier, device = mobileDevice, content = content)
+        PreviewDevice.Mobile -> MobileDevicePreview(
+            modifier = modifier,
+            device = selectedMobileDevice,
+            registerInToolbar = false,
+            content = content
+        )
+
         PreviewDevice.Desktop -> DesktopDevicePreview(modifier = modifier, device = desktopDevice, content = content)
     }
 }
@@ -116,10 +128,32 @@ private fun DevicePreviewContent(
 internal fun DevicePreviewSelector(
     selectedDevice: PreviewDevice,
     onDeviceSelected: (PreviewDevice) -> Unit,
+    selectedMobileDevice: MobileDevice,
+    mobileDevices: List<MobileDevice>,
+    onMobileDeviceSelected: (MobileDevice) -> Unit,
+    showDeviceTypeSelector: Boolean = true,
 ) {
     val mobileLabel = stringResource(Res.string.device_preview_mobile)
     val desktopLabel = stringResource(Res.string.device_preview_desktop)
 
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (showDeviceTypeSelector) {
+            DevicePreviewTypeSelector(selectedDevice, onDeviceSelected, mobileLabel, desktopLabel)
+        }
+        if (selectedDevice == PreviewDevice.Mobile && mobileDevices.isNotEmpty()) {
+            Spacer(Modifier.width(24.dp))
+            MobileDeviceSelector(selectedMobileDevice, mobileDevices, onMobileDeviceSelected)
+        }
+    }
+}
+
+@Composable
+private fun DevicePreviewTypeSelector(
+    selectedDevice: PreviewDevice,
+    onDeviceSelected: (PreviewDevice) -> Unit,
+    mobileLabel: String,
+    desktopLabel: String,
+) {
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(CStoriesRadii.sm))
@@ -144,6 +178,71 @@ internal fun DevicePreviewSelector(
         )
     }
 }
+
+@Composable
+private fun MobileDeviceSelector(
+    selectedDevice: MobileDevice,
+    devices: List<MobileDevice>,
+    onDeviceSelected: (MobileDevice) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val mobileDeviceLabel = stringResource(Res.string.device_preview_mobile_model)
+    Box {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                text = mobileDeviceLabel,
+                color = CStoriesColors.textFaint,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+            )
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(CStoriesRadii.sm))
+                    .background(CStoriesColors.surface)
+                    .border(1.dp, CStoriesColors.borderSoft, RoundedCornerShape(CStoriesRadii.sm))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { expanded = true },
+                    )
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = selectedDevice.name,
+                        color = CStoriesColors.textMuted,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.ArrowDropDown,
+                        contentDescription = null,
+                        tint = CStoriesColors.textFaint,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            devices.forEach { device ->
+                DropdownMenuItem(
+                    text = { Text(device.name) },
+                    onClick = {
+                        onDeviceSelected(device)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun PreviewDeviceOption(

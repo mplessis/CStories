@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.dp
 import io.cstories.annotations.CStory
 import io.cstories.runtime.DesktopDevice
 import io.cstories.runtime.DevicePreview
+import io.cstories.runtime.MobileDevice
 import io.cstories.runtime.PreviewDevice
 import io.cstories.runtime.knobs.BooleanKnob
 import io.cstories.runtime.knobs.KnobPanel
@@ -29,7 +30,21 @@ fun DevicePreviewStory() {
 
     DevicePreview(
         initialDevice = PreviewDevice.Desktop,
+        mobileDevice = MobileDevice(
+            id = "cstories-custom-phone",
+            name = "CStories Phone",
+            width = 393.dp,
+            height = 852.dp,
+        ),
         desktopDevice = DesktopDevice(title = title),
+        additionalMobileDevices = listOf(
+            MobileDevice(
+                id = "cstories-custom-phone",
+                name = "CStories Phone",
+                width = 393.dp,
+                height = 852.dp,
+            ),
+        ),
     ) {
         DevicePreviewDemoScreen(title = title, showAction = showAction)
     }

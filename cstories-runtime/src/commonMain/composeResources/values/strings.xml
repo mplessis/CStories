@@ -12,6 +12,7 @@
     <string name="canvas_background_toggle_to_solid">Solid background</string>
     <string name="device_preview_mobile">Mobile</string>
     <string name="device_preview_desktop">Desktop</string>
+    <string name="device_preview_mobile_model">Mobile device</string>
 
     <string name="sidebar_search_placeholder">Search for a story…</string>
 

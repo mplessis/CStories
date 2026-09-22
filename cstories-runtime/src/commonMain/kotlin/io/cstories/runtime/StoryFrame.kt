@@ -131,6 +131,10 @@ private fun CanvasToolbar(
                 DevicePreviewSelector(
                     selectedDevice = registration.selectedDevice,
                     onDeviceSelected = registration.onDeviceSelected,
+                    selectedMobileDevice = registration.selectedMobileDevice,
+                    mobileDevices = registration.mobileDevices,
+                    onMobileDeviceSelected = registration.onMobileDeviceSelected,
+                    showDeviceTypeSelector = registration.supportsDeviceTypeSelection,
                 )
             }
             Spacer(Modifier.weight(1f))
