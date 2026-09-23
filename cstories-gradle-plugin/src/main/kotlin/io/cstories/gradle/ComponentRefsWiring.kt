@@ -15,6 +15,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.util.jar.JarFile
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -74,7 +75,18 @@ internal fun Project.wireComponentRefsGeneration(
 
     val componentMetadata = if (readDependencyMetadata) {
         tasks.register<ExtractComponentMetadataTask>("cstoriesExtractComponentMetadata") {
-            inputClasspath.from(configurations.matching { it.name.endsWith("CompileClasspath") })
+            configurations.matching { it.name.endsWith("CompileClasspath") }.forEach { configuration ->
+                val artifactFiles = configuration.incoming.artifactView {
+                    componentFilter { identifier ->
+                        identifier !is ProjectComponentIdentifier || identifier.projectPath != project.path
+                    }
+                }.files
+                // Detach the snapshot consumed by the extractor from KMP's
+                // own-output task dependencies. Those dependencies include
+                // this project's compilation and create a cycle with KSP.
+                inputClasspath.from(files(artifactFiles.files))
+                dependsOn(artifactFiles.buildDependencies.getDependencies(this).filter { it.project != project })
+            }
             outputFile.set(layout.buildDirectory.file("generated/cstories/component-metadata/components.txt"))
         }
     } else {
