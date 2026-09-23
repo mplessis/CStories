@@ -4,7 +4,17 @@ import com.google.devtools.ksp.gradle.KspAATask
 import com.google.devtools.ksp.gradle.KspTask
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.withType
+import org.gradle.kotlin.dsl.register
 import org.gradle.process.CommandLineArgumentProvider
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
+import java.io.File
+import java.util.jar.JarFile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -22,7 +32,10 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
  * a dependency boundary — so both plugins need this same wiring, applied
  * directly to whichever module actually declares the annotated functions.
  */
-internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExtension) {
+internal fun Project.wireComponentRefsGeneration(
+    kotlin: KotlinMultiplatformExtension,
+    readDependencyMetadata: Boolean = false,
+) {
     fun realTargets() = kotlin.targets.filter { it.platformType != KotlinPlatformType.common }
 
     // KSP snapshots the `kspCommonMainMetadata` configuration's dependencies
@@ -58,6 +71,32 @@ internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExte
     // actually schedule `kspCommonMainKotlinMetadata` at all (nothing else
     // in the task graph would reference it).
     val commonMetadataKspTasks = tasks.matching { it.name == "kspCommonMainKotlinMetadata" }
+
+    val componentMetadata = if (readDependencyMetadata) {
+        tasks.register<ExtractComponentMetadataTask>("cstoriesExtractComponentMetadata") {
+            inputClasspath.from(configurations.matching { it.name.endsWith("CompileClasspath") })
+            outputFile.set(layout.buildDirectory.file("generated/cstories/component-metadata/components.txt"))
+        }
+    } else {
+        null
+    }
+    val metadataArgument = componentMetadata?.let { task ->
+        CommandLineArgumentProvider { listOf("$COMPONENT_METADATA_OPTION=${task.get().outputFile.get().asFile.absolutePath}") }
+    }
+    tasks.withType<KspTask>().configureEach {
+        metadataArgument?.let(commandLineArgumentProviders::add)
+        componentMetadata?.let { dependsOn(it) }
+        if (!readDependencyMetadata) {
+            commandLineArgumentProviders.add(CommandLineArgumentProvider { listOf("$WRITE_COMPONENT_METADATA_OPTION=true") })
+        }
+    }
+    tasks.withType<KspAATask>().configureEach {
+        metadataArgument?.let(commandLineArgumentProviders::add)
+        componentMetadata?.let { dependsOn(it) }
+        if (!readDependencyMetadata) {
+            commandLineArgumentProviders.add(CommandLineArgumentProvider { listOf("$WRITE_COMPONENT_METADATA_OPTION=true") })
+        }
+    }
     kotlin.targets.configureEach {
         if (platformType == KotlinPlatformType.common) return@configureEach
         compilations.configureEach {
@@ -101,8 +140,10 @@ internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExte
     // `commonMain` source set — needed here so every platform target
     // (which each pull in `commonMain` as a dependency source set) can
     // actually see the generated `CStoryComponentRefs`.
-    kotlin.sourceSets.getByName("commonMain").kotlin
-        .srcDir(layout.buildDirectory.dir("generated/ksp/metadata/commonMain/kotlin"))
+    if (readDependencyMetadata) {
+        kotlin.sourceSets.getByName("commonMain").kotlin
+            .srcDir(layout.buildDirectory.dir("generated/ksp/metadata/commonMain/kotlin"))
+    }
 
     // The consumer declares its targets in its own `kotlin { }` block, which
     // runs after this plugin is applied — detecting how many real targets
@@ -128,6 +169,8 @@ internal fun Project.wireComponentRefsGeneration(kotlin: KotlinMultiplatformExte
         }
         generateComponentRefs.configure { dependsOn(standaloneKspTasks) }
         sourcesJarTasks.configureEach { dependsOn(standaloneKspTasks) }
+
+        if (!readDependencyMetadata) return@afterEvaluate
 
         // The ksp Gradle plugin always wires that per-target run's output
         // onto the target's own platform source set — never onto
@@ -160,3 +203,31 @@ internal fun localProjectOrCoordinates(project: Project, moduleName: String): An
 
 internal const val PROCESS_MODE_OPTION = "cstories.processMode"
 internal const val MODULE_NAME_OPTION = "cstories.moduleName"
+internal const val COMPONENT_METADATA_OPTION = "cstories.componentMetadata"
+internal const val WRITE_COMPONENT_METADATA_OPTION = "cstories.writeComponentMetadata"
+
+abstract class ExtractComponentMetadataTask : DefaultTask() {
+    @get:Internal
+    abstract val inputClasspath: ConfigurableFileCollection
+
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
+
+    @TaskAction
+    fun extract() {
+        val lines = inputClasspath.files.flatMap { file ->
+            when {
+                file.isDirectory -> File(file, ComponentMetadataPath).takeIf(File::exists)?.readLines().orEmpty()
+                file.extension == "jar" -> JarFile(file).use { jar ->
+                    jar.getJarEntry(ComponentMetadataPath)?.let { jar.getInputStream(it).bufferedReader().readLines() }.orEmpty()
+                }
+                else -> emptyList()
+            }
+        }.distinct()
+        outputFile.get().asFile.apply { parentFile.mkdirs() }.writeText(lines.joinToString("\n"))
+    }
+
+    private companion object {
+        const val ComponentMetadataPath = "META-INF/cstories/components.txt"
+    }
+}

@@ -43,12 +43,14 @@ import com.google.devtools.ksp.validate
  * this round's own [Resolver] — no state needs to be shared with a separate
  * common-metadata processor run/task.
  */
-class CStoriesProcessor(
+internal class CStoriesProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
     private val moduleName: String,
     private val processComponents: Boolean,
     private val processStories: Boolean,
+    private val componentMetadata: List<ComponentRefsGenerator.ComponentMetadata>,
+    private val writeComponentMetadata: Boolean,
 ) : SymbolProcessor {
 
     private val processedComponentKeys = mutableSetOf<String>()
@@ -67,6 +69,9 @@ class CStoriesProcessor(
     private val accumulatedEntries = mutableListOf<StoryDescriptor>()
 
     private var themeWrapperWritten = false
+    private var externalRefsWritten = false
+    private var componentMetadataWritten = false
+    private val externalDocumentation = componentMetadata.associate { it.fqn to it.documentation }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val deferredComponents = if (processComponents) runComponentsPass(resolver) else emptyList()
@@ -152,8 +157,19 @@ class CStoriesProcessor(
 
         if (newComponents.isNotEmpty()) {
             processedComponents += newComponents
-            ComponentRefsGenerator.generate(codeGenerator, newComponents)
         }
+
+        if (writeComponentMetadata && deferredComponents.isEmpty() && !componentMetadataWritten) {
+            ComponentRefsGenerator.writeMetadata(codeGenerator, processedComponents)
+            componentMetadataWritten = true
+        }
+
+        if (processComponents && !writeComponentMetadata && deferredComponents.isEmpty() && !externalRefsWritten) {
+            val external = componentMetadata.map { ComponentRefsGenerator.run { it.toDescriptor() } }
+            ComponentRefsGenerator.generateDescriptors(codeGenerator, external + processedComponents)
+            externalRefsWritten = true
+        }
+
 
         return deferredComponents
     }
@@ -349,6 +365,7 @@ class CStoriesProcessor(
         }
 
         return parseFunctionDocumentation(componentFunction)
+            ?: externalDocumentation[componentFunction.qualifiedNameAsString()]
             ?: resolveDocumentationFromGeneratedRefs(resolver, componentFunction)
     }
 

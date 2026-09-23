@@ -9,7 +9,7 @@ internal data class ComponentDescriptor(
     val enclosingObjectName: String?,
     val functionName: String,
     val fqn: String,
-    val function: KSFunctionDeclaration,
+    val function: KSFunctionDeclaration?,
     val originatingFile: KSFile?,
     val documentation: String? = null,
 ) {

@@ -68,7 +68,8 @@ This requires applying an additional, lightweight plugin **directly on the modul
 (`:lib`, not `:lib:stories`): `id("dev.cstories.gradle.components")`. Unlike `id("dev.cstories.gradle")` (the catalog
 plugin), this one doesn't apply Compose Multiplatform, doesn't require a `jvm()`/`wasmJs()` target, and doesn't wire
 any catalog/entry-point task — it only wires KSP to process `@CStoryComponent` and generate
-`io.cstories.generated.CStoryComponentRefs`, an object exposing one FQN constant per annotated function:
+component metadata. The stories module then generates `io.cstories.generated.CStoryComponentRefs` locally, so the
+generated refs object is not part of the published component API:
 
 ```kotlin
 // lib/build.gradle.kts
@@ -81,8 +82,9 @@ plugins {
 This is required whenever the component and the story that demonstrates it live in **different Gradle modules**
 (the `:lib` / `:lib:stories` split — see [Structure a multi-module project](/guides/multi-module-setup)): KSP only
 ever scans annotated symbols within the module it's currently processing, never across a dependency boundary.
-Applying `dev.cstories.gradle.components` directly on `:lib` generates `CStoryComponentRefs` locally, in the same
-compilation where the component's KDoc is still visible as source.
+Applying `dev.cstories.gradle.components` directly on `:lib` publishes only internal CStories component metadata. The
+stories module consumes that metadata and generates `CStoryComponentRefs` in its own compilation, while the KDoc is
+copied into the generated `StoryEntry` used by the runtime documentation tab.
 
 ## Referencing the component from a story
 

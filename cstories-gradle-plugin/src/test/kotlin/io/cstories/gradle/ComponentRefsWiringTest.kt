@@ -31,6 +31,18 @@ class ComponentRefsWiringTest {
     }
 
     @Test
+    fun `components plugin does not add generated refs to commonMain`() {
+        val project = ProjectBuilder.builder().build()
+        project.pluginManager.apply("dev.cstories.gradle.components")
+
+        val kotlin = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
+        kotlin.jvm()
+
+        val commonMain = kotlin.sourceSets.getByName("commonMain")
+        assertFalse(commonMain.kotlin.srcDirs.any { it.path.contains("generated/ksp") })
+    }
+
+    @Test
     fun `android release sources jar depends on metadata ksp task when both exist`() {
         val project = ProjectBuilder.builder().build()
         project.pluginManager.apply("org.jetbrains.kotlin.multiplatform")
@@ -122,7 +134,7 @@ class ComponentRefsWiringTest {
     }
 
     @Test
-    fun `commonMain includes generated metadata ksp directory`() {
+    fun `components plugin does not expose generated refs through commonMain`() {
         val project = ProjectBuilder.builder().build()
         project.pluginManager.apply("org.jetbrains.kotlin.multiplatform")
         project.pluginManager.apply("com.google.devtools.ksp")
@@ -135,7 +147,7 @@ class ComponentRefsWiringTest {
 
         val commonMain = kotlin.sourceSets.getByName("commonMain")
         val generatedDirSuffix = "build/generated/ksp/metadata/commonMain/kotlin"
-        assertTrue(commonMain.kotlin.srcDirs.any { it.path.endsWith(generatedDirSuffix) })
+        assertFalse(commonMain.kotlin.srcDirs.any { it.path.endsWith(generatedDirSuffix) })
     }
 
     private fun taskDependenciesOf(task: Task): Set<Task> {

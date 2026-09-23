@@ -9,6 +9,8 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.ksp.writeTo
+import java.io.OutputStreamWriter
+import java.util.Base64
 
 /**
  * Generates `CStoryComponentRefs`, an object exposing a `const val` FQN
@@ -28,6 +30,7 @@ internal object ComponentRefsGenerator {
     private const val GENERATED_PACKAGE = "io.cstories.generated"
     const val OBJECT_NAME = "CStoryComponentRefs"
     const val QUALIFIED_NAME = "$GENERATED_PACKAGE.$OBJECT_NAME"
+    const val METADATA_PATH = "META-INF/cstories/components.txt"
 
     private val documentationAnnotation = ClassName("io.cstories.annotations", "GeneratedComponentDocumentation")
 
@@ -42,6 +45,74 @@ internal object ComponentRefsGenerator {
             originatingKSFiles = components.mapNotNull { it.originatingFile },
         )
     }
+
+    fun writeMetadata(codeGenerator: CodeGenerator, components: List<ComponentDescriptor>) {
+        if (components.isEmpty()) return
+        codeGenerator.createNewFile(
+            dependencies = com.google.devtools.ksp.processing.Dependencies.ALL_FILES,
+            packageName = "",
+            fileName = METADATA_PATH.removeSuffix(".txt"),
+            extensionName = "txt",
+        ).use { output ->
+            OutputStreamWriter(output, Charsets.UTF_8).use { writer ->
+                components.forEach { component ->
+                    writer.appendLine(encode(component.namespace))
+                    writer.appendLine(encode(component.enclosingObjectName ?: ""))
+                    writer.appendLine(encode(component.functionName))
+                    writer.appendLine(encode(component.fqn))
+                    writer.appendLine(encode(component.documentation ?: ""))
+                }
+            }
+        }
+    }
+
+    fun decodeMetadata(lines: List<String>): List<ComponentMetadata> {
+        return lines.filter(String::isNotBlank).chunked(5).mapNotNull { fields ->
+            if (fields.size != 5) return@mapNotNull null
+            ComponentMetadata(
+                namespace = decode(fields[0]),
+                enclosingObjectName = decode(fields[1]).ifEmpty { null },
+                functionName = decode(fields[2]),
+                fqn = decode(fields[3]),
+                documentation = decode(fields[4]).ifEmpty { null },
+            )
+        }
+    }
+
+    fun generateFromMetadata(codeGenerator: CodeGenerator, metadata: List<ComponentMetadata>) {
+        if (metadata.isEmpty()) return
+        generateDescriptors(codeGenerator, metadata.map { it.toDescriptor() })
+    }
+
+    fun generateDescriptors(codeGenerator: CodeGenerator, components: List<ComponentDescriptor>) {
+        if (components.isEmpty()) return
+        buildFileSpec(components).writeTo(
+            codeGenerator = codeGenerator,
+            aggregating = true,
+        )
+    }
+
+    internal fun ComponentMetadata.toDescriptor() = ComponentDescriptor(
+        namespace = namespace,
+        enclosingObjectName = enclosingObjectName,
+        functionName = functionName,
+        fqn = fqn,
+        function = null,
+        originatingFile = null,
+        documentation = documentation,
+    )
+
+    private fun encode(value: String): String = Base64.getEncoder().encodeToString(value.toByteArray(Charsets.UTF_8))
+
+    private fun decode(value: String): String = String(Base64.getDecoder().decode(value), Charsets.UTF_8)
+
+    data class ComponentMetadata(
+        val namespace: String,
+        val enclosingObjectName: String?,
+        val functionName: String,
+        val fqn: String,
+        val documentation: String?,
+    )
 
     internal fun buildFileSpec(components: List<ComponentDescriptor>): FileSpec {
         val rootNode = buildReferenceTree(components)

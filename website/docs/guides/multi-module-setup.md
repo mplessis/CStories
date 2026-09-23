@@ -36,7 +36,7 @@ kotlin {
 ## Recommended structure for published libraries
 
 The component module must not apply `dev.cstories.gradle`. It should only apply `dev.cstories.gradle.components` when
-it needs generated component references.
+it needs component references. That plugin publishes component metadata, not the generated `CStoryComponentRefs` API.
 
 The stories module is the only module that applies `dev.cstories.gradle`. This keeps `cstories-runtime`, catalog tasks,
 and CStories-specific dependencies outside the published component library.

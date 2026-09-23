@@ -60,7 +60,7 @@ class CStoriesGradlePlugin : Plugin<Project> {
             }
         }
 
-        project.wireComponentRefsGeneration(kotlin)
+        project.wireComponentRefsGeneration(kotlin, readDependencyMetadata = true)
 
         // The consumer declares its jvm()/wasmJs() targets in the `kotlin { }`
         // block of its own build script, which runs *after* this plugin is
