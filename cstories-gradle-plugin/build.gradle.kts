@@ -1,3 +1,4 @@
+import org.gradle.api.publish.PublishingExtension
 import java.util.Properties
 
 plugins {
@@ -18,6 +19,11 @@ val cstoriesVersion: String = rootGradleProperties.getProperty("cstoriesVersion"
 
 group = cstoriesGroup
 version = cstoriesVersion
+
+val azureDevOpsUsername = providers.gradleProperty("azureDevOpsUsername")
+    .orElse(providers.environmentVariable("AZURE_DEVOPS_USERNAME"))
+val azureDevOpsToken = providers.gradleProperty("azureDevOpsToken")
+    .orElse(providers.environmentVariable("AZURE_DEVOPS_TOKEN"))
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
@@ -43,6 +49,19 @@ gradlePlugin {
             displayName = "CStories Components Gradle Plugin"
             description = "Generates CStoryComponentRefs for @CStoryComponent-annotated functions " +
                 "in a plain component/design-system library module"
+        }
+    }
+}
+
+extensions.configure(PublishingExtension::class.java) {
+    repositories {
+        maven {
+            name = "AzureDevOps"
+            url = uri("https://pkgs.dev.azure.com/Dev-BS-grpleg/_packaging/kotlin-cstories/maven/v1")
+            credentials {
+                username = azureDevOpsUsername.orNull ?: ""
+                password = azureDevOpsToken.orNull ?: ""
+            }
         }
     }
 }

@@ -74,6 +74,13 @@ internal class CStoriesProcessor(
     private val externalDocumentation = componentMetadata.associate { it.fqn to it.documentation }
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        if (processComponents && !writeComponentMetadata && !externalRefsWritten && componentMetadata.isNotEmpty()) {
+            ComponentRefsGenerator.generateDescriptors(
+                codeGenerator,
+                componentMetadata.map { ComponentRefsGenerator.run { it.toDescriptor() } },
+            )
+            externalRefsWritten = true
+        }
         val deferredComponents = if (processComponents) runComponentsPass(resolver) else emptyList()
         val deferredStories = if (processStories) runStoriesPass(resolver) else emptyList()
         val deferredThemeWrapper = if (processStories) runThemeWrapperPass(resolver) else emptyList()
@@ -164,9 +171,11 @@ internal class CStoriesProcessor(
             componentMetadataWritten = true
         }
 
-        if (processComponents && !writeComponentMetadata && deferredComponents.isEmpty() && !externalRefsWritten) {
+        if (!writeComponentMetadata && !externalRefsWritten) {
             val external = componentMetadata.map { ComponentRefsGenerator.run { it.toDescriptor() } }
-            ComponentRefsGenerator.generateDescriptors(codeGenerator, external + processedComponents)
+            if (external.isNotEmpty() || processedComponents.isNotEmpty()) {
+                ComponentRefsGenerator.generateDescriptors(codeGenerator, external + processedComponents)
+            }
             externalRefsWritten = true
         }
 

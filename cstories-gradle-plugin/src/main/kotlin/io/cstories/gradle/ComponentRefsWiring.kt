@@ -13,6 +13,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.language.jvm.tasks.ProcessResources
 import java.io.File
 import java.util.jar.JarFile
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier
@@ -124,6 +125,12 @@ internal fun Project.wireComponentRefsGeneration(
         }
     }
 
+    if (!readDependencyMetadata) {
+        tasks.withType<ProcessResources>().configureEach {
+            dependsOn(commonMetadataKspTasks)
+        }
+    }
+
     // A dedicated, stable lifecycle task so consumers can regenerate
     // `CStoryComponentRefs` after adding/removing a `@CStoryComponent`
     // without needing to run a full build. Depends only on whichever KSP
@@ -155,6 +162,9 @@ internal fun Project.wireComponentRefsGeneration(
     if (readDependencyMetadata) {
         kotlin.sourceSets.getByName("commonMain").kotlin
             .srcDir(layout.buildDirectory.dir("generated/ksp/metadata/commonMain/kotlin"))
+    } else {
+        kotlin.sourceSets.getByName("commonMain").resources
+            .srcDir(layout.buildDirectory.dir("generated/ksp/metadata/commonMain/resources"))
     }
 
     // The consumer declares its targets in its own `kotlin { }` block, which
@@ -163,7 +173,17 @@ internal fun Project.wireComponentRefsGeneration(
     // is fully configured.
     afterEvaluate {
         val targets = realTargets()
-        if (targets.size != 1) return@afterEvaluate
+        if (targets.size != 1) {
+            targets.forEach { target ->
+                val targetTaskName = "kspKotlin" + target.name.replaceFirstChar(Char::uppercaseChar)
+                tasks.matching { it.name == targetTaskName }.configureEach {
+                    val provider = CommandLineArgumentProvider { listOf("$PROCESS_MODE_OPTION=stories") }
+                    (this as? KspTask)?.commandLineArgumentProviders?.add(provider)
+                    (this as? KspAATask)?.commandLineArgumentProviders?.add(provider)
+                }
+            }
+            return@afterEvaluate
+        }
 
         // With a single real target declared, Kotlin never creates a
         // `kspCommonMainKotlinMetadata` task at all (no separate metadata
@@ -182,7 +202,24 @@ internal fun Project.wireComponentRefsGeneration(
         generateComponentRefs.configure { dependsOn(standaloneKspTasks) }
         sourcesJarTasks.configureEach { dependsOn(standaloneKspTasks) }
 
-        if (!readDependencyMetadata) return@afterEvaluate
+        if (!readDependencyMetadata) {
+            val standaloneMain = kotlin.sourceSets.getByName("${target.name}Main")
+            standaloneMain.resources.srcDir(
+                layout.buildDirectory.dir("generated/ksp/${target.name}/${target.name}Main/resources"),
+            )
+            tasks.matching { it.name == "${target.name}ProcessResources" }.configureEach {
+                dependsOn(standaloneKspTasks)
+            }
+            return@afterEvaluate
+        }
+
+        // The generated refs directory is moved from the target source set to
+        // commonMain below. Preserve the task ordering that KSP normally adds
+        // for the original target source set explicitly, otherwise the
+        // commonMain compilation can start before CStoryComponentRefs exists.
+        kotlin.targets.getByName(target.name).compilations.getByName("main")
+            .compileTaskProvider
+            .configure { dependsOn(standaloneKspTasks) }
 
         // The ksp Gradle plugin always wires that per-target run's output
         // onto the target's own platform source set — never onto
@@ -235,7 +272,7 @@ abstract class ExtractComponentMetadataTask : DefaultTask() {
                 }
                 else -> emptyList()
             }
-        }.distinct()
+        }
         outputFile.get().asFile.apply { parentFile.mkdirs() }.writeText(lines.joinToString("\n"))
     }
 

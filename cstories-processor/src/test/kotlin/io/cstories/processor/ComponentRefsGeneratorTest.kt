@@ -3,6 +3,7 @@ package io.cstories.processor
 import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import java.lang.reflect.Proxy
+import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -20,6 +21,26 @@ class ComponentRefsGeneratorTest {
             ComponentRefsGenerator.QUALIFIED_NAME,
         )
     }
+
+    @Test
+    fun `metadata decoding preserves empty namespace fields`() {
+        val metadata = ComponentRefsGenerator.decodeMetadata(
+            listOf(
+                "",
+                encoded("LumenSidebar"),
+                encoded("Info"),
+                encoded("com.example.LumenSidebar.Companion.Info"),
+                encoded("docs"),
+            ),
+        )
+
+        assertEquals("", metadata.single().namespace)
+        assertEquals("LumenSidebar", metadata.single().enclosingObjectName)
+        assertEquals("Info", metadata.single().functionName)
+        assertEquals("com.example.LumenSidebar.Companion.Info", metadata.single().fqn)
+    }
+
+    private fun encoded(value: String): String = Base64.getEncoder().encodeToString(value.toByteArray())
 
     @Test
     fun `buildFileSpec nests namespaced component refs under namespace object`() {

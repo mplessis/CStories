@@ -2,6 +2,7 @@ package io.cstories.gradle
 
 import org.gradle.api.Task
 import org.gradle.api.tasks.bundling.Jar
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.testfixtures.ProjectBuilder
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import kotlin.test.Test
@@ -10,6 +11,26 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ComponentRefsWiringTest {
+    @Test
+    fun `metadata extraction preserves repeated encoded fields`() {
+        val project = ProjectBuilder.builder().build()
+        val task = project.tasks.register("extract", ExtractComponentMetadataTask::class.java)
+        val input = project.layout.buildDirectory.file("input/META-INF/cstories/components.txt").get().asFile
+        input.parentFile.mkdirs()
+        input.writeText("same\nsame\nname\nfqn\ndoc\nsame\nsame\nother\nfqn2\ndoc2\n")
+        task.configure {
+            inputClasspath.from(input.parentFile.parentFile.parentFile)
+            outputFile.set(project.layout.buildDirectory.file("output/components.txt"))
+        }
+
+        task.get().actions.forEach { it.execute(task.get()) }
+
+        assertEquals(
+            input.readText().trimEnd(),
+            task.get().outputFile.get().asFile.readText().trimEnd(),
+        )
+    }
+
     @Test
     fun `components plugin keeps annotations compile only`() {
         val project = ProjectBuilder.builder().build()

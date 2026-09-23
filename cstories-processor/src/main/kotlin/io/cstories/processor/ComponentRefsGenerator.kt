@@ -67,7 +67,10 @@ internal object ComponentRefsGenerator {
     }
 
     fun decodeMetadata(lines: List<String>): List<ComponentMetadata> {
-        return lines.filter(String::isNotBlank).chunked(5).mapNotNull { fields ->
+        // Empty fields are significant: an empty namespace or documentation
+        // is still one field in the five-line record. Do not filter blank
+        // lines here or all following fields become shifted.
+        return lines.chunked(5).mapNotNull { fields ->
             if (fields.size != 5) return@mapNotNull null
             ComponentMetadata(
                 namespace = decode(fields[0]),
