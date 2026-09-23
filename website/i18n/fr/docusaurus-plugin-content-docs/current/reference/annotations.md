@@ -15,8 +15,9 @@ Marque une fonction composable comme une story, démontrant un composant dans le
 | `name` | `String` | oui | Libellé de la story affiché dans la navigation. Ne doit pas contenir `/`. |
 | `tags` | `Array<String>` | non | Tags optionnels pour la story. |
 | `component` | `String` | non | Référence FQN sûre vers un `@CStoryComponent`, généralement via `CStoryComponentRefs`. |
+| `themeWrapper` | `KClass<*>` | non | Objet implémentant `CStoriesThemeWrapper`, utilisé uniquement pour cette story. |
 
-S'applique à : fonctions `@Composable` top-level.
+S'applique à : fonctions `@Composable` top-level. `Any::class` signifie que le wrapper du catalogue est utilisé.
 
 ## `@CStoryComponent`
 
@@ -29,13 +30,6 @@ panneau de documentation du catalogue.
 | `namespace` | `String` | non | Namespace optionnel, devant être un identifiant Kotlin valide, utilisé pour imbriquer la référence générée sous `CStoryComponentRefs.<namespace>...`. Laisser vide pour conserver la référence historique à la racine. |
 
 S'applique à : fonctions top-level, ou fonctions membres d'un objet/companion object.
-
-## `@CStoryThemeWrapper`
-
-Marque une propriété top-level qui fournit le wrapper de thème de tout le catalogue, utilisé pour prévisualiser les
-stories sous le thème de votre propre design system plutôt que le fallback Material3 par défaut du runtime.
-
-S'applique à : propriétés top-level uniquement. Une seule propriété de ce type est autorisée dans tout le projet.
 
 Voir aussi : [Référencer un composant dans une story](/guides/component-references) et
 [Personnaliser le thème du catalogue](/guides/theming).

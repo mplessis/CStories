@@ -119,7 +119,7 @@ fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = 
                                                         CanvasBackgroundStyle.Checkerboard
                                                     }
                                             },
-                                            themeWrapper = themeWrapper,
+                                             themeWrapper = entry.themeWrapper ?: themeWrapper,
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .fillMaxWidth(),

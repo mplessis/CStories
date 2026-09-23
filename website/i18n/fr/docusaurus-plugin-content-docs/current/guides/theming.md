@@ -17,23 +17,56 @@ Par défaut, l'activer enveloppe la story prévisualisée dans un `MaterialTheme
 
 ## Utiliser votre propre thème
 
-Si votre design system utilise son propre thème plutôt que Material3 (un `MyCustomTheme(isDark) { ... }`, par exemple),
-indiquez-le au catalogue en annotant une unique propriété top-level avec `@CStoryThemeWrapper`, n'importe où dans
-votre projet :
+Si votre design system utilise son propre thème plutôt que Material3 (un `MyTheme(isDark) { ... }`, par exemple),
+définissez un objet wrapper :
 
 ```kotlin
-import io.cstories.annotations.CStoryThemeWrapper
 import io.cstories.runtime.CStoriesThemeWrapper
 
-@CStoryThemeWrapper
-val MyCustomCStoriesThemeWrapper: CStoriesThemeWrapper = { isDark, content ->
-    MyCustomTheme(isDark = isDark, content = content)
+object CustomCStoriesThemeWrapper : CStoriesThemeWrapper {
+    @Composable
+    override operator fun invoke(isDark: Boolean, content: @Composable () -> Unit) {
+        MyTheme(isDark = isDark, content = content)
+    }
 }
 ```
 
-`cstories-processor` le détecte via KSP — aucune configuration Gradle nécessaire. Le point d'entrée généré enveloppe
-alors chaque story prévisualisée dans `MyCustomTheme(isDark = ...)` au lieu du fallback Material3, afin que les
-couleurs réellement rendues (pas seulement le fond du canvas) reflètent le thème.
+L'objet est découvert automatiquement par le plugin CStories. Aucune configuration Gradle n'est nécessaire. S'il
+n'est pas présent, `DefaultCStoriesThemeWrapper` est utilisé.
+
+## Surcharger le thème d'une story
+
+Une story peut utiliser un autre thème sans modifier le wrapper global du catalogue. Commencez par définir un objet qui
+implémente `CStoriesThemeWrapper`. Il doit implémenter `invoke`, qui reçoit l'état light/dark sélectionné et doit rendre
+la story à l'intérieur de votre thème :
+
+```kotlin
+object MyThemeWrapper : CStoriesThemeWrapper {
+    @Composable
+    override operator fun invoke(isDark: Boolean, content: @Composable () -> Unit) {
+        MyTheme(isDark = isDark, content = content)
+    }
+}
+```
+
+Référencez ensuite cet objet dans l'argument `themeWrapper` de la story :
+
+```kotlin
+@CStory(
+    collection = "Components",
+    group = "Buttons",
+    name = "Alternative button",
+    themeWrapper = MyThemeWrapper::class,
+)
+@Composable
+fun AlternativeButtonStory() {
+    AlternativeButton()
+}
+```
+
+Le wrapper spécifique de la story est prioritaire sur celui passé à `CStoriesApp`. Les stories sans argument
+`themeWrapper` utilisent le wrapper du catalogue, ou `DefaultCStoriesThemeWrapper` lorsqu'aucun wrapper global n'a été
+découvert.
 
 ## Previews d'appareils
 
@@ -53,11 +86,3 @@ fun ResponsiveProfileStory() {
 
 Avec `MobileDevicePreview` ou `DesktopDevicePreview` utilisé directement, la même règle s'applique : seul le contenu
 à l'intérieur de l'appareil simulé est enveloppé par le thème sélectionné.
-
-## Contraintes
-
-:::warning
-Une seule propriété `@CStoryThemeWrapper` est autorisée dans tout le projet. Le build échoue avec une erreur claire
-si plusieurs sont trouvées, et KSP signale une erreur si l'annotation est appliquée à autre chose qu'une propriété
-top-level.
-:::

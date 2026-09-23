@@ -1,7 +1,6 @@
 package io.cstories.gradle
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -52,17 +51,13 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             .distinct()
             .sorted()
 
-        // A `@CStoryThemeWrapper` property is picked up by `cstories-processor`
-        // (see `CStoriesProcessor.runThemeWrapperPass`) wherever it's declared
-        // in the dependency graph, so at most one manifest entry should ever
-        // be found across the whole aggregated classpath.
         val themeWrapperCandidates = runtimeClasspath.files
             .flatMap { readManifest(it, THEME_WRAPPER_MANIFEST_PATH) }
             .distinct()
         if (themeWrapperCandidates.size > 1) {
-            throw GradleException(
-                "Only one @CStoryThemeWrapper property is allowed across the whole project, found " +
-                    "${themeWrapperCandidates.size}: ${themeWrapperCandidates.joinToString()}",
+            throw org.gradle.api.GradleException(
+                "Only one CustomCStoriesThemeWrapper is allowed across the whole project, found " +
+                    themeWrapperCandidates.joinToString(),
             )
         }
         val themeWrapperReference = themeWrapperCandidates.singleOrNull()

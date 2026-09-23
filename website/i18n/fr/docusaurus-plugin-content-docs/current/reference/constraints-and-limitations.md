@@ -27,10 +27,11 @@ l'état de navigation (story sélectionnée, valeurs des contrôles) est perdu �
 prennent quelques secondes selon la taille du projet. Il n'existe actuellement aucun hot reload préservant l'état
 pour la cible `wasmJs`.
 
-## Unicité du wrapper de thème
+## Wrappers de thème
 
-Une seule propriété `@CStoryThemeWrapper` est autorisée dans tout le projet. En déclarer plusieurs fait échouer le
-build avec une erreur claire.
+Le wrapper global est un `object` Kotlin accessible nommé `CustomCStoriesThemeWrapper` qui implémente
+`CStoriesThemeWrapper`. Il est découvert automatiquement. Chaque story peut le surcharger avec
+`@CStory(themeWrapper = WrapperObject::class)`. Un seul wrapper global peut exister dans le projet agrégé.
 
 ## Références de composants multi-modules
 

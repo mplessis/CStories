@@ -94,6 +94,9 @@ internal object StoryRegistryGenerator {
             }
             builder.add("),\n")
             builder.add("    composableInvoker = %L,\n", buildInvoker(entry.invoker))
+            if (entry.themeWrapper != null) {
+                builder.add("    themeWrapper = %T,\n", ClassName(entry.themeWrapper.packageName, entry.themeWrapper.objectName))
+            }
             builder.add("    documentation = %L,\n", entry.documentation?.let { CodeBlock.of("%S", it) } ?: CodeBlock.of("null"))
             builder.add("    usageCode = %L\n", entry.usageCode?.let { CodeBlock.of("%S", it) } ?: CodeBlock.of("null"))
             builder.add("  )")

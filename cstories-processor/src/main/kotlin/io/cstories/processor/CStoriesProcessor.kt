@@ -11,6 +11,7 @@ import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.Modifier
 import com.google.devtools.ksp.symbol.KSPropertyDeclaration
 import com.google.devtools.ksp.validate
 
@@ -65,10 +66,6 @@ class CStoriesProcessor(
     /** See [runStoriesPass] for why entries accumulate across rounds. */
     private val accumulatedEntries = mutableListOf<StoryDescriptor>()
 
-    /**
-     * `true` once a `@CStoryThemeWrapper` manifest entry has been written for
-     * this module — same one-shot-write constraint as [storyRegistryWritten].
-     */
     private var themeWrapperWritten = false
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -78,52 +75,58 @@ class CStoriesProcessor(
         return deferredComponents + deferredStories + deferredThemeWrapper
     }
 
-    /**
-     * Scans for a top-level property annotated `@CStoryThemeWrapper` and
-     * writes its FQN to `META-INF/cstories/theme-wrapper.txt`, so
-     * `CStoriesAggregateTask` can wire it into the generated entry point's
-     * `CStoriesApp(themeWrapper = ...)` argument.
-     *
-     * Tied to [processStories] (rather than running unconditionally) since
-     * that's the same "platform mode" pass whose per-module manifest output
-     * ends up somewhere `CStoriesAggregateTask` actually scans.
-     */
     private fun runThemeWrapperPass(resolver: Resolver): List<KSAnnotated> {
         if (themeWrapperWritten) return emptyList()
 
-        val symbols = resolver
-            .getSymbolsWithAnnotation(CSTORY_THEME_WRAPPER_ANNOTATION_FQN)
-            .filterIsInstance<KSPropertyDeclaration>()
+        val declarations = resolver.getAllFiles()
+            .flatMap { file -> file.declarations.flatMap(::allClassDeclarations) }
+            .filter { it.simpleName.asString() == CUSTOM_THEME_WRAPPER_NAME }
             .toList()
-
-        val deferred = symbols.filterNot(KSAnnotated::validate)
+        val deferred = declarations.filterNot(KSAnnotated::validate)
         if (deferred.isNotEmpty()) return deferred
 
-        val validProperties = symbols.filter { property ->
-            if (property.parentDeclaration != null) {
+        val wrapperType = resolver.getClassDeclarationByName(CSTORIES_THEME_WRAPPER_FQN)
+            ?.asStarProjectedType()
+        val valid = declarations.filter { declaration ->
+            if (declaration.parentDeclaration != null) {
+                logger.error("$CUSTOM_THEME_WRAPPER_NAME must be a top-level object", declaration)
+                false
+            } else if (declaration.modifiers.contains(Modifier.PRIVATE)) {
+                logger.error("$CUSTOM_THEME_WRAPPER_NAME must be accessible from the generated entry point", declaration)
+                false
+            } else if (declaration.classKind != ClassKind.OBJECT) {
+                logger.error("$CUSTOM_THEME_WRAPPER_NAME must be declared as an object", declaration)
+                false
+            } else if (wrapperType == null || !wrapperType.isAssignableFrom(declaration.asStarProjectedType())) {
                 logger.error(
-                    "@CStoryThemeWrapper supports top-level properties only: ${property.simpleName.asString()}",
-                    property,
+                    "$CUSTOM_THEME_WRAPPER_NAME must implement CStoriesThemeWrapper",
+                    declaration,
                 )
                 false
             } else {
                 true
             }
         }
-
-        if (validProperties.size > 1) {
+        if (valid.size > 1) {
             logger.error(
-                "Only one @CStoryThemeWrapper property is allowed per module, found ${validProperties.size}: " +
-                    validProperties.joinToString { it.simpleName.asString() },
+                "Only one $CUSTOM_THEME_WRAPPER_NAME is allowed per module, found " +
+                    valid.joinToString { it.qualifiedName?.asString() ?: it.simpleName.asString() },
             )
             return emptyList()
         }
 
-        val property = validProperties.singleOrNull() ?: return emptyList()
-        val fqn = "${property.packageName.asString()}.${property.simpleName.asString()}"
+        val wrapper = valid.singleOrNull() ?: run {
+            themeWrapperWritten = true
+            return emptyList()
+        }
+        val qualifiedName = wrapper.qualifiedName?.asString()
+        if (qualifiedName == null) {
+            logger.error("$CUSTOM_THEME_WRAPPER_NAME must have a qualified name", wrapper)
+            themeWrapperWritten = true
+            return emptyList()
+        }
         themeWrapperWritten = true
-        ThemeWrapperManifestWriter.write(codeGenerator, fqn)
-
+        ThemeWrapperManifestWriter.write(codeGenerator, qualifiedName)
         return emptyList()
     }
 
@@ -444,6 +447,8 @@ class CStoriesProcessor(
         val group = annotation.stringArgument("group")
         val name = annotation.stringArgument("name")
         val component = annotation.stringArgument("component")
+        val themeWrapperResolution = resolveThemeWrapper(annotation, resolver, function, logger)
+        if (themeWrapperResolution is InvalidThemeWrapper) return null
 
         val validationError = StoryValidation.validateCollectionGroupAndName(collection, group, name)
         if (validationError != null) {
@@ -488,6 +493,7 @@ class CStoriesProcessor(
             group = validatedGroup,
             name = validatedName,
             invoker = invoker,
+            themeWrapper = themeWrapperResolution.reference,
             documentation = documentation,
             usageCode = usageCode,
         )
@@ -496,7 +502,8 @@ class CStoriesProcessor(
 
 private const val CSTORY_ANNOTATION_FQN = "io.cstories.annotations.CStory"
 private const val CSTORY_COMPONENT_ANNOTATION_FQN = "io.cstories.annotations.CStoryComponent"
-private const val CSTORY_THEME_WRAPPER_ANNOTATION_FQN = "io.cstories.annotations.CStoryThemeWrapper"
+private const val CSTORIES_THEME_WRAPPER_FQN = "io.cstories.runtime.CStoriesThemeWrapper"
+private const val CUSTOM_THEME_WRAPPER_NAME = "CustomCStoriesThemeWrapper"
 private const val COMPOSABLE_ANNOTATION_FQN = "androidx.compose.runtime.Composable"
 private const val GENERATED_DOC_ANNOTATION_FQN = "io.cstories.annotations.GeneratedComponentDocumentation"
 
@@ -506,6 +513,59 @@ private fun KSFunctionDeclaration.isComposable(): Boolean {
 
 private fun KSDeclaration.qualifiedNameAsString(): String? = qualifiedName?.asString()
 
+private fun allClassDeclarations(declaration: KSDeclaration): List<KSClassDeclaration> {
+    val klass = declaration as? KSClassDeclaration ?: return emptyList()
+    return listOf(klass) + klass.declarations.flatMap(::allClassDeclarations)
+}
+
 private fun com.google.devtools.ksp.symbol.KSAnnotation.stringArgument(name: String): String? {
     return arguments.firstOrNull { it.name?.asString() == name }?.value as? String
+}
+
+private sealed interface ThemeWrapperResolution {
+    val reference: ThemeWrapperReference?
+}
+
+private data class ValidThemeWrapper(override val reference: ThemeWrapperReference?) : ThemeWrapperResolution
+private object InvalidThemeWrapper : ThemeWrapperResolution {
+    override val reference: ThemeWrapperReference? = null
+}
+
+private fun CStoriesProcessor.resolveThemeWrapper(
+    annotation: com.google.devtools.ksp.symbol.KSAnnotation,
+    resolver: Resolver,
+    function: KSFunctionDeclaration,
+    logger: KSPLogger,
+): ThemeWrapperResolution {
+    val argument = annotation.arguments.firstOrNull { it.name?.asString() == "themeWrapper" }
+        ?: return ValidThemeWrapper(null)
+    val type = argument.value as? com.google.devtools.ksp.symbol.KSType
+        ?: return ValidThemeWrapper(null)
+    val declaration = type.declaration as? KSClassDeclaration
+        ?: return ValidThemeWrapper(null)
+    if (declaration.qualifiedName?.asString() == "kotlin.Any") return ValidThemeWrapper(null)
+
+    if (declaration.classKind != ClassKind.OBJECT) {
+        logger.error("@CStory(themeWrapper = ...) must reference an object", function)
+        return InvalidThemeWrapper
+    }
+
+    val wrapperType = resolver.getClassDeclarationByName(CSTORIES_THEME_WRAPPER_FQN)?.asStarProjectedType()
+    if (wrapperType == null || !wrapperType.isAssignableFrom(type)) {
+        logger.error(
+            "@CStory(themeWrapper = ...) must reference an object implementing CStoriesThemeWrapper",
+            function,
+        )
+        return InvalidThemeWrapper
+    }
+
+    val qualifiedName = declaration.qualifiedName?.asString()
+    if (qualifiedName == null) {
+        logger.error("The story theme wrapper must have a qualified name", function)
+        return InvalidThemeWrapper
+    }
+    return ValidThemeWrapper(ThemeWrapperReference(
+        packageName = qualifiedName.substringBeforeLast('.', ""),
+        objectName = qualifiedName.substringAfterLast('.'),
+    ))
 }

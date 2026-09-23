@@ -1,5 +1,7 @@
 package io.cstories.annotations
 
+import kotlin.reflect.KClass
+
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.SOURCE)
 annotation class CStory(
@@ -8,4 +10,5 @@ annotation class CStory(
     val name: String,
     val tags: Array<String> = [],
     val component: String = "",
+    val themeWrapper: KClass<*> = Any::class,
 )

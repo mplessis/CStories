@@ -12,19 +12,23 @@ import androidx.compose.runtime.Composable
  *
  * `cstories-runtime` doesn't know about a consumer's own design system (e.g.
  * a `LumenTheme(isDark) { ... }`), so this indirection lets a consumer
- * project supply its own wrapper — see the `cstories { themeWrapper = ... }`
- * Gradle DSL wired by `cstories-gradle-plugin`, which injects a custom
- * reference into the generated entry point instead of [DefaultCStoriesThemeWrapper].
+ * project supply its own wrapper. The generated catalog entry point can pass
+ * it to [CStoriesApp], while individual stories can select an override.
  */
-typealias CStoriesThemeWrapper = @Composable (isDark: Boolean, content: @Composable () -> Unit) -> Unit
+fun interface CStoriesThemeWrapper {
+    @Composable
+    operator fun invoke(isDark: Boolean, content: @Composable () -> Unit)
+}
 
 /**
- * Fallback used when no custom `cstories { themeWrapper = ... }` is
- * configured: wraps the story in a nested [MaterialTheme] using Material3's
- * own dark/light color schemes.
+ * Fallback used when no custom wrapper is passed to [CStoriesApp]: wraps the
+ * story in a nested [MaterialTheme] using Material3's own dark/light color schemes.
  */
-val DefaultCStoriesThemeWrapper: CStoriesThemeWrapper = { isDark, content ->
-    MaterialTheme(colorScheme = if (isDark) darkColorScheme() else lightColorScheme()) {
-        content()
+object DefaultCStoriesThemeWrapper : CStoriesThemeWrapper {
+    @Composable
+    override operator fun invoke(isDark: Boolean, content: @Composable () -> Unit) {
+        MaterialTheme(colorScheme = if (isDark) darkColorScheme() else lightColorScheme()) {
+            content()
+        }
     }
 }

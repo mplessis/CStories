@@ -15,6 +15,12 @@ The main catalog plugin. Applies to the module that hosts your stories.
 
 Applying it with neither `jvm()` nor `wasmJs` declared fails fast with a clear error.
 
+### Global theme wrapper
+
+The plugin automatically discovers an accessible object named `CustomCStoriesThemeWrapper` that implements
+`CStoriesThemeWrapper`. No Gradle configuration is required. If it is not present, the runtime uses
+`DefaultCStoriesThemeWrapper`.
+
 ## `dev.cstories.gradle.components`
 
 A lightweight plugin for plain component/design-system library modules. Applies to the module that declares your

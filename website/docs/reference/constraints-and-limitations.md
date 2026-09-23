@@ -24,10 +24,11 @@ The web catalog's watch mode (`--continuous`) triggers a full page reload on eve
 (selected story, knob values) is lost each time, and reloads take a few seconds depending on project size. There is
 currently no state-preserving hot reload available for the `wasmJs` target.
 
-## Theme wrapper uniqueness
+## Theme wrappers
 
-Only one `@CStoryThemeWrapper` property is allowed across the whole project. Declaring more than one causes the
-build to fail with a clear error.
+The global theme wrapper is an accessible Kotlin `object` named `CustomCStoriesThemeWrapper` implementing
+`CStoriesThemeWrapper`. It is discovered automatically. Each story may override it with
+`@CStory(themeWrapper = WrapperObject::class)`. Only one global wrapper may exist across the aggregated project.
 
 ## Multi-module component references
 
