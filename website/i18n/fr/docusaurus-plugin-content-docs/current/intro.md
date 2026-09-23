@@ -5,7 +5,11 @@ slug: /
 sidebar_label: Accueil
 ---
 
+import CurrentVersion from '@site/src/components/CurrentVersion';
+
 # CStories
+
+<CurrentVersion />
 
 **CStories** est une solution de catalogage de composants pour Compose Multiplatform.
 

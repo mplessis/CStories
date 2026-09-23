@@ -5,6 +5,14 @@
 // See: https://docusaurus.io/docs/api/docusaurus-config
 
 import { themes as prismThemes } from 'prism-react-renderer';
+import { readFileSync } from 'node:fs';
+
+const gradleProperties = readFileSync(new URL('../gradle.properties', import.meta.url), 'utf8');
+const cstoriesVersion = gradleProperties.match(/^cstoriesVersion=(.+)$/m)?.[1];
+
+if (!cstoriesVersion) {
+  throw new Error('cstoriesVersion is missing from gradle.properties');
+}
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -32,6 +40,10 @@ const config = {
   trailingSlash: true,
 
   onBrokenLinks: 'throw',
+
+  customFields: {
+    cstoriesVersion,
+  },
 
   // Docusaurus always serves the default locale unprefixed at the site
   // root (`/`) — this is a hard framework constraint, not a config choice

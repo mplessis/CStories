@@ -32,3 +32,19 @@
 .navbar__logo img {
     height: 36px;
 }
+
+.cstories-current-version {
+    display: inline-block;
+    margin: 0 0 1rem;
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--ifm-color-primary);
+    border-radius: 999px;
+    color: var(--ifm-color-primary-darkest);
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+[data-theme='dark'] .cstories-current-version {
+    color: var(--ifm-color-primary-lightest);
+}
