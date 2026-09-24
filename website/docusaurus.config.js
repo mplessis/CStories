@@ -20,7 +20,7 @@ if (!cstoriesVersion) {
 const config = {
   title: 'CStories',
   tagline: 'A component cataloging solution for Compose Multiplatform',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon.png',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
   future: {
