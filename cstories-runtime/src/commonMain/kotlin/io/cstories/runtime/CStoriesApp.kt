@@ -47,7 +47,7 @@ fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = 
     var selected by remember(stories) { mutableStateOf(stories.firstOrNull()) }
     val resetTokens = remember(stories) { mutableStateOf(mapOf<List<String>, Int>()) }
     var isCanvasDark by remember { mutableStateOf(false) }
-    var canvasBackgroundStyle by remember { mutableStateOf(CanvasBackgroundStyle.Checkerboard) }
+    var canvasBackgroundStyle by remember { mutableStateOf(CanvasBackgroundStyle.Solid) }
     var sidebarWidth by remember { mutableStateOf(SidebarDefaultWidth) }
 
     MaterialTheme {
@@ -119,7 +119,7 @@ fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = 
                                                         CanvasBackgroundStyle.Checkerboard
                                                     }
                                             },
-                                             themeWrapper = entry.themeWrapper ?: themeWrapper,
+                                            themeWrapper = entry.themeWrapper ?: themeWrapper,
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .fillMaxWidth(),
