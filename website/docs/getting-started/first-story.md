@@ -60,6 +60,8 @@ With this example, the story will appear in a structure such as:
 DesignSystem / Buttons / Primary
 ```
 
+The catalog sidebar search matches story names and any collection or group in the story path. Matching is partial and case-insensitive; a matching group shows every story beneath it.
+
 ## 4. Run and verify
 
 Launch the catalog:

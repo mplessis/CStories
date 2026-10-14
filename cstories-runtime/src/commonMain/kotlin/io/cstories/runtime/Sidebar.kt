@@ -37,6 +37,7 @@ fun Sidebar(
     modifier: Modifier = Modifier,
 ) {
     var query by remember { mutableStateOf("") }
+    val filteredTree = remember(tree, query) { filterTree(tree, query) }
 
     Column(
         modifier = modifier
@@ -55,16 +56,13 @@ fun Sidebar(
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            tree.forEach { node ->
-                if (query.isBlank() || nodeMatches(node, query)) {
-                    TreeNodeItem(
-                        node = node,
-                        selectedPath = selectedPath,
-                        onSelect = onSelect,
-                        depth = 0,
-                        query = query,
-                    )
-                }
+            filteredTree.forEach { node ->
+                TreeNodeItem(
+                    node = node,
+                    selectedPath = selectedPath,
+                    onSelect = onSelect,
+                    depth = 0,
+                )
             }
         }
         if (!isHotReloadActive()) {
@@ -74,12 +72,26 @@ fun Sidebar(
     }
 }
 
-private fun nodeMatches(node: TreeNode, query: String): Boolean {
+internal fun filterTree(tree: List<TreeNode>, query: String): List<TreeNode> {
     val needle = query.trim().lowercase()
-    return needle.isEmpty() || when (node) {
-        is TreeNode.Leaf -> node.name.lowercase().contains(needle)
-        is TreeNode.Group -> node.children.any { nodeMatches(it, needle) }
+    if (needle.isEmpty()) return tree
+
+    fun filter(nodes: List<TreeNode>): List<TreeNode> = nodes.mapNotNull { node ->
+        when (node) {
+            is TreeNode.Leaf -> node.takeIf { it.name.lowercase().contains(needle) }
+            is TreeNode.Group -> {
+                if (node.name.lowercase().contains(needle)) {
+                    node
+                } else {
+                    val filteredChildren = filter(node.children)
+                    node.takeIf { filteredChildren.isNotEmpty() }
+                        ?.copy(children = filteredChildren)
+                }
+            }
+        }
     }
+
+    return filter(tree)
 }
 
 @Composable
@@ -125,7 +137,6 @@ private fun TreeNodeItem(
     selectedPath: List<String>?,
     onSelect: (StoryEntry) -> Unit,
     depth: Int,
-    query: String,
 ) {
     when (node) {
         is TreeNode.Group -> {
@@ -162,15 +173,12 @@ private fun TreeNodeItem(
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                     ) {
                         node.children.forEach { child ->
-                            if (query.isBlank() || nodeMatches(child, query)) {
-                                TreeNodeItem(
-                                    node = child,
-                                    selectedPath = selectedPath,
-                                    onSelect = onSelect,
-                                    depth = depth + 1,
-                                    query = query,
-                                )
-                            }
+                            TreeNodeItem(
+                                node = child,
+                                selectedPath = selectedPath,
+                                onSelect = onSelect,
+                                depth = depth + 1,
+                            )
                         }
                     }
                 }

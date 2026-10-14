@@ -13,3 +13,6 @@
 /gradle/wrapper/
 
 .DS_Store
+.omp
+.junie
+.opencode
