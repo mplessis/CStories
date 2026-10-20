@@ -1,9 +1,16 @@
 package io.cstories.sample
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.cstories.annotations.CStory
@@ -52,53 +59,30 @@ fun DevicePreviewStory() {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun DevicePreviewDemoScreen(title: String, showAction: Boolean) {
-
-    Column(
-        modifier = Modifier
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-    ) {
-        Text(
-            text = title,
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.headlineLarge,
-        )
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        DemoTopBar(title = title, subtitle = "CStories")
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            SummaryCard("Stories", "24")
-            SummaryCard("Components", "12")
-            SummaryCard("Coverage", "86%")
-        }
-        repeat(5) { index ->
-                Text(
-                    text = "Recent activity ${index + 1}",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                    .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant, MaterialTheme.shapes.medium)
-                    .padding(16.dp),
-            )
-        }
-        if (showAction) {
-            Button(onClick = {}) {
-                Text("Create story")
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                DemoStatCard(label = "Stories", value = "24", trendPercent = 9, modifier = Modifier.width(160.dp))
+                DemoStatCard(label = "Components", value = "12", modifier = Modifier.width(160.dp))
+                DemoStatCard(label = "Coverage", value = "86%", trendPercent = 4, modifier = Modifier.width(160.dp))
             }
-        }
-    }
-
-}
-
-@Composable
-private fun SummaryCard(label: String, value: String) {
-    Card(
-        modifier = Modifier.width(150.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-    ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            Text(label, color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.labelMedium)
-            Text(value, color = MaterialTheme.colorScheme.onSecondaryContainer, style = MaterialTheme.typography.headlineSmall)
+            sampleMembers.take(5).forEach { (memberName, memberRole) ->
+                DemoListItem(
+                    title = memberName,
+                    subtitle = "Updated a story · $memberRole",
+                    leading = { DemoAvatar(name = memberName, size = AvatarSize.Small) },
+                )
+            }
+            if (showAction) {
+                DemoButton(text = "Create story", onClick = {}, leadingIcon = SampleIcon.Add.vector)
+            }
         }
     }
 }

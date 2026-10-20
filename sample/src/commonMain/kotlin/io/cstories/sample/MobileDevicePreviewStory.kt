@@ -1,24 +1,14 @@
 package io.cstories.sample
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.cstories.annotations.CStory
@@ -41,61 +31,37 @@ fun MobileDevicePreviewStory() {
     MobileDevicePreview {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("9:41", color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.labelSmall)
-            Text(title, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.headlineMedium)
+            DemoTopBar(title = title, onBack = {})
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                shape = RoundedCornerShape(20.dp),
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        "Weekly progress",
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        "You are on track",
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        style = MaterialTheme.typography.bodyMedium,
+            DemoProgressIndicator(
+                progress = 70,
+                label = "Weekly progress",
+                showPercentage = true,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            )
+
+            Column {
+                sampleMembers.forEachIndexed { index, (memberName, _) ->
+                    DemoListItem(
+                        title = "Activity ${index + 1}",
+                        subtitle = "Completed today by $memberName",
+                        leading = { DemoAvatar(name = memberName, size = AvatarSize.Small) },
+                        trailing = if (index == 0) ({ DemoBadge(text = "New", tone = StatusTone.Info, size = BadgeSize.Small) }) else null,
                     )
                 }
-            }
-
-            repeat(7) { index ->
-                ActivityRow(
-                    title = "Activity ${index + 1}",
-                    detail = "Completed today",
-                )
             }
 
             if (showAction) {
-                Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
-                    Text("Continue")
-                }
+                DemoButton(
+                    text = "Continue",
+                    onClick = {},
+                    size = ButtonSize.Large,
+                    fullWidth = true,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
             }
-        }
-    }
-}
-
-@Composable
-private fun ActivityRow(title: String, detail: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        androidx.compose.foundation.layout.Box(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
-                .padding(7.dp),
-        )
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, color = MaterialTheme.colorScheme.onBackground, style = MaterialTheme.typography.bodyLarge)
-            Text(detail, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
