@@ -14,13 +14,13 @@ class StorySourceExtractorTest {
             }
         """.trimIndent()
 
-        val result = StorySourceExtractor.extractCall(body, "PrimaryButton")
+        val result = StorySourceExtractor.extractCalls(body, "PrimaryButton").firstOrNull()
 
         assertEquals("""PrimaryButton(text = "Click me", enabled = true, onClick = {})""", result)
     }
 
     @Test
-    fun `extracts a multi-line call with a trailing lambda`() {
+    fun `extracts a multi-line call re-indented relative to its start column`() {
         val body = """
             Column {
                 KnobPanel {
@@ -35,15 +35,15 @@ class StorySourceExtractorTest {
             }
         """.trimIndent()
 
-        val result = StorySourceExtractor.extractCall(body, "PrimaryButton")
+        val result = StorySourceExtractor.extractCalls(body, "PrimaryButton").firstOrNull()
 
         assertEquals(
             """
             PrimaryButton(
-                    text = label,
-                    enabled = enabled,
-                    onClick = {},
-                )
+                text = label,
+                enabled = enabled,
+                onClick = {},
+            )
             """.trimIndent(),
             result,
         )
@@ -57,7 +57,7 @@ class StorySourceExtractorTest {
             }
         """.trimIndent()
 
-        assertNull(StorySourceExtractor.extractCall(body, "PrimaryButton"))
+        assertNull(StorySourceExtractor.extractCalls(body, "PrimaryButton").firstOrNull())
     }
 
     @Test
@@ -68,7 +68,7 @@ class StorySourceExtractorTest {
             }
         """.trimIndent()
 
-        assertNull(StorySourceExtractor.extractCall(body, "PrimaryButton"))
+        assertNull(StorySourceExtractor.extractCalls(body, "PrimaryButton").firstOrNull())
     }
 
     @Test
@@ -79,7 +79,7 @@ class StorySourceExtractorTest {
             }
         """.trimIndent()
 
-        val result = StorySourceExtractor.extractCall(body, "Primary")
+        val result = StorySourceExtractor.extractCalls(body, "Primary").firstOrNull()
 
         assertEquals(
             """LumenButton.Primary(onClick = {}, label = label, enabled = enabled)""",
@@ -95,13 +95,13 @@ class StorySourceExtractorTest {
             }
         """.trimIndent()
 
-        val result = StorySourceExtractor.extractCall(body, "Primary")
+        val result = StorySourceExtractor.extractCalls(body, "Primary").firstOrNull()
 
         assertEquals("""design.LumenButton.Primary(onClick = {})""", result)
     }
 
     @Test
-    fun `picks the first call when the component is invoked more than once`() {
+    fun `extracts every call in source order`() {
         val body = """
             Column {
                 PrimaryButton(text = "First", onClick = {})
@@ -109,8 +109,80 @@ class StorySourceExtractorTest {
             }
         """.trimIndent()
 
-        val result = StorySourceExtractor.extractCall(body, "PrimaryButton")
+        val result = StorySourceExtractor.extractCalls(body, "PrimaryButton")
 
-        assertEquals("""PrimaryButton(text = "First", onClick = {})""", result)
+        assertEquals(
+            listOf(
+                """PrimaryButton(text = "First", onClick = {})""",
+                """PrimaryButton(text = "Second", onClick = {})""",
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun `does not extract a call nested inside an already extracted call again`() {
+        val body = """
+            Card(
+                content = {
+                    Card(title = "Inner")
+                },
+            )
+        """.trimIndent()
+
+        val result = StorySourceExtractor.extractCalls(body, "Card")
+
+        assertEquals(1, result.size)
+        assertEquals(
+            """
+            Card(
+                content = {
+                    Card(title = "Inner")
+                },
+            )
+            """.trimIndent(),
+            result.single(),
+        )
+    }
+
+    @Test
+    fun `re-indents each call found inside a nested layout`() {
+        val body = """
+            Row {
+                items.forEach { item ->
+                    PrimaryButton(
+                        text = item,
+                        onClick = {},
+                    )
+                }
+                PrimaryButton(text = "Last", onClick = {})
+            }
+        """.trimIndent()
+
+        val result = StorySourceExtractor.extractCalls(body, "PrimaryButton")
+
+        assertEquals(
+            listOf(
+                """
+                PrimaryButton(
+                    text = item,
+                    onClick = {},
+                )
+                """.trimIndent(),
+                """PrimaryButton(text = "Last", onClick = {})""",
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun `returns an empty list when the component is never called`() {
+        val body = """
+            Column {
+                Text("Nothing to see here")
+            }
+        """.trimIndent()
+
+        assertEquals(emptyList(), StorySourceExtractor.extractCalls(body, "PrimaryButton"))
     }
 }

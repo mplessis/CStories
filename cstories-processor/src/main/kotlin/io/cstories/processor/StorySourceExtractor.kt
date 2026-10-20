@@ -6,7 +6,7 @@ import java.io.File
 
 /**
  * Extracts, from a `@CStory` function's own source file, the exact
- * expression that invokes its referenced `@CStoryComponent`.
+ * expressions that invoke its referenced `@CStoryComponent`.
  *
  * This is a lightweight text-based extraction (brace/paren balancing), not
  * a real AST — KSP only exposes symbol-level information, not
@@ -17,14 +17,14 @@ import java.io.File
 internal object StorySourceExtractor {
 
     /**
-     * Returns the source text of the call to [componentFunctionName] found
-     * inside [story]'s body, or `null` if the story's source can't be read
-     * or the call can't be located (e.g. the component is invoked
-     * indirectly, or via an alias).
+     * Returns the source text of every call to [componentFunctionName]
+     * found inside [story]'s body, in source order and separated by a blank
+     * line, or `null` if the story's source can't be read or no call can be
+     * located (e.g. the component is invoked indirectly, or via an alias).
      */
     fun extractUsageCode(story: KSFunctionDeclaration, componentFunctionName: String): String? {
         val body = extractFunctionBody(story) ?: return null
-        return extractCall(body, componentFunctionName)
+        return extractCalls(body, componentFunctionName).ifEmpty { null }?.joinToString("\n\n")
     }
 
     private fun extractFunctionBody(function: KSFunctionDeclaration): String? {
@@ -51,7 +51,7 @@ internal object StorySourceExtractor {
                 '{' -> depth++
                 '}' -> {
                     depth--
-                    if (depth == 0) return fromDeclaration.substring(openBrace + 1, i).trim()
+                    if (depth == 0) return fromDeclaration.substring(openBrace + 1, i)
                 }
             }
             i++
@@ -59,9 +59,29 @@ internal object StorySourceExtractor {
         return null
     }
 
-    /** Exposed at `internal` visibility for direct unit testing of the paren-balancing heuristic, without needing a real KSP symbol/file. */
-    internal fun extractCall(body: String, functionName: String): String? {
-        val callStart = findCallStart(body, functionName) ?: return null
+    /**
+     * Returns every top-level call to [functionName] in [body], each one
+     * re-indented relative to its own start column. Calls nested inside an
+     * already extracted call (e.g. in one of its lambda arguments) are part
+     * of that call's text and are not returned again.
+     *
+     * Exposed at `internal` visibility for direct unit testing of the
+     * paren-balancing heuristic, without needing a real KSP symbol/file.
+     */
+    internal fun extractCalls(body: String, functionName: String): List<String> {
+        val calls = mutableListOf<String>()
+        var searchFrom = 0
+        while (true) {
+            val callStart = findCallStart(body, functionName, searchFrom) ?: break
+            val callEnd = findCallEnd(body, callStart) ?: break
+            calls += dedent(body.substring(callStart, callEnd), columnOf(body, callStart))
+            searchFrom = callEnd
+        }
+        return calls
+    }
+
+    /** Returns the index right after the parenthesis closing the call starting at [callStart]. */
+    private fun findCallEnd(body: String, callStart: Int): Int? {
         val openParen = body.indexOf('(', callStart)
         if (openParen == -1) return null
 
@@ -72,7 +92,7 @@ internal object StorySourceExtractor {
                 '(' -> depth++
                 ')' -> {
                     depth--
-                    if (depth == 0) return body.substring(callStart, i + 1).trim()
+                    if (depth == 0) return i + 1
                 }
             }
             i++
@@ -80,9 +100,22 @@ internal object StorySourceExtractor {
         return null
     }
 
+    private fun columnOf(text: String, index: Int): Int = index - (text.lastIndexOf('\n', index - 1) + 1)
+
+    /** Removes up to [column] leading whitespace characters from every line but the first. */
+    private fun dedent(call: String, column: Int): String =
+        call.lines().mapIndexed { index, line ->
+            if (index == 0) {
+                line
+            } else {
+                val removable = line.takeWhile { it == ' ' || it == '\t' }.length.coerceAtMost(column)
+                line.substring(removable)
+            }
+        }.joinToString("\n").trimEnd()
+
     /** Finds the start of `functionName(`, ensuring it's a whole identifier match (not a substring of a longer name). */
-    private fun findCallStart(body: String, functionName: String): Int? {
-        var searchFrom = 0
+    private fun findCallStart(body: String, functionName: String, from: Int): Int? {
+        var searchFrom = from
         while (true) {
             val index = body.indexOf(functionName, searchFrom)
             if (index == -1) return null
