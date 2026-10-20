@@ -112,6 +112,9 @@ snippet shown in the catalog updates to reflect the new value. For the enum over
 fully-qualified constant (e.g. `BadgeTone.Success`) instead of a quoted string, so the snippet stays valid Kotlin
 without any extra work on your part.
 
+The "Code" tab shows every call to the story's `component` found in the story body, in source order and separated by a
+blank line. The surrounding code (layouts, loops, knob declarations) is not included.
+
 ## Best practices
 
 :::tip

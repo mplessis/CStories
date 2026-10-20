@@ -113,6 +113,9 @@ Pour la surcharge enum, cela affiche automatiquement la constante entièrement q
 `BadgeTone.Success`) plutôt qu'une chaîne entre guillemets, afin que l'extrait reste du Kotlin valide sans travail
 supplémentaire de votre part.
 
+L'onglet "Code" affiche tous les appels au `component` de la story trouvés dans son corps, dans l'ordre du code et
+séparés par une ligne vide. Le code qui les entoure (layouts, boucles, déclarations de contrôles) n'est pas inclus.
+
 ## Bonnes pratique
 
 :::tip
