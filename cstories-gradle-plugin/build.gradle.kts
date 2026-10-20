@@ -82,4 +82,14 @@ kotlin.sourceSets.getByName("main").kotlin.srcDir(generateCstoriesVersion.map { 
 
 tasks.test {
     useJUnitPlatform()
+    systemProperty("cstories.repoRoot", rootDir.parentFile.absolutePath)
+    systemProperty("cstories.kotlinVersion", libs.versions.kotlin.get())
+    systemProperty("cstories.composeVersion", libs.versions.compose.multiplatform.get())
+    // TestKit builds consume these modules through a composite build, so
+    // changes to them must invalidate this task.
+    listOf("cstories-annotations", "cstories-processor", "cstories-runtime").forEach { module ->
+        inputs.dir("../$module/src")
+            .withPropertyName("${module}Sources")
+            .withPathSensitivity(PathSensitivity.RELATIVE)
+    }
 }
