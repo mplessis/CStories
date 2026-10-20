@@ -34,18 +34,6 @@ internal object ComponentRefsGenerator {
 
     private val documentationAnnotation = ClassName("io.cstories.annotations", "GeneratedComponentDocumentation")
 
-    fun generate(codeGenerator: CodeGenerator, components: List<ComponentDescriptor>) {
-        if (components.isEmpty()) return
-
-        val fileSpec = buildFileSpec(components)
-
-        fileSpec.writeTo(
-            codeGenerator = codeGenerator,
-            aggregating = false,
-            originatingKSFiles = components.mapNotNull { it.originatingFile },
-        )
-    }
-
     fun writeMetadata(codeGenerator: CodeGenerator, components: List<ComponentDescriptor>) {
         if (components.isEmpty()) return
         codeGenerator.createNewFile(
@@ -89,9 +77,13 @@ internal object ComponentRefsGenerator {
 
     fun generateDescriptors(codeGenerator: CodeGenerator, components: List<ComponentDescriptor>) {
         if (components.isEmpty()) return
+        // In incremental mode KSP only hands the processor its dirty files.
+        // Listing every component's source file here makes them all dirty
+        // whenever this aggregate is regenerated, so no reference is lost.
         buildFileSpec(components).writeTo(
             codeGenerator = codeGenerator,
             aggregating = true,
+            originatingKSFiles = components.mapNotNull { it.originatingFile }.distinct(),
         )
     }
 
