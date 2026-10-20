@@ -65,6 +65,13 @@ kotlin {
 }
 ```
 
+:::note[Compose compiler plugin]
+The CStories plugin applies `org.jetbrains.kotlin.plugin.compose`, but does not bundle it. If this plugin is not already
+declared in the module (directly, or through a convention plugin), declare it yourself in the `plugins {}` block, with
+the same version as your Kotlin plugin. Otherwise the build fails with
+`Plugin with id 'org.jetbrains.kotlin.plugin.compose' not found`.
+:::
+
 For a first use, the recommended path is to start with the `jvm()` target only, in order to run the catalog as a
 desktop application. Applying the plugin with no target declared fails fast with a clear error instead of silently
 forcing one.
