@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
  * `StoryFrame.kt`) is toggled.
  *
  * `cstories-runtime` doesn't know about a consumer's own design system (e.g.
- * a `LumenTheme(isDark) { ... }`), so this indirection lets a consumer
+ * a `DemoTheme(isDark) { ... }`), so this indirection lets a consumer
  * project supply its own wrapper. The generated catalog entry point can pass
  * it to [CStoriesApp], while individual stories can select an override.
  */

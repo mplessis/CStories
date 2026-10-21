@@ -14,11 +14,11 @@ class HomeMarkdownGenerationTest {
 
     @Test
     fun `registry embeds CSTORIES md as an escaped Kotlin string`() {
-        val markdown = "# Lumen\n\nPrice: \$10, path C:\\lib, \"quoted\" and \"\"\"triple\"\"\""
+        val markdown = "# CStories design system\n\nPrice: \$10, path C:\\lib, \"quoted\" and \"\"\"triple\"\"\""
 
         val registry = generateRegistry(homeMarkdown = markdown)
 
-        val expectedLiteral = "\"# Lumen\\n\\nPrice: \\\$10, path C:\\\\lib, \\\"quoted\\\" and " +
+        val expectedLiteral = "\"# CStories design system\\n\\nPrice: \\\$10, path C:\\\\lib, \\\"quoted\\\" and " +
             "\\\"\\\"\\\"triple\\\"\\\"\\\"\""
         assertTrue("val homeMarkdown: String? = listOf($expectedLiteral).joinToString(\"\")" in registry, registry)
     }

@@ -134,7 +134,7 @@ internal object StorySourceExtractor {
 
     /**
      * Walks backward from [nameStart] over any dotted qualifier chain (e.g.
-     * `LumenButton.`) so the returned call start includes the receiver, not
+     * `DemoButton.`) so the returned call start includes the receiver, not
      * just the invoked function's own name.
      */
     private fun findQualifierStart(body: String, nameStart: Int): Int {

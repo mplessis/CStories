@@ -27,17 +27,17 @@ class ComponentRefsGeneratorTest {
         val metadata = ComponentRefsGenerator.decodeMetadata(
             listOf(
                 "",
-                encoded("LumenSidebar"),
+                encoded("DemoSidebar"),
                 encoded("Info"),
-                encoded("com.example.LumenSidebar.Companion.Info"),
+                encoded("com.example.DemoSidebar.Companion.Info"),
                 encoded("docs"),
             ),
         )
 
         assertEquals("", metadata.single().namespace)
-        assertEquals("LumenSidebar", metadata.single().enclosingObjectName)
+        assertEquals("DemoSidebar", metadata.single().enclosingObjectName)
         assertEquals("Info", metadata.single().functionName)
-        assertEquals("com.example.LumenSidebar.Companion.Info", metadata.single().fqn)
+        assertEquals("com.example.DemoSidebar.Companion.Info", metadata.single().fqn)
     }
 
     private fun encoded(value: String): String = Base64.getEncoder().encodeToString(value.toByteArray())
@@ -72,16 +72,16 @@ class ComponentRefsGeneratorTest {
     fun `buildFileSpec keeps non namespaced and namespaced refs side by side`() {
         val file = ComponentRefsGenerator.buildFileSpec(
             listOf(
-                component(namespace = "", enclosingObjectName = "LumenIconOnBackground", functionName = "Brand", fqn = "sample.v1.LumenIconOnBackground.Brand"),
-                component(namespace = "v2", enclosingObjectName = "LumenIconOnBackground", functionName = "Brand", fqn = "sample.v2.LumenIconOnBackground.Brand"),
+                component(namespace = "", enclosingObjectName = "DemoIconOnBackground", functionName = "Brand", fqn = "sample.v1.DemoIconOnBackground.Brand"),
+                component(namespace = "v2", enclosingObjectName = "DemoIconOnBackground", functionName = "Brand", fqn = "sample.v2.DemoIconOnBackground.Brand"),
             ),
         )
 
         val generated = file.toString()
-        assertContains(generated, "public object LumenIconOnBackground")
+        assertContains(generated, "public object DemoIconOnBackground")
         assertContains(generated, "public object v2")
-        assertContains(generated, "\"sample.v1.LumenIconOnBackground.Brand\"")
-        assertContains(generated, "\"sample.v2.LumenIconOnBackground.Brand\"")
+        assertContains(generated, "\"sample.v1.DemoIconOnBackground.Brand\"")
+        assertContains(generated, "\"sample.v2.DemoIconOnBackground.Brand\"")
     }
 
     @Test

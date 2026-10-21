@@ -75,14 +75,14 @@ class StorySourceExtractorTest {
     fun `includes a simple object qualifier before the function name`() {
         val body = """
             Column {
-                LumenButton.Primary(onClick = {}, label = label, enabled = enabled)
+                DemoButton.Primary(onClick = {}, label = label, enabled = enabled)
             }
         """.trimIndent()
 
         val result = StorySourceExtractor.extractCalls(body, "Primary").firstOrNull()
 
         assertEquals(
-            """LumenButton.Primary(onClick = {}, label = label, enabled = enabled)""",
+            """DemoButton.Primary(onClick = {}, label = label, enabled = enabled)""",
             result,
         )
     }
@@ -91,13 +91,13 @@ class StorySourceExtractorTest {
     fun `includes a multi-segment qualifier chain before the function name`() {
         val body = """
             Column {
-                design.LumenButton.Primary(onClick = {})
+                design.DemoButton.Primary(onClick = {})
             }
         """.trimIndent()
 
         val result = StorySourceExtractor.extractCalls(body, "Primary").firstOrNull()
 
-        assertEquals("""design.LumenButton.Primary(onClick = {})""", result)
+        assertEquals("""design.DemoButton.Primary(onClick = {})""", result)
     }
 
     @Test

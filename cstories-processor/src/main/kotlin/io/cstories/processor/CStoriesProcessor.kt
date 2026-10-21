@@ -253,14 +253,14 @@ internal class CStoriesProcessor(
     private data class FunctionLocation(
         val packageName: String,
         /**
-         * Display name only, used to group generated refs (e.g. `LumenButton`
-         * for a function in a plain `object LumenButton` or in
-         * `LumenButton`'s companion object — never the literal `Companion`).
+         * Display name only, used to group generated refs (e.g. `DemoButton`
+         * for a function in a plain `object DemoButton` or in
+         * `DemoButton`'s companion object — never the literal `Companion`).
          */
         val enclosingObjectName: String?,
         /**
          * Full dotted path of enclosing declarations relative to the package
-         * (e.g. `LumenButton.Companion`), used to build a resolvable FQN.
+         * (e.g. `DemoButton.Companion`), used to build a resolvable FQN.
          * `null` for top-level functions.
          */
         val enclosingQualifiedPath: String?,
