@@ -7,6 +7,10 @@ sealed interface TreeNode {
         override val name: String,
         val children: List<TreeNode>,
     ) : TreeNode {
+        /** Whether this group only contains stories, i.e. it sits on the next-to-last level of the tree. */
+        val isStoryGroup: Boolean
+            get() = children.isNotEmpty() && children.all { it is Leaf }
+
         /** Total number of stories under this group, summed through every sub-group. */
         fun storyCount(): Int = children.sumOf { child ->
             when (child) {

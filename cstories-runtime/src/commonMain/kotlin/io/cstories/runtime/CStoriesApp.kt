@@ -24,6 +24,7 @@ import io.cstories.runtime.knobs.LocalControlsSlot
 import io.cstories.runtime.knobs.LocalKnobValuesSlot
 import io.cstories.runtime.resources.Res
 import io.cstories.runtime.resources.empty_state_no_stories
+import io.cstories.runtime.resources.home_title
 import org.jetbrains.compose.resources.stringResource
 
 private val SidebarDefaultWidth = 350.dp
@@ -42,9 +43,16 @@ internal fun clampSidebarWidth(requestedWidth: Dp, availableWidth: Dp): Dp {
 }
 
 @Composable
-fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = DefaultCStoriesThemeWrapper) {
+fun CStoriesApp(
+    stories: List<StoryEntry>,
+    themeWrapper: CStoriesThemeWrapper = DefaultCStoriesThemeWrapper,
+    homeMarkdown: String? = null,
+) {
     val tree = remember(stories) { buildTree(stories) }
-    var selected by remember(stories) { mutableStateOf(stories.firstOrNull()) }
+    var query by remember { mutableStateOf("") }
+    val filteredTree = remember(tree, query) { filterTree(tree, query) }
+    // `null` means the home page is displayed.
+    var selected by remember(stories) { mutableStateOf<StoryEntry?>(null) }
     val resetTokens = remember(stories) { mutableStateOf(mapOf<List<String>, Int>()) }
     var isCanvasDark by remember { mutableStateOf(false) }
     var canvasBackgroundStyle by remember { mutableStateOf(CanvasBackgroundStyle.Solid) }
@@ -62,9 +70,13 @@ fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = 
 
                 Row(Modifier.fillMaxSize()) {
                     Sidebar(
-                        tree = tree,
+                        tree = filteredTree,
                         selectedPath = selected?.path,
                         onSelect = { selected = it },
+                        query = query,
+                        onQueryChange = { query = it },
+                        isHomeSelected = selected == null,
+                        onHomeClick = { selected = null },
                         modifier = Modifier
                             .width(effectiveSidebarWidth)
                             .fillMaxHeight(),
@@ -146,7 +158,17 @@ fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = 
                                     )
                                 }
                             }
-                        } ?: EmptyState()
+                        } ?: if (stories.isEmpty()) {
+                            EmptyState()
+                        } else {
+                            MainHeader(breadcrumbPath = emptyList(), title = stringResource(Res.string.home_title))
+                            HomePage(
+                                tree = filteredTree,
+                                homeMarkdown = homeMarkdown,
+                                onOpenStory = { selected = it },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
                 }
             }

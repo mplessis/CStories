@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -39,26 +40,57 @@ fun Sidebar(
     modifier: Modifier = Modifier,
 ) {
     var query by remember { mutableStateOf("") }
-    val filteredTree = remember(tree, query) { filterTree(tree, query) }
+    Sidebar(
+        tree = filterTree(tree, query),
+        selectedPath = selectedPath,
+        onSelect = onSelect,
+        query = query,
+        onQueryChange = { query = it },
+        isHomeSelected = false,
+        onHomeClick = null,
+        modifier = modifier,
+    )
+}
 
+/**
+ * Sidebar with its search query hoisted, so the caller can filter other views
+ * (e.g. the home page) with the same query. [tree] is expected to be already
+ * filtered. When [onHomeClick] is set, a "Home" entry is shown and the logo
+ * navigates to it.
+ */
+@Composable
+internal fun Sidebar(
+    tree: List<TreeNode>,
+    selectedPath: List<String>?,
+    onSelect: (StoryEntry) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    isHomeSelected: Boolean,
+    onHomeClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier
             .background(CStoriesColors.surface)
             .padding(horizontal = 14.dp, vertical = 20.dp),
     ) {
-        Brand()
+        Brand(onClick = onHomeClick)
         Spacer(Modifier.height(18.dp))
         SearchField(
             value = query,
-            onValueChange = { query = it },
+            onValueChange = onQueryChange,
         )
-        Spacer(Modifier.height(18.dp))
+        if (onHomeClick != null) {
+            Spacer(Modifier.height(18.dp))
+            HomeRow(isSelected = isHomeSelected, onClick = onHomeClick)
+        }
+        Spacer(Modifier.height(8.dp))
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
-            filteredTree.forEach { node ->
+            tree.forEach { node ->
                 TreeNodeItem(
                     node = node,
                     selectedPath = selectedPath,
@@ -97,12 +129,46 @@ internal fun filterTree(tree: List<TreeNode>, query: String): List<TreeNode> {
 }
 
 @Composable
-private fun Brand() {
+private fun Brand(onClick: (() -> Unit)?) {
+    val clickModifier = if (onClick != null) {
+        Modifier.clip(RoundedCornerShape(CStoriesRadii.sm)).clickable(onClick = onClick)
+    } else {
+        Modifier
+    }
     Image(
         painter = painterResource(Res.drawable.logo),
         contentDescription = null,
-        modifier = Modifier.size(72.dp),
+        modifier = Modifier
+            .size(72.dp)
+            .then(clickModifier),
     )
+}
+
+@Composable
+private fun HomeRow(isSelected: Boolean, onClick: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(CStoriesRadii.sm))
+            .background(if (isSelected) CStoriesColors.primarySoft else Color.Transparent)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Home,
+            contentDescription = null,
+            tint = if (isSelected) CStoriesColors.primary else CStoriesColors.textFaint,
+            modifier = Modifier.size(16.dp),
+        )
+        Text(
+            text = stringResource(Res.string.home_title),
+            color = if (isSelected) CStoriesColors.primary else CStoriesColors.textMuted,
+            fontSize = 13.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+        )
+    }
 }
 
 @Composable

@@ -20,7 +20,11 @@ import org.jetbrains.compose.resources.stringResource
  * the mockup's main-header.
  */
 @Composable
-fun MainHeader(breadcrumbPath: List<String>, modifier: Modifier = Modifier) {
+fun MainHeader(
+    breadcrumbPath: List<String>,
+    modifier: Modifier = Modifier,
+    title: String = stringResource(Res.string.main_header_title),
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -29,7 +33,7 @@ fun MainHeader(breadcrumbPath: List<String>, modifier: Modifier = Modifier) {
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = stringResource(Res.string.main_header_title),
+                text = title,
                 color = CStoriesColors.text,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.ExtraBold,
