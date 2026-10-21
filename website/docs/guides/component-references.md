@@ -44,7 +44,7 @@ When two components share the same simple reference path but come from different
 into a namespace:
 
 ```kotlin
-object LumenIconOnBackground {
+object DemoIconOnBackground {
     @CStoryComponent(namespace = "v2")
     @Composable
     fun Brand() { /* ... */
@@ -56,8 +56,8 @@ object LumenIconOnBackground {
     }
 }
 
-// Generates CStoryComponentRefs.v2.LumenIconOnBackground.Brand
-// and       CStoryComponentRefs.v2.LumenIconOnBackground.Warning
+// Generates CStoryComponentRefs.v2.DemoIconOnBackground.Brand
+// and       CStoryComponentRefs.v2.DemoIconOnBackground.Warning
 ```
 
 The namespace must be a single valid Kotlin identifier. CStories does not derive it from the package name.
@@ -107,13 +107,13 @@ import io.cstories.generated.CStoryComponentRefs
 
 @CStory(
     collection = "v2/Components",
-    group = "Content Display/LumenIconOnBackground",
+    group = "Content Display/DemoIconOnBackground",
     name = "Brand",
-    component = CStoryComponentRefs.v2.LumenIconOnBackground.Brand,
+    component = CStoryComponentRefs.v2.DemoIconOnBackground.Brand,
 )
 @Composable
-fun LumenIconOnBackgroundBrandV2Story() {
-    LumenIconOnBackground.Brand()
+fun DemoIconOnBackgroundBrandV2Story() {
+    DemoIconOnBackground.Brand()
 }
 ```
 

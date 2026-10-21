@@ -40,9 +40,9 @@ Son contenu s'affiche en haut de la page d'accueil. Il supporte le même Markdow
 titres, listes, tableaux, gras, code inline et blocs de code (avec un bouton de copie).
 
 ```markdown
-# Design system Lumen
+# Design system CStories
 
-Lumen rassemble les composants Compose partagés par nos applications.
+Le design system CStories rassemble les composants Compose partagés par nos applications.
 
 ## Conventions
 

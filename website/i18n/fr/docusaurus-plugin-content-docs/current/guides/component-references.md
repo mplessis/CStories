@@ -44,7 +44,7 @@ Lorsque deux composants partagent le même chemin de référence simple mais pro
 pouvez préciser l'un d'eux à l'aide d'un namespace :
 
 ```kotlin
-object LumenIconOnBackground {
+object DemoIconOnBackground {
     @CStoryComponent(namespace = "v2")
     @Composable
     fun Brand() { /* ... */
@@ -56,8 +56,8 @@ object LumenIconOnBackground {
     }
 }
 
-// Génère CStoryComponentRefs.v2.LumenIconOnBackground.Brand
-// et      CStoryComponentRefs.v2.LumenIconOnBackground.Warning
+// Génère CStoryComponentRefs.v2.DemoIconOnBackground.Brand
+// et      CStoryComponentRefs.v2.DemoIconOnBackground.Warning
 ```
 
 Le namespace doit être un identifiant Kotlin unique et valide. CStories ne le déduit jamais automatiquement du nom de
@@ -107,13 +107,13 @@ import io.cstories.generated.CStoryComponentRefs
 
 @CStory(
     collection = "v2/Components",
-    group = "Content Display/LumenIconOnBackground",
+    group = "Content Display/DemoIconOnBackground",
     name = "Brand",
-    component = CStoryComponentRefs.v2.LumenIconOnBackground.Brand,
+    component = CStoryComponentRefs.v2.DemoIconOnBackground.Brand,
 )
 @Composable
-fun LumenIconOnBackgroundBrandV2Story() {
-    LumenIconOnBackground.Brand()
+fun DemoIconOnBackgroundBrandV2Story() {
+    DemoIconOnBackground.Brand()
 }
 ```
 

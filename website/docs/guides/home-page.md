@@ -39,9 +39,9 @@ Its content is displayed at the top of the home page. It supports the same Markd
 headings, lists, tables, bold, inline code and fenced code blocks (with a copy button).
 
 ```markdown
-# Lumen design system
+# CStories design system
 
-Lumen gathers the Compose components shared by our applications.
+The CStories design system gathers the Compose components shared by our applications.
 
 ## Conventions
 
