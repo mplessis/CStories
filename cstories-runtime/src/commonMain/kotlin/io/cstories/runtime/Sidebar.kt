@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +29,7 @@ import io.cstories.runtime.resources.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -141,11 +144,13 @@ private fun TreeNodeItem(
     when (node) {
         is TreeNode.Group -> {
             var expanded by remember(node.name, depth) { mutableStateOf(true) }
+            val storyCount = node.storyCount()
             if (depth == 0) {
                 CollectionHeaderRow(
                     name = node.name,
                     expanded = expanded,
                     onToggle = { expanded = !expanded },
+                    storyCount = storyCount,
                 )
             } else {
                 GroupHeaderRow(
@@ -153,6 +158,7 @@ private fun TreeNodeItem(
                     expanded = expanded,
                     onToggle = { expanded = !expanded },
                     depth = depth,
+                    storyCount = storyCount,
                 )
             }
             if (expanded) {
@@ -201,6 +207,7 @@ private fun CollectionHeaderRow(
     name: String,
     expanded: Boolean,
     onToggle: () -> Unit,
+    storyCount: Int,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -219,7 +226,9 @@ private fun CollectionHeaderRow(
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.9.sp,
+            modifier = Modifier.weight(1f),
         )
+        StoryCountBadge(storyCount)
     }
 }
 
@@ -229,6 +238,7 @@ private fun GroupHeaderRow(
     expanded: Boolean,
     onToggle: () -> Unit,
     depth: Int,
+    storyCount: Int,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -248,8 +258,25 @@ private fun GroupHeaderRow(
             color = CStoriesColors.textMuted,
             fontSize = 12.5.sp,
             fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f),
         )
+        StoryCountBadge(storyCount)
     }
+}
+
+@Composable
+private fun StoryCountBadge(count: Int) {
+    val description = pluralStringResource(Res.plurals.sidebar_group_story_count_description, count, count)
+    Text(
+        text = count.toString(),
+        color = CStoriesColors.textFaint,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .clearAndSetSemantics { contentDescription = description }
+            .background(CStoriesColors.surfaceMuted, RoundedCornerShape(percent = 50))
+            .padding(horizontal = 7.dp, vertical = 1.dp),
+    )
 }
 
 @Composable

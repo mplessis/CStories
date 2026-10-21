@@ -6,7 +6,15 @@ sealed interface TreeNode {
     data class Group(
         override val name: String,
         val children: List<TreeNode>,
-    ) : TreeNode
+    ) : TreeNode {
+        /** Total number of stories under this group, summed through every sub-group. */
+        fun storyCount(): Int = children.sumOf { child ->
+            when (child) {
+                is Leaf -> 1
+                is Group -> child.storyCount()
+            }
+        }
+    }
 
     data class Leaf(
         override val name: String,
