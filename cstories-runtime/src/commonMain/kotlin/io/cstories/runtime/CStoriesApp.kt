@@ -26,7 +26,7 @@ import io.cstories.runtime.resources.Res
 import io.cstories.runtime.resources.empty_state_no_stories
 import org.jetbrains.compose.resources.stringResource
 
-private val SidebarDefaultWidth = 248.dp
+private val SidebarDefaultWidth = 350.dp
 private val SidebarMinWidth = 200.dp
 private val SidebarMaxWidth = 520.dp
 private val SidebarResizeHandleWidth = 8.dp
@@ -48,7 +48,7 @@ fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = 
     val resetTokens = remember(stories) { mutableStateOf(mapOf<List<String>, Int>()) }
     var isCanvasDark by remember { mutableStateOf(false) }
     var canvasBackgroundStyle by remember { mutableStateOf(CanvasBackgroundStyle.Solid) }
-    var sidebarWidth by remember { mutableStateOf(SidebarDefaultWidth) }
+    var sidebarWidth by remember { mutableStateOf(loadSidebarWidth()?.dp ?: SidebarDefaultWidth) }
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = CStoriesColors.pageBg) {
@@ -73,6 +73,7 @@ fun CStoriesApp(stories: List<StoryEntry>, themeWrapper: CStoriesThemeWrapper = 
                         sidebarWidth = effectiveSidebarWidth,
                         availableWidth = availableWidth,
                         onWidthChange = { sidebarWidth = it },
+                        onResizeFinished = { saveSidebarWidth(sidebarWidth.value) },
                     )
                     Column(
                         modifier = Modifier
@@ -158,6 +159,7 @@ private fun SidebarResizeHandle(
     sidebarWidth: Dp,
     availableWidth: Dp,
     onWidthChange: (Dp) -> Unit,
+    onResizeFinished: () -> Unit,
 ) {
     val density = LocalDensity.current
     var isDragging by remember { mutableStateOf(false) }
@@ -178,7 +180,10 @@ private fun SidebarResizeHandle(
                     onWidthChange(clampSidebarWidth(sidebarWidth + deltaDp, availableWidth))
                 },
                 onDragStarted = { isDragging = true },
-                onDragStopped = { isDragging = false },
+                onDragStopped = {
+                    isDragging = false
+                    onResizeFinished()
+                },
             ),
         contentAlignment = Alignment.Center,
     ) {
