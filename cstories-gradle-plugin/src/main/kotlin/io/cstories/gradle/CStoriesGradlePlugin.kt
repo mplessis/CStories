@@ -118,6 +118,7 @@ class CStoriesGradlePlugin : Plugin<Project> {
             packageName.set("io.cstories.generated")
             applicationName.set("CStories - ${project.rootProject.name}")
             jsBundleBaseName.set(project.name)
+            homeMarkdownFile.from(project.layout.projectDirectory.file(HOME_MARKDOWN_FILE_NAME))
             generateWasmJsEntryPoint.set(hasWasmJs)
             generateDesktopEntryPoint.set(hasJvm)
             wasmJsOutputDirectory.set(project.layout.buildDirectory.dir(WASM_JS_OUTPUT_PATH))
@@ -289,3 +290,6 @@ class CStoriesGradlePlugin : Plugin<Project> {
 private const val WASM_JS_OUTPUT_PATH = "generated/cstories/wasmJsMain/kotlin"
 private const val DESKTOP_OUTPUT_PATH = "generated/cstories/jvmMain/kotlin"
 private const val WEB_RESOURCES_PATH = "generated/cstories/wasmJsMain/resources"
+
+/** Optional home page introduction, read from the root of the stories module. */
+private const val HOME_MARKDOWN_FILE_NAME = "CSTORIES.md"

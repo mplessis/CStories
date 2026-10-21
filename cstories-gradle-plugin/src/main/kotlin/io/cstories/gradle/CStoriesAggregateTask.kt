@@ -6,8 +6,11 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.util.jar.JarFile
@@ -44,6 +47,15 @@ abstract class CStoriesAggregateTask : DefaultTask() {
     @get:Input
     abstract val generateDesktopEntryPoint: Property<Boolean>
 
+    /**
+     * Candidate location of the optional `CSTORIES.md` home page introduction.
+     * Declared as a file collection so that the file may be missing, and that
+     * creating, editing or deleting it reruns this task.
+     */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val homeMarkdownFile: ConfigurableFileCollection
+
     @TaskAction
     fun generate() {
         val registries = runtimeClasspath.files
@@ -63,7 +75,8 @@ abstract class CStoriesAggregateTask : DefaultTask() {
         val themeWrapperReference = themeWrapperCandidates.singleOrNull()
 
         val packagePath = packageName.get().replace('.', '/')
-        val registrySource = buildRegistrySource(registries)
+        val homeMarkdown = homeMarkdownFile.files.firstOrNull(File::isFile)?.readText()
+        val registrySource = buildRegistrySource(registries, homeMarkdown)
 
         if (generateWasmJsEntryPoint.get()) {
             val wasmJsKotlinDir = File(wasmJsOutputDirectory.get().asFile, packagePath).apply { mkdirs() }
@@ -110,7 +123,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
         }
     }
 
-    private fun buildRegistrySource(registries: List<String>): String {
+    private fun buildRegistrySource(registries: List<String>, homeMarkdown: String?): String {
         val entriesInitializer = if (registries.isEmpty()) {
             "emptyList()"
         } else {
@@ -125,8 +138,23 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |object AllStoriesRegistry {
             |    val entries: List<StoryEntry> =
             |        $entriesInitializer
+            |
+            |    val homeMarkdown: String? = ${homeMarkdownInitializer(homeMarkdown)}
             |}
         """.trimMargin()
+    }
+
+    /**
+     * Kotlin expression for the home page Markdown. The text is split into
+     * several string literals joined at runtime, because a single JVM string
+     * constant is limited to 65535 bytes.
+     */
+    private fun homeMarkdownInitializer(homeMarkdown: String?): String {
+        if (homeMarkdown == null) return "null"
+        val literals = homeMarkdown
+            .chunked(HOME_MARKDOWN_CHUNK_SIZE)
+            .joinToString(", ") { chunk -> "\"${chunk.escapeKotlinString()}\"" }
+        return "listOf($literals).joinToString(\"\")"
     }
 
     private fun buildWasmJsEntryPointSource(themeWrapperReference: String?): String {
@@ -143,7 +171,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |@OptIn(ExperimentalComposeUiApi::class)
             |fun main() {
             |    CanvasBasedWindow("$escapedApplicationName") {
-            |        CStoriesApp(AllStoriesRegistry.entries$themeWrapperArg)
+            |        CStoriesApp(AllStoriesRegistry.entries$themeWrapperArg, homeMarkdown = AllStoriesRegistry.homeMarkdown)
             |    }
             |}
         """.trimMargin()
@@ -179,7 +207,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |            icon = cstoriesDesktopWindowIcon(),
             |        ) {
             |            window.minimumSize = Dimension(1600, 1200)
-            |            CStoriesApp(AllStoriesRegistry.entries$themeWrapperArg)
+            |            CStoriesApp(AllStoriesRegistry.entries$themeWrapperArg, homeMarkdown = AllStoriesRegistry.homeMarkdown)
             |        }
             |    }
             |}
@@ -197,6 +225,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             .replace("\"", "\\\"")
             .replace("\n", "\\n")
             .replace("\r", "\\r")
+            .replace("$", "\\$")
 
     private fun String.escapeHtml(): String =
         replace("&", "&amp;")
@@ -240,5 +269,6 @@ abstract class CStoriesAggregateTask : DefaultTask() {
     private companion object {
         const val REGISTRIES_MANIFEST_PATH = "META-INF/cstories/registries.txt"
         const val THEME_WRAPPER_MANIFEST_PATH = "META-INF/cstories/theme-wrapper.txt"
+        const val HOME_MARKDOWN_CHUNK_SIZE = 8_000
     }
 }
