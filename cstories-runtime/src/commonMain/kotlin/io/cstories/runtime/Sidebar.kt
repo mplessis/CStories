@@ -17,10 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -312,7 +311,7 @@ private fun LeafRow(
 
 @Composable
 private fun PromoCard() {
-    val clipboard = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     var copied by remember { mutableStateOf(false) }
     val command = hotReloadCommand
@@ -340,9 +339,9 @@ private fun PromoCard() {
         Spacer(Modifier.height(12.dp))
         Button(
             onClick = {
-                clipboard.setText(AnnotatedString(command))
                 copied = true
                 scope.launch {
+                    clipboard.setPlainText(command)
                     delay(1500)
                     copied = false
                 }

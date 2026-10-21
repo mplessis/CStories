@@ -27,7 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -95,7 +95,7 @@ fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
 
 @Composable
 private fun MarkdownExampleCodeBlock(code: String) {
-    val clipboard = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
     var copied by remember(code) { mutableStateOf(false) }
     val copyDescription = stringResource(Res.string.docs_example_copy_button_description)
@@ -112,9 +112,9 @@ private fun MarkdownExampleCodeBlock(code: String) {
         )
         IconButton(
             onClick = {
-                clipboard.setText(AnnotatedString(code))
                 copied = true
                 scope.launch {
+                    clipboard.setPlainText(code)
                     delay(1500)
                     copied = false
                 }
