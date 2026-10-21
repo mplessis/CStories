@@ -19,6 +19,7 @@ const sidebars = {
       items: [
         'guides/desktop-catalog',
         'guides/web-catalog',
+        'guides/home-page',
         'guides/multi-module-setup',
         'guides/component-references',
         'guides/component-documentation',
