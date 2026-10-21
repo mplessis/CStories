@@ -73,6 +73,36 @@ enum class ButtonSize(
  * - When [loading] is `true`, the button announces a "Loading" state description.
  * - Every size keeps a touch target of at least 48dp through Material's minimum interactive size.
  *
+ * ### Example
+ * A form footer with a secondary "Cancel" action and a primary "Save" action that shows a
+ * spinner while the request is running:
+ *
+ * ```kotlin
+ * var isSaving by remember { mutableStateOf(false) }
+ * val scope = rememberCoroutineScope()
+ *
+ * Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+ *     DemoButton(
+ *         text = "Cancel",
+ *         onClick = onCancel,
+ *         variant = ButtonVariant.Secondary,
+ *         enabled = !isSaving,
+ *     )
+ *     DemoButton(
+ *         text = "Save",
+ *         onClick = {
+ *             scope.launch {
+ *                 isSaving = true
+ *                 repository.save(draft)
+ *                 isSaving = false
+ *             }
+ *         },
+ *         loading = isSaving,
+ *         leadingIcon = Icons.Filled.Check,
+ *     )
+ * }
+ * ```
+ *
  * @param text Label shown inside the button. Keep it short (1–3 words).
  * @param onClick Called when the user clicks the button. Not called while [enabled] is `false` or [loading] is `true`.
  * @param modifier Modifier applied to the button container.

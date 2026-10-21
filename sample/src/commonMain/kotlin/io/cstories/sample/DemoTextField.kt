@@ -28,6 +28,25 @@ import io.cstories.annotations.CStoryComponent
  * - When [isError] is `true`, the [errorMessage] is exposed to screen readers as the field's error.
  * - Never rely on the red color alone: always provide an [errorMessage].
  *
+ * ### Example
+ * An email field whose state is hoisted in the caller and validated on every change:
+ *
+ * ```kotlin
+ * var email by remember { mutableStateOf("") }
+ * val isInvalid = email.isNotEmpty() && "@" !in email
+ *
+ * DemoTextField(
+ *     value = email,
+ *     onValueChange = { email = it },
+ *     label = "Email",
+ *     placeholder = "jane@example.com",
+ *     supportingText = "We'll never share your email.",
+ *     isError = isInvalid,
+ *     errorMessage = "Enter a valid email address",
+ *     maxLength = 80,
+ * )
+ * ```
+ *
  * @param value Current text of the field. The component is stateless: hoist this value in the caller.
  * @param onValueChange Called with the new text on every keystroke, already truncated to [maxLength].
  * @param label Floating label, also used as the accessible name.
