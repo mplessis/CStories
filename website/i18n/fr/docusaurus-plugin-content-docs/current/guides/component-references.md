@@ -75,7 +75,7 @@ générer `io.cstories.generated.CStoryComponentRefs`, un objet exposant une con
 // lib/build.gradle.kts
 plugins {
     kotlin("multiplatform") version "2.2.0"
-    id("dev.cstories.gradle.components") version "1.1.5"
+    id("dev.cstories.gradle.components") version "<version>"
 }
 ```
 

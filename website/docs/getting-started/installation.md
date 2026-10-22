@@ -57,13 +57,16 @@ plugins {
     kotlin("multiplatform") version "2.2.0"
     id("org.jetbrains.compose") version "1.8.2"
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
-    id("dev.cstories.gradle") version "1.1.5"
+    id("dev.cstories.gradle") version "<version>"
 }
 
 kotlin {
     jvm()
 }
 ```
+
+Replace `<version>` with the CStories version you published, defined by `cstoriesVersion` in the CStories
+repository's `gradle.properties`.
 
 :::note[Compose compiler plugin]
 The CStories plugin applies `org.jetbrains.kotlin.plugin.compose`, but does not bundle it. If this plugin is not already

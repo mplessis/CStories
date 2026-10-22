@@ -27,7 +27,7 @@ prise en compte par celle du projet racine — cette tâche agrégée relie les 
 
 ## Versioning
 
-Le groupe et la version publiés (`dev.cstories` / `1.0.0` actuellement) proviennent du `gradle.properties`
+Le groupe (`dev.cstories`) et la version publiés proviennent du `gradle.properties`
 racine (`cstoriesGroup` / `cstoriesVersion`), qui constitue la source de vérité unique.
 
 ## Quand republier

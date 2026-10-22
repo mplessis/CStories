@@ -75,7 +75,7 @@ generated refs object is not part of the published component API:
 // lib/build.gradle.kts
 plugins {
     kotlin("multiplatform") version "2.2.0"
-    id("dev.cstories.gradle.components") version "1.1.5"
+    id("dev.cstories.gradle.components") version "<version>"
 }
 ```
 
