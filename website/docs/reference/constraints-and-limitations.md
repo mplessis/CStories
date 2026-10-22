@@ -24,6 +24,16 @@ The web catalog's watch mode (`--continuous`) triggers a full page reload on eve
 (selected story, knob values) is lost each time, and reloads take a few seconds depending on project size. There is
 currently no state-preserving hot reload available for the `wasmJs` target.
 
+The copy buttons of the web catalog (Code tab, code examples in the Docs tab, watch command) use the browser clipboard,
+which is only available in a secure context: the catalog must be served over HTTPS or from `localhost`. Otherwise,
+these buttons have no effect.
+
+## Home page
+
+The home page introduction is read from a file named exactly `CSTORIES.md`, at the root of the module that applies
+`dev.cstories.gradle`. Its name and location can't be configured, and a `CSTORIES.md` file in another module (for
+example a components module) is ignored. See [Home page](/guides/home-page).
+
 ## Theme wrappers
 
 The global theme wrapper is an accessible Kotlin `object` named `CustomCStoriesThemeWrapper` implementing

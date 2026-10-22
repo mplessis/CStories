@@ -27,6 +27,16 @@ l'état de navigation (story sélectionnée, valeurs des contrôles) est perdu �
 prennent quelques secondes selon la taille du projet. Il n'existe actuellement aucun hot reload préservant l'état
 pour la cible `wasmJs`.
 
+Les boutons de copie du catalogue web (onglet Code, exemples de code de l'onglet Docs, commande watch) utilisent le
+presse-papiers du navigateur, qui n'est disponible que dans un contexte sécurisé : le catalogue doit être servi en
+HTTPS ou depuis `localhost`. Sinon, ces boutons n'ont aucun effet.
+
+## Page d'accueil
+
+L'introduction de la page d'accueil est lue depuis un fichier nommé exactement `CSTORIES.md`, à la racine du module
+qui applique `dev.cstories.gradle`. Son nom et son emplacement ne sont pas configurables, et un fichier `CSTORIES.md`
+placé dans un autre module (par exemple un module de composants) est ignoré. Voir [Page d'accueil](/guides/home-page).
+
 ## Wrappers de thème
 
 Le wrapper global est un `object` Kotlin accessible nommé `CustomCStoriesThemeWrapper` qui implémente
