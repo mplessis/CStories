@@ -24,7 +24,46 @@ fun PrimaryButton(text: String, onClick: () -> Unit) { /* ... */ }
 ```
 
 La description et les tags `@param` sont récupérés et affichés dans le panneau de documentation de la story, à côté
-de l'aperçu en direct.
+de l'aperçu en direct. Un tag `@return` est également affiché.
+
+Le premier paragraphe de la description sert aussi de résumé du composant sur la
+[page d'accueil](/guides/home-page) : limitez-le à une ou deux phrases.
+
+## Mise en forme avec Markdown
+
+La description supporte le Markdown : titres `###`, listes à puces, tableaux, **gras**, *italique*, code inline et
+blocs de code. Les blocs de code Kotlin sont colorés et disposent d'un bouton de copie, ce qui en fait un bon endroit
+pour des exemples d'utilisation :
+
+````kotlin
+/**
+ * High-emphasis filled button, used for the main call-to-action.
+ *
+ * ### Usage
+ * - Keep one primary button per screen.
+ * - Use a verb as label ("Save", "Send invitation").
+ *
+ * ### Example
+ * ```kotlin
+ * PrimaryButton(
+ *     text = "Save",
+ *     onClick = { viewModel.save() },
+ * )
+ * ```
+ *
+ * @param text Label displayed inside the button.
+ * @param onClick Called when the button is clicked.
+ */
+````
+
+## Limites
+
+- Seuls `@param` et `@return` sont affichés. Les autres tags (`@see`, `@sample`, `@throws`, `@property`...) sont
+  ignorés et signalés par un avertissement KSP.
+- Une ligne qui commence par `@` est toujours lue comme un tag, même dans un bloc de code : évitez les annotations
+  comme `@Composable` en début de ligne dans les exemples.
+- Un texte entre crochets est affiché comme du code inline (les liens KDoc comme `[ButtonVariant]` deviennent
+  `ButtonVariant`), y compris dans les blocs de code : évitez les crochets dans les exemples de code.
 
 ## Bonnes pratiques
 

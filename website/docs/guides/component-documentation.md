@@ -24,7 +24,46 @@ fun PrimaryButton(text: String, onClick: () -> Unit) { /* ... */ }
 ```
 
 The description and the `@param` tags are picked up and rendered in the story's documentation panel, next to the
-live preview.
+live preview. A `@return` tag is rendered too.
+
+The first paragraph of the description is also used as the component's summary on the
+[home page](/guides/home-page): keep it to one or two sentences.
+
+## Formatting with Markdown
+
+The description supports Markdown: `###` headings, bulleted lists, tables, **bold**, *italics*, inline code and fenced
+code blocks. Kotlin code blocks are syntax-highlighted and come with a copy button, which makes them a good place for
+usage examples:
+
+````kotlin
+/**
+ * High-emphasis filled button, used for the main call-to-action.
+ *
+ * ### Usage
+ * - Keep one primary button per screen.
+ * - Use a verb as label ("Save", "Send invitation").
+ *
+ * ### Example
+ * ```kotlin
+ * PrimaryButton(
+ *     text = "Save",
+ *     onClick = { viewModel.save() },
+ * )
+ * ```
+ *
+ * @param text Label displayed inside the button.
+ * @param onClick Called when the button is clicked.
+ */
+````
+
+## Limitations
+
+- Only `@param` and `@return` are rendered. Other tags (`@see`, `@sample`, `@throws`, `@property`...) are ignored and
+  reported as a KSP warning.
+- A line starting with `@` is always read as a tag, even inside a code block: avoid annotations such as `@Composable`
+  at the start of a line in examples.
+- Text between square brackets is rendered as inline code (KDoc links such as `[ButtonVariant]` become
+  `ButtonVariant`), including inside code blocks: avoid brackets in code examples.
 
 ## Best practices
 
