@@ -65,6 +65,32 @@ KnobPanel {
 }
 ```
 
+## `IntKnob`
+
+Un curseur, pour les props qui prennent un `Int` dans un intervalle connu (une progression, une largeur, un nombre
+d'éléments...) :
+
+```kotlin
+var progress by remember { mutableStateOf(40) }
+
+KnobPanel {
+    IntKnob(
+        label = "Progress (%)",
+        value = progress,
+        onValueChange = { progress = it },
+        range = 0..100,
+        step = 5,
+        codeKey = "progress",
+    )
+}
+```
+
+- `range` définit les valeurs minimale et maximale (incluses).
+- `step` (`1` par défaut) fait se caler le curseur sur `range.first`, `range.first + step`, etc. Si l'intervalle n'est
+  pas un multiple de `step`, la dernière valeur atteignable est la plus grande qui tient dans l'intervalle.
+- La valeur courante est affichée à côté du libellé, et `codeKey` la substitue sous forme de littéral `Int` dans
+  l'onglet "Code".
+
 ## `SelectKnob`
 
 Un contrôle de type liste déroulante, pour les props qui prennent une valeur parmi un ensemble fixe d'options.
@@ -122,4 +148,5 @@ séparés par une ligne vide. Le code qui les entoure (layouts, boucles, déclar
 - exposez des contrôles pour les props qui comptent réellement pour explorer les états du composant
 - gardez une story ciblée : quelques contrôles bien choisis valent mieux qu'une douzaine
 - privilégiez la surcharge `SelectKnob` typée enum dès que la prop repose sur un enum
+- utilisez `IntKnob` pour les props numériques bornées plutôt qu'un `TextKnob` qu'il faudrait convertir
 :::

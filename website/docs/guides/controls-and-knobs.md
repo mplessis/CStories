@@ -65,6 +65,30 @@ KnobPanel {
 }
 ```
 
+## `IntKnob`
+
+A slider, for props that take an `Int` within a known range (a progress, a width, a number of items...):
+
+```kotlin
+var progress by remember { mutableStateOf(40) }
+
+KnobPanel {
+    IntKnob(
+        label = "Progress (%)",
+        value = progress,
+        onValueChange = { progress = it },
+        range = 0..100,
+        step = 5,
+        codeKey = "progress",
+    )
+}
+```
+
+- `range` sets the minimum and maximum values (both included).
+- `step` (default `1`) makes the slider snap to `range.first`, `range.first + step`, and so on. If the range is not a
+  multiple of `step`, the last reachable value is the highest one that fits.
+- The current value is displayed next to the label, and `codeKey` substitutes it as an `Int` literal in the "Code" tab.
+
 ## `SelectKnob`
 
 A dropdown/select-style knob, for props that take one value out of a fixed set of options.
@@ -121,4 +145,5 @@ blank line. The surrounding code (layouts, loops, knob declarations) is not incl
 - expose knobs for the props that actually matter for exploring the component's states
 - keep a story focused: a handful of well-chosen knobs beats a dozen of everything
 - prefer the enum-typed `SelectKnob` overload whenever the prop is backed by an enum
+- use `IntKnob` for numeric props with a bounded range rather than a `TextKnob` that has to be parsed
 :::
