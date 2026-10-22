@@ -160,17 +160,17 @@ abstract class CStoriesAggregateTask : DefaultTask() {
     private fun buildWasmJsEntryPointSource(themeWrapperReference: String?): String {
         val themeWrapperImport = themeWrapperReference?.let { "\nimport $it" } ?: ""
         val themeWrapperArg = themeWrapperArgument(themeWrapperReference)
-        val escapedApplicationName = applicationName.get().escapeKotlinString()
         return """
             |package ${packageName.get()}
             |
             |import androidx.compose.ui.ExperimentalComposeUiApi
-            |import androidx.compose.ui.window.CanvasBasedWindow
-            |import io.cstories.runtime.CStoriesApp$themeWrapperImport
+            |import androidx.compose.ui.window.ComposeViewport
+            |import io.cstories.runtime.CStoriesApp
+            |import kotlinx.browser.document$themeWrapperImport
             |
             |@OptIn(ExperimentalComposeUiApi::class)
             |fun main() {
-            |    CanvasBasedWindow("$escapedApplicationName") {
+            |    ComposeViewport(document.body!!) {
             |        CStoriesApp(AllStoriesRegistry.entries$themeWrapperArg, homeMarkdown = AllStoriesRegistry.homeMarkdown)
             |    }
             |}
@@ -250,16 +250,9 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |            width: 100%;
             |            height: 100%;
             |        }
-            |
-            |        #ComposeTarget {
-            |            width: 100%;
-            |            height: 100%;
-            |            display: block;
-            |        }
             |    </style>
             |</head>
             |<body>
-            |    <canvas id="ComposeTarget"></canvas>
             |    <script src="${jsBundleBaseName.get()}.js"></script>
             |</body>
             |</html>

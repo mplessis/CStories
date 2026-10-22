@@ -1,17 +1,19 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     `maven-publish`
 }
 
+@OptIn(ExperimentalWasmDsl::class)
 kotlin {
     jvm()
-    js(IR) {
+    js {
         browser()
     }
     wasmJs {
         browser()
     }
-    iosX64()
     iosArm64()
     iosSimulatorArm64()
 

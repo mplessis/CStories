@@ -64,6 +64,8 @@ val generateCstoriesVersion = tasks.register("generateCstoriesVersion") {
     val outputDir = layout.buildDirectory.dir("generated/cstoriesVersion/kotlin")
     outputs.dir(outputDir)
     inputs.property("cstoriesVersion", cstoriesVersion)
+    val composeMultiplatformVersion = libs.versions.compose.multiplatform.get()
+    inputs.property("composeMultiplatformVersion", composeMultiplatformVersion)
 
     doLast {
         val packageDir = outputDir.get().dir("io/cstories/gradle").asFile.apply { mkdirs() }
@@ -72,6 +74,8 @@ val generateCstoriesVersion = tasks.register("generateCstoriesVersion") {
             |package io.cstories.gradle
             |
             |internal const val CSTORIES_VERSION = "$cstoriesVersion"
+            |
+            |internal const val COMPOSE_MULTIPLATFORM_VERSION = "$composeMultiplatformVersion"
             |
             """.trimMargin(),
         )

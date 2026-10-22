@@ -79,9 +79,9 @@ In the module that will host the stories:
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "2.2.0"
-    id("org.jetbrains.compose") version "1.8.2"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
+    kotlin("multiplatform") version "<kotlin-version>"
+    id("org.jetbrains.compose") version "<compose-version>"
+    id("org.jetbrains.kotlin.plugin.compose") version "<kotlin-version>"
     id("dev.cstories.gradle") version "<version>"
 }
 
@@ -90,7 +90,13 @@ kotlin {
 }
 ```
 
-Replace `<version>` with the CStories version you published, defined by `cstoriesVersion` in `gradle.properties`.
+Replace `<version>` with the CStories version you published, defined by `cstoriesVersion` in `gradle.properties`, and
+`<kotlin-version>` / `<compose-version>` with the matching Kotlin and Compose Multiplatform versions:
+
+| CStories | Kotlin | Compose Multiplatform |
+|---|---|---|
+| 2.0.0 | 2.4.21 | 1.12.2 |
+| 1.x | 2.2.0 | 1.8.2 |
 
 > **Note:** the CStories plugin applies `org.jetbrains.kotlin.plugin.compose`, but does not bundle it. If this plugin
 > is not already declared in the module (directly, or through a convention plugin), declare it yourself in the

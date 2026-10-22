@@ -54,9 +54,9 @@ published component library itself, because it adds `cstories-runtime` and catal
 
 ```kotlin
 plugins {
-    kotlin("multiplatform") version "2.2.0"
-    id("org.jetbrains.compose") version "1.8.2"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
+    kotlin("multiplatform") version "<kotlin-version>"
+    id("org.jetbrains.compose") version "<compose-version>"
+    id("org.jetbrains.kotlin.plugin.compose") version "<kotlin-version>"
     id("dev.cstories.gradle") version "<version>"
 }
 
@@ -65,8 +65,21 @@ kotlin {
 }
 ```
 
-Replace `<version>` with the CStories version you published, defined by `cstoriesVersion` in the CStories
-repository's `gradle.properties`.
+Replace the placeholders with:
+
+- `<version>`: the CStories version you published, defined by `cstoriesVersion` in the CStories repository's
+  `gradle.properties`;
+- `<kotlin-version>` and `<compose-version>`: the Kotlin and Compose Multiplatform versions matching that CStories
+  version (see the table below). The Compose compiler plugin (`org.jetbrains.kotlin.plugin.compose`) always uses the
+  same version as Kotlin.
+
+| CStories | Kotlin (`<kotlin-version>`) | Compose Multiplatform (`<compose-version>`) |
+|---|---|---|
+| 2.0.0 | 2.4.21 | 1.12.2 |
+| 1.x | 2.2.0 | 1.8.2 |
+
+CStories artifacts are compiled with these versions: use at least the same ones in your project. Since CStories 2.0.0,
+the `iosX64` target is no longer published, as Compose Multiplatform 1.11+ no longer supports it.
 
 :::note[Compose compiler plugin]
 The CStories plugin applies `org.jetbrains.kotlin.plugin.compose`, but does not bundle it. If this plugin is not already

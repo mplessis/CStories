@@ -17,8 +17,8 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.material3)
-            implementation(compose.materialIconsExtended)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.material.icons.extended)
         }
     }
 }
