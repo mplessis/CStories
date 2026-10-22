@@ -7,14 +7,16 @@ title: Home page
 The catalog opens on a home page that gives an overview of every component in the library. You can come back to it at
 any time with the **Home** entry at the top of the sidebar, or by clicking the logo.
 
+![Home](../assets/home.png)
+
 ## What the home page shows
 
 1. The content of an optional `CSTORIES.md` file, rendered as Markdown (see below).
 2. The list of components, organized in sections that follow the sidebar tree. Each group of stories (the level right
    above the stories, for example `Buttons`) becomes a card showing:
-   - the name of the group;
-   - a summary, taken from the first paragraph of the documentation of the referenced component;
-   - the number of stories in the group.
+    - the name of the group;
+    - a summary, taken from the first paragraph of the documentation of the referenced component;
+    - the number of stories in the group.
 
 Clicking a card opens the first story of the group. The sidebar search field also filters the home page.
 

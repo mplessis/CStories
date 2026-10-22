@@ -7,14 +7,16 @@ title: Page d'accueil
 Le catalogue s'ouvre sur une page d'accueil qui donne une vue d'ensemble de tous les composants de la bibliothèque. Vous
 pouvez y revenir à tout moment avec l'entrée **Home** en haut de la sidebar, ou en cliquant sur le logo.
 
+![Home](../assets/home.png)
+
 ## Contenu de la page d'accueil
 
 1. Le contenu d'un fichier `CSTORIES.md` optionnel, rendu en Markdown (voir plus bas).
 2. La liste des composants, organisée en sections qui suivent l'arbre de la sidebar. Chaque groupe de stories (le
    niveau juste au-dessus des stories, par exemple `Buttons`) devient une carte qui affiche :
-   - le nom du groupe ;
-   - un résumé, tiré du premier paragraphe de la documentation du composant référencé ;
-   - le nombre de stories du groupe.
+    - le nom du groupe ;
+    - un résumé, tiré du premier paragraphe de la documentation du composant référencé ;
+    - le nombre de stories du groupe.
 
 Un clic sur une carte ouvre la première story du groupe. Le champ de recherche de la sidebar filtre aussi la page
 d'accueil.
