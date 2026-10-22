@@ -24,9 +24,9 @@ par ailleurs :
 ```kotlin
 // lib/build.gradle.kts
 plugins {
-    kotlin("multiplatform") version "2.2.0"
-    id("org.jetbrains.compose") version "1.8.2"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
+    kotlin("multiplatform") version "<kotlin-version>"
+    id("org.jetbrains.compose") version "<compose-version>"
+    id("org.jetbrains.kotlin.plugin.compose") version "<kotlin-version>"
     id("dev.cstories.gradle") version "<version>"
 }
 
@@ -81,9 +81,9 @@ include(":lib", ":lib:stories")
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
-    kotlin("multiplatform") version "2.2.0"
-    id("org.jetbrains.compose") version "1.8.2"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.2.0"
+    kotlin("multiplatform") version "<kotlin-version>"
+    id("org.jetbrains.compose") version "<compose-version>"
+    id("org.jetbrains.kotlin.plugin.compose") version "<kotlin-version>"
     id("dev.cstories.gradle") version "<version>"
 }
 
