@@ -1,17 +1,33 @@
 [versions]
-kotlin = "2.2.0"
-compose-multiplatform = "1.8.2"
-# Compose Hot Reload >= 1.2.0-alpha02 requires Compose Multiplatform >= 1.10.0;
-# 1.1.1 is the latest stable release still compatible with 1.8.2.
-compose-hot-reload = "1.1.1"
-ksp = "2.2.0-2.0.2"
-kotlinpoet = "2.2.0"
+kotlin = "2.4.21"
+compose-multiplatform = "1.12.2"
+# Material3 is versioned independently from Compose Multiplatform since 1.9.0.
+# 1.12.0-alpha03 is the version released alongside Compose Multiplatform 1.12.2
+# (based on Jetpack Material3 1.5.0-alpha22).
+compose-material3 = "1.12.0-alpha03"
+# Material icons are no longer released: 1.7.3 is the last published version.
+compose-material-icons = "1.7.3"
+# Compose Hot Reload is bundled with the Compose Multiplatform Gradle plugin
+# since 1.10.0; 1.2.0 is the version bundled with Compose Multiplatform 1.12.
+compose-hot-reload = "1.2.0"
+ksp = "2.3.12"
+kotlinpoet = "2.4.0"
+kotlinx-serialization = "1.12.0"
+kotlinx-coroutines = "1.11.0"
 
 [libraries]
 ksp-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "ksp" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }
 compose-hot-reload-runtime-api = { module = "org.jetbrains.compose.hot-reload:hot-reload-runtime-api", version.ref = "compose-hot-reload" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
+compose-material-icons-extended = { module = "org.jetbrains.compose.material:material-icons-extended", version.ref = "compose-material-icons" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

@@ -94,7 +94,7 @@ internal class CStoriesProcessor(
             .flatMap { file -> file.declarations.flatMap(::allClassDeclarations) }
             .filter { it.simpleName.asString() == CUSTOM_THEME_WRAPPER_NAME }
             .toList()
-        val deferred = declarations.filterNot(KSAnnotated::validate)
+        val deferred = declarations.filterNot(KSAnnotated::isResolved)
         if (deferred.isNotEmpty()) return deferred
 
         val wrapperType = resolver.getClassDeclarationByName(CSTORIES_THEME_WRAPPER_FQN)
@@ -148,9 +148,9 @@ internal class CStoriesProcessor(
             .filterIsInstance<KSFunctionDeclaration>()
             .toList()
 
-        val deferredComponents = componentSymbols.filterNot(KSAnnotated::validate)
+        val deferredComponents = componentSymbols.filterNot(KSAnnotated::isResolved)
         val validComponents = componentSymbols
-            .filter(KSAnnotated::validate)
+            .filter(KSAnnotated::isResolved)
             .mapNotNull(::validateAndBuildComponent)
 
         val newCandidates = validComponents.filter { it.refKey !in processedComponentKeys }
@@ -190,7 +190,7 @@ internal class CStoriesProcessor(
             .toList()
 
         val deferred = mutableListOf<KSAnnotated>()
-        deferred.addAll(symbols.filterNot(KSAnnotated::validate))
+        deferred.addAll(symbols.filterNot(KSAnnotated::isResolved))
 
         // In "standalone" mode, a story's `component = CStoryComponentRefs.Xxx`
         // reference may point at a `@CStoryComponent` processed moments
@@ -210,7 +210,7 @@ internal class CStoriesProcessor(
         // `KSFile` reference, so retaining it past the round it was built in
         // is safe (unlike the underlying KSP symbols themselves, whose
         // backing analysis session gets torn down between rounds).
-        val resolvableSymbols = symbols.filter(KSAnnotated::validate).filter { function ->
+        val resolvableSymbols = symbols.filter(KSAnnotated::isResolved).filter { function ->
             if (hasUnresolvedComponentReference(function)) {
                 deferred += function
                 false
@@ -595,3 +595,10 @@ private fun CStoriesProcessor.resolveThemeWrapper(
         objectName = qualifiedName.substringAfterLast('.'),
     ))
 }
+
+/**
+ * Whether every type referenced by this symbol can be resolved, so it can be
+ * processed in the current round. Keeps the historical validation rules of
+ * `KSNode.validate()` (`enableNewFeatures = false`).
+ */
+private fun KSAnnotated.isResolved(): Boolean = validate(enableNewFeatures = false)

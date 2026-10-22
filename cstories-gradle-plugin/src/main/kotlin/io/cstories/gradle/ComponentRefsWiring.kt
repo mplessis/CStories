@@ -1,7 +1,6 @@
 package io.cstories.gradle
 
 import com.google.devtools.ksp.gradle.KspAATask
-import com.google.devtools.ksp.gradle.KspTask
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.withType
 import org.gradle.kotlin.dsl.register
@@ -62,7 +61,6 @@ internal fun Project.wireComponentRefsGeneration(
     // argument set directly on that one task.
     tasks.matching { it.name == "kspCommonMainKotlinMetadata" }.configureEach {
         val provider = CommandLineArgumentProvider { listOf("$PROCESS_MODE_OPTION=common") }
-        (this as? KspTask)?.commandLineArgumentProviders?.add(provider)
         (this as? KspAATask)?.commandLineArgumentProviders?.add(provider)
     }
 
@@ -95,13 +93,6 @@ internal fun Project.wireComponentRefsGeneration(
     }
     val metadataArgument = componentMetadata?.let { task ->
         CommandLineArgumentProvider { listOf("$COMPONENT_METADATA_OPTION=${task.get().outputFile.get().asFile.absolutePath}") }
-    }
-    tasks.withType<KspTask>().configureEach {
-        metadataArgument?.let(commandLineArgumentProviders::add)
-        componentMetadata?.let { dependsOn(it) }
-        if (!readDependencyMetadata) {
-            commandLineArgumentProviders.add(CommandLineArgumentProvider { listOf("$WRITE_COMPONENT_METADATA_OPTION=true") })
-        }
     }
     tasks.withType<KspAATask>().configureEach {
         metadataArgument?.let(commandLineArgumentProviders::add)
@@ -178,8 +169,7 @@ internal fun Project.wireComponentRefsGeneration(
                 val targetTaskName = "kspKotlin" + target.name.replaceFirstChar(Char::uppercaseChar)
                 tasks.matching { it.name == targetTaskName }.configureEach {
                     val provider = CommandLineArgumentProvider { listOf("$PROCESS_MODE_OPTION=stories") }
-                    (this as? KspTask)?.commandLineArgumentProviders?.add(provider)
-                    (this as? KspAATask)?.commandLineArgumentProviders?.add(provider)
+                                (this as? KspAATask)?.commandLineArgumentProviders?.add(provider)
                 }
             }
             return@afterEvaluate
@@ -196,8 +186,7 @@ internal fun Project.wireComponentRefsGeneration(
         val standaloneKspTasks = tasks.matching { it.name == standaloneTaskName }
         standaloneKspTasks.configureEach {
             val provider = CommandLineArgumentProvider { listOf("$PROCESS_MODE_OPTION=standalone") }
-            (this as? KspTask)?.commandLineArgumentProviders?.add(provider)
-            (this as? KspAATask)?.commandLineArgumentProviders?.add(provider)
+                (this as? KspAATask)?.commandLineArgumentProviders?.add(provider)
         }
         generateComponentRefs.configure { dependsOn(standaloneKspTasks) }
         sourcesJarTasks.configureEach { dependsOn(standaloneKspTasks) }

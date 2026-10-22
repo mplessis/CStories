@@ -265,7 +265,7 @@ class CStoriesGradlePlugin : Plugin<Project> {
     private fun desktopCurrentOs(project: Project): Any {
         val composeExtension = project.extensions.findByType(ComposeExtension::class.java)
         return composeExtension?.dependencies?.desktop?.currentOs
-            ?: "org.jetbrains.compose.desktop:desktop-jvm:1.8.2"
+            ?: "org.jetbrains.compose.desktop:desktop-jvm:$COMPOSE_MULTIPLATFORM_VERSION"
     }
 
     /**

@@ -20,18 +20,22 @@ kotlin {
     // actually runs on wasmJs — otherwise resolving commonMain metadata
     // for those other targets fails. Kept in sync with the target list of
     // cstories-annotations.
-    iosX64()
     iosArm64()
     iosSimulatorArm64()
 
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.components.resources)
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+            // Exposed as `api`: the public API (StoryEntry, CStoriesThemeWrapper,
+            // knobs, previews) is made of @Composable functions and Modifier
+            // parameters that story modules compile against.
+            api(libs.compose.runtime)
+            api(libs.compose.ui)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.material.icons.extended)
+            implementation(libs.compose.components.resources)
+            implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.coroutines.core)
         }
 
         jvmMain.dependencies {

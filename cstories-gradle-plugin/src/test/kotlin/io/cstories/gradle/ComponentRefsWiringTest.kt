@@ -71,7 +71,7 @@ class ComponentRefsWiringTest {
 
         val kotlin = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
         kotlin.jvm()
-        kotlin.iosX64()
+        kotlin.iosArm64()
 
         val metadataTask = project.tasks.register("kspCommonMainKotlinMetadata")
         val sourcesJarTask = project.tasks.register("androidReleaseSourcesJar", Jar::class.java)
@@ -90,7 +90,7 @@ class ComponentRefsWiringTest {
 
         val kotlin = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
         kotlin.jvm()
-        kotlin.iosX64()
+        kotlin.iosArm64()
 
         val metadataTask = project.tasks.register("kspCommonMainKotlinMetadata")
         val sourcesJarTask = project.tasks.register("desktopSourcesJar", Jar::class.java)
@@ -109,10 +109,15 @@ class ComponentRefsWiringTest {
 
         val kotlin = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
         kotlin.jvm()
-        kotlin.iosX64()
+        kotlin.iosArm64()
 
         val metadataTask = project.tasks.register("kspCommonMainKotlinMetadata")
-        val sourcesJarTask = project.tasks.register("sourcesJar", Jar::class.java)
+        // Kotlin 2.4+ already registers `sourcesJar` for multiplatform projects.
+        val sourcesJarTask = if ("sourcesJar" in project.tasks.names) {
+            project.tasks.named("sourcesJar")
+        } else {
+            project.tasks.register("sourcesJar", Jar::class.java)
+        }
 
         project.wireComponentRefsGeneration(kotlin)
 
@@ -128,7 +133,7 @@ class ComponentRefsWiringTest {
 
         val kotlin = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
         kotlin.jvm()
-        kotlin.iosX64()
+        kotlin.iosArm64()
 
         project.tasks.register("kspCommonMainKotlinMetadata")
 
@@ -162,7 +167,7 @@ class ComponentRefsWiringTest {
 
         val kotlin = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
         kotlin.jvm()
-        kotlin.iosX64()
+        kotlin.iosArm64()
 
         project.wireComponentRefsGeneration(kotlin)
 
