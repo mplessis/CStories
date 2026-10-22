@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -85,8 +85,8 @@ fun DemoTabs(
     }
 
     if (scrollable) {
-        ScrollableTabRow(selectedTabIndex = safeIndex, modifier = modifier, edgePadding = 16.dp) { tabsContent() }
+        PrimaryScrollableTabRow(selectedTabIndex = safeIndex, modifier = modifier, edgePadding = 16.dp) { tabsContent() }
     } else {
-        TabRow(selectedTabIndex = safeIndex, modifier = modifier) { tabsContent() }
+        PrimaryTabRow(selectedTabIndex = safeIndex, modifier = modifier) { tabsContent() }
     }
 }
