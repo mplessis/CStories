@@ -185,4 +185,90 @@ class StorySourceExtractorTest {
 
         assertEquals(emptyList(), StorySourceExtractor.extractCalls(body, "PrimaryButton"))
     }
+
+    @Test
+    fun `extracts a trailing-lambda-only call`() {
+        val body = """
+            Column {
+                App {
+                    Text("Hello")
+                    Button(onClick = {}) { Text("Ok") }
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(
+            listOf(
+                """
+                App {
+                    Text("Hello")
+                    Button(onClick = {}) { Text("Ok") }
+                }
+                """.trimIndent(),
+            ),
+            StorySourceExtractor.extractCalls(body, "App"),
+        )
+    }
+
+    @Test
+    fun `includes the trailing lambda after the arguments`() {
+        val body = """
+            Column {
+                App(title = "Demo") {
+                    Text("Hello")
+                }
+                App(
+                    title = "Other",
+                )
+                {
+                    Text("World")
+                }
+            }
+        """.trimIndent()
+
+        assertEquals(
+            listOf(
+                """
+                App(title = "Demo") {
+                    Text("Hello")
+                }
+                """.trimIndent(),
+                """
+                App(
+                    title = "Other",
+                )
+                {
+                    Text("World")
+                }
+                """.trimIndent(),
+            ),
+            StorySourceExtractor.extractCalls(body, "App"),
+        )
+    }
+
+    @Test
+    fun `extracts mixed lambda-only and argument calls in source order`() {
+        val body = """
+            Column {
+                App { Text("First") }
+                App(title = "Second")
+            }
+        """.trimIndent()
+
+        assertEquals(
+            listOf("""App { Text("First") }""", """App(title = "Second")"""),
+            StorySourceExtractor.extractCalls(body, "App"),
+        )
+    }
+
+    @Test
+    fun `does not match a longer identifier followed by a lambda`() {
+        val body = """
+            AppTheme {
+                Text("Hello")
+            }
+        """.trimIndent()
+
+        assertEquals(emptyList(), StorySourceExtractor.extractCalls(body, "App"))
+    }
 }

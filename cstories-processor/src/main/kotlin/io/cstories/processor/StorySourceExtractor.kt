@@ -80,17 +80,35 @@ internal object StorySourceExtractor {
         return calls
     }
 
-    /** Returns the index right after the parenthesis closing the call starting at [callStart]. */
+    /**
+     * Returns the index right after the end of the call starting at [callStart]:
+     * either `name { ... }`, `name(...)`, or `name(...) { ... }`.
+     */
     private fun findCallEnd(body: String, callStart: Int): Int? {
-        val openParen = body.indexOf('(', callStart)
-        if (openParen == -1) return null
+        var i = callStart
+        while (i < body.length && (body[i].isLetterOrDigit() || body[i] == '_' || body[i] == '.')) i++
+        while (i < body.length && body[i] == ' ') i++
 
+        return when (body.getOrNull(i)) {
+            '{' -> matchClosing(body, i, '{', '}')
+            '(' -> {
+                val parenEnd = matchClosing(body, i, '(', ')') ?: return null
+                var j = parenEnd
+                while (j < body.length && body[j].isWhitespace()) j++
+                if (body.getOrNull(j) == '{') matchClosing(body, j, '{', '}') ?: parenEnd else parenEnd
+            }
+            else -> null
+        }
+    }
+
+    /** Returns the index right after the [close] char matching the [open] char at [openIndex]. */
+    private fun matchClosing(body: String, openIndex: Int, open: Char, close: Char): Int? {
         var depth = 0
-        var i = openParen
+        var i = openIndex
         while (i < body.length) {
             when (body[i]) {
-                '(' -> depth++
-                ')' -> {
+                open -> depth++
+                close -> {
                     depth--
                     if (depth == 0) return i + 1
                 }
@@ -125,9 +143,10 @@ internal object StorySourceExtractor {
 
             var afterIndex = index + functionName.length
             while (afterIndex < body.length && body[afterIndex] == ' ') afterIndex++
-            val isFollowedByParen = body.getOrNull(afterIndex) == '('
+            val next = body.getOrNull(afterIndex)
+            val isFollowedByCall = next == '(' || next == '{'
 
-            if (isWordBoundaryBefore && isFollowedByParen) return findQualifierStart(body, index)
+            if (isWordBoundaryBefore && isFollowedByCall) return findQualifierStart(body, index)
             searchFrom = index + functionName.length
         }
     }
