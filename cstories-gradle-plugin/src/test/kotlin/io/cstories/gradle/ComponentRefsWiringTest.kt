@@ -32,6 +32,60 @@ class ComponentRefsWiringTest {
     }
 
     @Test
+    fun `metadata extraction merges variant and classpath records without duplicates`() {
+        val project = ProjectBuilder.builder().build()
+        val task = project.tasks.register("extract", ExtractComponentMetadataTask::class.java)
+        val record = "ns\n\nPrimary\nfqn\n\n"
+        val variantFile = project.layout.buildDirectory.file("variant/components.txt").get().asFile
+        variantFile.parentFile.mkdirs()
+        variantFile.writeText(record)
+        val classpathFile = project.layout.buildDirectory.file("cp/META-INF/cstories/components.txt").get().asFile
+        classpathFile.parentFile.mkdirs()
+        classpathFile.writeText(record + "ns\n\nSecondary\nfqn2\ndoc\n")
+        task.configure {
+            metadataFiles.from(variantFile)
+            inputClasspath.from(classpathFile.parentFile.parentFile.parentFile)
+            outputFile.set(project.layout.buildDirectory.file("output/components.txt"))
+        }
+
+        task.get().actions.forEach { it.execute(task.get()) }
+
+        assertEquals(
+            record + "ns\n\nSecondary\nfqn2\ndoc\n",
+            task.get().outputFile.get().asFile.readText(),
+        )
+    }
+
+    @Test
+    fun `metadata extraction tolerates a missing variant file`() {
+        val project = ProjectBuilder.builder().build()
+        val task = project.tasks.register("extract", ExtractComponentMetadataTask::class.java)
+        val missing = project.layout.buildDirectory.file("missing/components.txt").get().asFile
+        task.configure {
+            metadataFiles.from(missing)
+            metadataSources.put(missing.absolutePath, "project :design-system")
+            outputFile.set(project.layout.buildDirectory.file("output/components.txt"))
+        }
+
+        task.get().actions.forEach { it.execute(task.get()) }
+
+        assertEquals("", task.get().outputFile.get().asFile.readText())
+    }
+
+    @Test
+    fun `components plugin exposes a component metadata variant`() {
+        val project = ProjectBuilder.builder().build()
+        project.pluginManager.apply("dev.cstories.gradle.components")
+
+        val elements = project.configurations.getByName(COMPONENT_METADATA_ELEMENTS_CONFIGURATION)
+        assertTrue(elements.isCanBeConsumed)
+        assertEquals(
+            COMPONENT_METADATA_USAGE,
+            elements.attributes.getAttribute(org.gradle.api.attributes.Usage.USAGE_ATTRIBUTE)?.name,
+        )
+    }
+
+    @Test
     fun `components plugin keeps annotations compile only`() {
         val project = ProjectBuilder.builder().build()
 

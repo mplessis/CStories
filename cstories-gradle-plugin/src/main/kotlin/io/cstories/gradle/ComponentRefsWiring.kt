@@ -11,6 +11,13 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.TaskCollection
+import org.gradle.api.Task
+import org.gradle.api.attributes.Usage
+import org.gradle.api.provider.MapProperty
+import org.gradle.kotlin.dsl.named
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.OutputFile
@@ -76,7 +83,25 @@ internal fun Project.wireComponentRefsGeneration(
     val commonMetadataKspTasks = tasks.matching { it.name == "kspCommonMainKotlinMetadata" }
 
     val componentMetadata = if (readDependencyMetadata) {
+        val metadataConfiguration = configurations.create(COMPONENT_METADATA_CONFIGURATION) {
+            isCanBeConsumed = false
+            isCanBeResolved = true
+            isVisible = false
+            attributes { attribute(Usage.USAGE_ATTRIBUTE, objects.named(COMPONENT_METADATA_USAGE)) }
+        }
+        configurations
+            .matching { it.name.endsWith("MainImplementation") || it.name.endsWith("MainApi") }
+            .configureEach { metadataConfiguration.extendsFrom(this) }
+        // Lenient: dependencies that don't apply the components plugin (and
+        // every external module) simply have no such variant.
+        val metadataArtifacts = metadataConfiguration.incoming.artifactView { lenient(true) }.artifacts
         tasks.register<ExtractComponentMetadataTask>("cstoriesExtractComponentMetadata") {
+            metadataFiles.from(metadataArtifacts.artifactFiles)
+            metadataSources.set(
+                metadataArtifacts.resolvedArtifacts.map { artifacts ->
+                    artifacts.associate { it.file.absolutePath to it.id.componentIdentifier.displayName }
+                },
+            )
             configurations.matching { it.name.endsWith("CompileClasspath") }.forEach { configuration ->
                 val artifactFiles = configuration.incoming.artifactView {
                     componentFilter { identifier ->
@@ -138,6 +163,12 @@ internal fun Project.wireComponentRefsGeneration(
         composeResourceCopyTasks().configureEach {
             dependsOn(commonMetadataKspTasks)
         }
+        configurations.create(COMPONENT_METADATA_ELEMENTS_CONFIGURATION) {
+            isCanBeConsumed = true
+            isCanBeResolved = false
+            isVisible = false
+            attributes { attribute(Usage.USAGE_ATTRIBUTE, objects.named(COMPONENT_METADATA_USAGE)) }
+        }
     }
 
     // A dedicated, stable lifecycle task so consumers can regenerate
@@ -183,6 +214,9 @@ internal fun Project.wireComponentRefsGeneration(
     afterEvaluate {
         val targets = realTargets()
         if (targets.size != 1) {
+            if (!readDependencyMetadata) {
+                exposeComponentMetadata("generated/ksp/metadata/commonMain/resources", commonMetadataKspTasks)
+            }
             targets.forEach { target ->
                 val targetTaskName = "kspKotlin" + target.name.replaceFirstChar(Char::uppercaseChar)
                 tasks.matching { it.name == targetTaskName }.configureEach {
@@ -210,6 +244,7 @@ internal fun Project.wireComponentRefsGeneration(
         sourcesJarTasks.configureEach { dependsOn(standaloneKspTasks) }
 
         if (!readDependencyMetadata) {
+            exposeComponentMetadata("generated/ksp/${target.name}/${target.name}Main/resources", standaloneKspTasks)
             val standaloneMain = kotlin.sourceSets.getByName("${target.name}Main")
             standaloneMain.resources.srcDir(
                 layout.buildDirectory.dir("generated/ksp/${target.name}/${target.name}Main/resources"),
@@ -251,6 +286,9 @@ internal fun Project.wireComponentRefsGeneration(
             .asFile
         val standaloneMain = kotlin.sourceSets.getByName("${target.name}Main")
         standaloneMain.kotlin.setSrcDirs(standaloneMain.kotlin.srcDirs.filterNot { it == generatedDir })
+        // KSP may register that directory on the target source set lazily,
+        // after this callback: exclude it there too, whenever it gets added.
+        standaloneMain.kotlin.exclude { it.file.startsWith(generatedDir) }
         kotlin.sourceSets.getByName("commonMain").kotlin.srcDir(generatedDir)
     }
 }
@@ -264,6 +302,21 @@ internal const val PROCESS_MODE_OPTION = "cstories.processMode"
 internal const val MODULE_NAME_OPTION = "cstories.moduleName"
 internal const val COMPONENT_METADATA_OPTION = "cstories.componentMetadata"
 internal const val WRITE_COMPONENT_METADATA_OPTION = "cstories.writeComponentMetadata"
+internal const val COMPONENT_METADATA_ELEMENTS_CONFIGURATION = "cstoriesComponentMetadataElements"
+internal const val COMPONENT_METADATA_CONFIGURATION = "cstoriesComponentMetadata"
+internal const val COMPONENT_METADATA_USAGE = "cstories-component-metadata"
+private const val COMPONENT_METADATA_PATH = "META-INF/cstories/components.txt"
+
+/**
+ * Exposes the KSP-written `components.txt` as a dedicated variant, so that a
+ * stories module depending on this project receives it directly, whatever
+ * KMP packages (or not) into its jars and klibs.
+ */
+private fun Project.exposeComponentMetadata(resourcesDir: String, producers: TaskCollection<Task>) {
+    configurations.getByName(COMPONENT_METADATA_ELEMENTS_CONFIGURATION).outgoing.artifact(
+        layout.buildDirectory.file("$resourcesDir/$COMPONENT_METADATA_PATH"),
+    ) { builtBy(producers) }
+}
 
 // Compose Multiplatform copies every resources dir (including the KSP one
 // added above) into its own tasks, which don't infer the KSP dependency.
@@ -289,24 +342,49 @@ abstract class ExtractComponentMetadataTask : DefaultTask() {
     @get:Classpath
     abstract val inputClasspath: ConfigurableFileCollection
 
+    /** `components.txt` files received through the dedicated metadata variant. */
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val metadataFiles: ConfigurableFileCollection
+
+    /** Absolute path of each [metadataFiles] entry to the dependency providing it. */
+    @get:Internal
+    abstract val metadataSources: MapProperty<String, String>
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
     @TaskAction
     fun extract() {
-        val lines = inputClasspath.files.flatMap { file ->
+        val sources = metadataSources.getOrElse(emptyMap())
+        val variantRecords = metadataFiles.files.flatMap { file ->
+            if (file.isFile) {
+                file.readLines().toRecords()
+            } else {
+                logger.warn(
+                    "CStories: '${sources[file.absolutePath] ?: file}' applies dev.cstories.gradle.components " +
+                        "but no CStories component metadata was found ($file): either it declares no " +
+                        "@CStoryComponent, or its metadata was not generated and its components will be missing " +
+                        "from CStoryComponentRefs.",
+                )
+                emptyList()
+            }
+        }
+        val classpathRecords = inputClasspath.files.flatMap { file ->
             when {
-                file.isDirectory -> File(file, ComponentMetadataPath).takeIf(File::exists)?.readLines().orEmpty()
+                file.isDirectory -> File(file, COMPONENT_METADATA_PATH).takeIf(File::exists)?.readLines().orEmpty().toRecords()
                 file.extension == "jar" -> JarFile(file).use { jar ->
-                    jar.getJarEntry(ComponentMetadataPath)?.let { jar.getInputStream(it).bufferedReader().readLines() }.orEmpty()
+                    jar.getJarEntry(COMPONENT_METADATA_PATH)?.let { jar.getInputStream(it).bufferedReader().readLines() }.orEmpty().toRecords()
                 }
                 else -> emptyList()
             }
         }
-        outputFile.get().asFile.apply { parentFile.mkdirs() }.writeText(lines.joinToString("\n"))
+        // A project dependency can be seen both through its variant and its
+        // jars: keep each 5-line component record once.
+        val lines = (variantRecords + classpathRecords).distinct().flatten()
+        outputFile.get().asFile.apply { parentFile.mkdirs() }.writeText(lines.joinToString("") { "$it\n" })
     }
 
-    private companion object {
-        const val ComponentMetadataPath = "META-INF/cstories/components.txt"
-    }
+    // Fields may be empty (blank lines), so records are split per file.
+    private fun List<String>.toRecords() = chunked(5).filter { it.size == 5 }
 }
