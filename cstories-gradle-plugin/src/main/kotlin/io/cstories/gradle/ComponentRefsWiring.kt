@@ -9,7 +9,9 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.PathSensitivity
+import java.security.MessageDigest
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -83,7 +85,11 @@ internal fun Project.wireComponentRefsGeneration(
                 // Detach the snapshot consumed by the extractor from KMP's
                 // own-output task dependencies. Those dependencies include
                 // this project's compilation and create a cycle with KSP.
-                inputClasspath.from(files(artifactFiles.files))
+                // Own outputs (e.g. main classes on test classpaths) are also
+                // dropped: they change after KSP runs and would otherwise
+                // keep this task permanently out of date.
+                val ownBuildDir = layout.buildDirectory.get().asFile
+                inputClasspath.from(files(artifactFiles.files.filterNot { it.startsWith(ownBuildDir) }))
                 dependsOn(artifactFiles.buildDependencies.getDependencies(this).filter { it.project != project })
             }
             outputFile.set(layout.buildDirectory.file("generated/cstories/component-metadata/components.txt"))
@@ -92,11 +98,26 @@ internal fun Project.wireComponentRefsGeneration(
         null
     }
     val metadataArgument = componentMetadata?.let { task ->
-        CommandLineArgumentProvider { listOf("$COMPONENT_METADATA_OPTION=${task.get().outputFile.get().asFile.absolutePath}") }
+        CommandLineArgumentProvider {
+            val file = task.get().outputFile.get().asFile
+            // KSP reruns non-incrementally when processor options change, so
+            // the content hash forces regeneration whenever a dependency's
+            // components.txt changes (e.g. a KDoc-only edit), which the
+            // classpath ABI snapshot alone would never detect.
+            listOf(
+                "$COMPONENT_METADATA_OPTION=${file.absolutePath}",
+                "$COMPONENT_METADATA_HASH_OPTION=${file.sha256()}",
+            )
+        }
     }
     tasks.withType<KspAATask>().configureEach {
         metadataArgument?.let(commandLineArgumentProviders::add)
-        componentMetadata?.let { dependsOn(it) }
+        componentMetadata?.let { task ->
+            dependsOn(task)
+            inputs.file(task.flatMap { it.outputFile })
+                .withPathSensitivity(PathSensitivity.NONE)
+                .withPropertyName("cstoriesComponentMetadata")
+        }
         if (!readDependencyMetadata) {
             commandLineArgumentProviders.add(CommandLineArgumentProvider { listOf("$WRITE_COMPONENT_METADATA_OPTION=true") })
         }
@@ -118,6 +139,9 @@ internal fun Project.wireComponentRefsGeneration(
 
     if (!readDependencyMetadata) {
         tasks.withType<ProcessResources>().configureEach {
+            dependsOn(commonMetadataKspTasks)
+        }
+        composeResourceCopyTasks().configureEach {
             dependsOn(commonMetadataKspTasks)
         }
     }
@@ -199,6 +223,9 @@ internal fun Project.wireComponentRefsGeneration(
             tasks.matching { it.name == "${target.name}ProcessResources" }.configureEach {
                 dependsOn(standaloneKspTasks)
             }
+            composeResourceCopyTasks().configureEach {
+                dependsOn(standaloneKspTasks)
+            }
             return@afterEvaluate
         }
 
@@ -243,9 +270,20 @@ internal const val PROCESS_MODE_OPTION = "cstories.processMode"
 internal const val MODULE_NAME_OPTION = "cstories.moduleName"
 internal const val COMPONENT_METADATA_OPTION = "cstories.componentMetadata"
 internal const val WRITE_COMPONENT_METADATA_OPTION = "cstories.writeComponentMetadata"
+internal const val COMPONENT_METADATA_HASH_OPTION = "cstories.componentMetadataHash"
+
+// Compose Multiplatform copies every resources dir (including the KSP one
+// added above) into its own tasks, which don't infer the KSP dependency.
+private fun Project.composeResourceCopyTasks() =
+    tasks.matching { it.name.startsWith("copy") && it.name.contains("ComposeResources") }
+
+private fun File.sha256(): String {
+    if (!exists()) return ""
+    return MessageDigest.getInstance("SHA-256").digest(readBytes()).joinToString("") { "%02x".format(it) }
+}
 
 abstract class ExtractComponentMetadataTask : DefaultTask() {
-    @get:Internal
+    @get:Classpath
     abstract val inputClasspath: ConfigurableFileCollection
 
     @get:OutputFile
