@@ -36,26 +36,33 @@ compatible with Kotlin/Wasm.
 
 ## Installation
 
-At this stage, CStories is published to `mavenLocal()` only.
+CStories is published to [GitHub Packages](https://github.com/mplessis/CStories/packages).
 
-### 1. Publish CStories locally
+### 1. Create a GitHub token
 
-From this repository, run:
+GitHub Packages requires authentication, even for public packages. Create a
+[personal access token (classic)](https://github.com/settings/tokens) with the `read:packages` scope and add it to
+`~/.gradle/gradle.properties`:
 
-```bash
-./gradlew publishAllToMavenLocal
+```properties
+gpr.user=<your-github-username>
+gpr.token=<your-token>
 ```
 
-This command publishes the required artifacts as well as the Gradle plugin to your local Maven repository.
-
-### 2. Declare `mavenLocal()` in the consumer project
+### 2. Declare the GitHub Packages repository in the consumer project
 
 In the `settings.gradle.kts` of the project that will use CStories:
 
 ```kotlin
 pluginManagement {
     repositories {
-        mavenLocal()
+        maven {
+            url = uri("https://maven.pkg.github.com/mplessis/CStories")
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.token").orNull ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
         gradlePluginPortal()
         mavenCentral()
         google()
@@ -64,7 +71,13 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        mavenLocal()
+        maven {
+            url = uri("https://maven.pkg.github.com/mplessis/CStories")
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.token").orNull ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
         mavenCentral()
         google()
     }
@@ -72,6 +85,7 @@ dependencyResolutionManagement {
 ```
 
 This configuration is required both to resolve the plugin and to resolve the dependencies published by CStories.
+For local development, `./gradlew publishAllToMavenLocal` publishes everything to `mavenLocal()` instead.
 
 ### 3. Apply the CStories plugin
 

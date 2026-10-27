@@ -4,28 +4,33 @@ title: Installation
 
 # Installation
 
-À ce stade, CStories est publié uniquement dans `mavenLocal()`.
+CStories est publié sur [GitHub Packages](https://github.com/mplessis/CStories/packages).
 
-## 1. Publier CStories en local
+## 1. Créer un token GitHub
 
-Depuis le [repository CStories](https://github.com/mplessis/CStories), exécutez :
+GitHub Packages exige une authentification, même pour télécharger des paquets publics. Créez un
+[personal access token (classic)](https://github.com/settings/tokens) avec le scope `read:packages`, puis ajoutez-le
+dans `~/.gradle/gradle.properties` :
 
-```bash
-./gradlew publishAllToMavenLocal
+```properties
+gpr.user=<votre-utilisateur-github>
+gpr.token=<votre-token>
 ```
 
-Cette commande publie les artefacts nécessaires (`cstories-annotations`, `cstories-processor`, `cstories-runtime`)
-ainsi que le `cstories-gradle-plugin` lui-même dans votre dépôt Maven local.
+## 2. Déclarer le dépôt GitHub Packages dans le projet consommateur
 
-## 2. Déclarer `mavenLocal()` dans le projet consommateur
-
-Dans le `settings.gradle.kts` du projet qui utilisera CStories, ajoutez `mavenLocal()` dans les deux blocs de
-résolution :
+Dans le `settings.gradle.kts` du projet qui utilisera CStories, ajoutez le dépôt dans les deux blocs de résolution :
 
 ```kotlin
 pluginManagement {
     repositories {
-        mavenLocal()
+        maven {
+            url = uri("https://maven.pkg.github.com/mplessis/CStories")
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.token").orNull ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
         gradlePluginPortal()
         mavenCentral()
         google()
@@ -34,7 +39,13 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
-        mavenLocal()
+        maven {
+            url = uri("https://maven.pkg.github.com/mplessis/CStories")
+            credentials {
+                username = providers.gradleProperty("gpr.user").orNull ?: System.getenv("GITHUB_ACTOR")
+                password = providers.gradleProperty("gpr.token").orNull ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
         mavenCentral()
         google()
     }
@@ -44,6 +55,12 @@ dependencyResolutionManagement {
 Ce sont deux blocs de dépôts distincts : `pluginManagement` résout le plugin lui-même, tandis que
 `dependencyResolutionManagement` résout les véritables artefacts de bibliothèque `dev.cstories:*`. L'omission de l'un
 des deux provoque des erreurs de résolution.
+
+:::tip[Développement local]
+Pour tester des changements non publiés, exécutez `./gradlew publishAllToMavenLocal` depuis le
+[repository CStories](https://github.com/mplessis/CStories) et ajoutez plutôt `mavenLocal()` en premier dans les deux
+blocs. Voir [Publication locale](/guides/local-publishing).
+:::
 
 ## 3. Appliquer le plugin CStories
 

@@ -4,8 +4,8 @@ title: Publish CStories locally
 
 # Publish CStories locally
 
-CStories is not yet published to a remote repository — `mavenLocal()` is the only supported publication target for
-now. If you're testing changes or trying out a specific version, you'll need to (re)publish it locally.
+Released versions of CStories are published to GitHub Packages. If you're testing unreleased changes or a specific
+local version, you'll need to (re)publish it to `mavenLocal()`.
 
 ## Publishing everything
 

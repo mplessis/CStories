@@ -1,3 +1,5 @@
+import org.gradle.api.publish.PublishingExtension
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.kotlin.jvm) apply false
@@ -10,6 +12,28 @@ plugins {
 allprojects {
     group = property("cstoriesGroup") as String
     version = property("cstoriesVersion") as String
+}
+
+subprojects {
+    plugins.withId("maven-publish") {
+        val githubUsername = providers.gradleProperty("gpr.user")
+            .orElse(providers.environmentVariable("GITHUB_ACTOR"))
+        val githubToken = providers.gradleProperty("gpr.token")
+            .orElse(providers.environmentVariable("GITHUB_TOKEN"))
+
+        extensions.configure(PublishingExtension::class.java) {
+            repositories {
+                maven {
+                    name = "GitHubPackages"
+                    url = uri("https://maven.pkg.github.com/mplessis/CStories")
+                    credentials {
+                        username = githubUsername.orNull ?: ""
+                        password = githubToken.orNull ?: ""
+                    }
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -31,5 +55,16 @@ tasks.register("publishAllToMavenLocal") {
         ":cstories-processor:publishToMavenLocal",
         ":cstories-runtime:publishToMavenLocal",
         gradle.includedBuild("cstories-gradle-plugin").task(":publishToMavenLocal"),
+    )
+}
+
+tasks.register("publishAllToGitHubPackages") {
+    group = "publishing"
+    description = "Publishes every dev.cstories artifact, including the cstories-gradle-plugin included build, to GitHub Packages"
+    dependsOn(
+        ":cstories-annotations:publishAllPublicationsToGitHubPackagesRepository",
+        ":cstories-processor:publishAllPublicationsToGitHubPackagesRepository",
+        ":cstories-runtime:publishAllPublicationsToGitHubPackagesRepository",
+        gradle.includedBuild("cstories-gradle-plugin").task(":publishAllPublicationsToGitHubPackagesRepository"),
     )
 }

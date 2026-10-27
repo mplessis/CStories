@@ -4,9 +4,8 @@ title: Publier CStories en local
 
 # Publier CStories en local
 
-CStories n'est pas encore publié sur un dépôt distant — `mavenLocal()` est pour l'instant la seule cible de
-publication supportée. Si vous testez des modifications ou essayez une version spécifique, vous devrez le
-(re)publier en local.
+Les versions publiées de CStories sont disponibles sur GitHub Packages. Si vous testez des modifications non publiées
+ou une version locale spécifique, vous devrez la (re)publier dans `mavenLocal()`.
 
 ## Tout publier
 

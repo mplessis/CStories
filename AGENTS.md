@@ -37,5 +37,5 @@
 ## Current Scope
 
 - Current phase: scaffold the multi-module project structure.
-- Publication target for now: `mavenLocal()` only.
-- CI is out of scope until explicitly requested.
+- Publication targets: `mavenLocal()` for local development, GitHub Packages (`https://maven.pkg.github.com/mplessis/CStories`) for releases via `./gradlew publishAllToGitHubPackages`.
+- CI: `.github/workflows/publish.yml` publishes on `v*` tags (tag must match `cstoriesVersion`), `.github/workflows/deploy-docs.yml` deploys the website. Do not add other workflows unless explicitly requested.

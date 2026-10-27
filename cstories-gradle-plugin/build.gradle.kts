@@ -1,4 +1,5 @@
-import java.util.*
+import org.gradle.api.publish.PublishingExtension
+import java.util.Properties
 
 plugins {
     `kotlin-dsl`
@@ -18,6 +19,11 @@ val cstoriesVersion: String = rootGradleProperties.getProperty("cstoriesVersion"
 
 group = cstoriesGroup
 version = cstoriesVersion
+
+val githubUsername = providers.gradleProperty("gpr.user")
+    .orElse(providers.environmentVariable("GITHUB_ACTOR"))
+val githubToken = providers.gradleProperty("gpr.token")
+    .orElse(providers.environmentVariable("GITHUB_TOKEN"))
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.get()}")
@@ -43,6 +49,19 @@ gradlePlugin {
             displayName = "CStories Components Gradle Plugin"
             description = "Generates CStoryComponentRefs for @CStoryComponent-annotated functions " +
                     "in a plain component/design-system library module"
+        }
+    }
+}
+
+extensions.configure(PublishingExtension::class.java) {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/mplessis/CStories")
+            credentials {
+                username = githubUsername.orNull ?: ""
+                password = githubToken.orNull ?: ""
+            }
         }
     }
 }

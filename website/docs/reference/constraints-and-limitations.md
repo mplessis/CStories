@@ -6,8 +6,9 @@ title: Constraints and limitations
 
 ## Distribution
 
-CStories is currently published to `mavenLocal()` only. There is no remote repository yet, so every consumer project
-needs `mavenLocal()` declared in both `pluginManagement` and `dependencyResolutionManagement`.
+CStories is published to GitHub Packages (see [Installation](/getting-started/installation)), which requires a GitHub
+token with the `read:packages` scope, even for public packages. The repository must be declared in both
+`pluginManagement` and `dependencyResolutionManagement`.
 
 ## Target requirements
 

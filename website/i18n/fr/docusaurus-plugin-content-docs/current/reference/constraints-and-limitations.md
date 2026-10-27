@@ -6,9 +6,9 @@ title: Contraintes et limites
 
 ## Distribution
 
-CStories est actuellement publié uniquement dans `mavenLocal()`. Il n'y a pas encore de dépôt distant, donc chaque
-projet consommateur doit déclarer `mavenLocal()` à la fois dans `pluginManagement` et
-`dependencyResolutionManagement`.
+CStories est publié sur GitHub Packages (voir [Installation](/getting-started/installation)), ce qui nécessite un
+token GitHub avec le scope `read:packages`, même pour des paquets publics. Le dépôt doit être déclaré à la fois dans
+`pluginManagement` et `dependencyResolutionManagement`.
 
 ## Cibles requises
 
