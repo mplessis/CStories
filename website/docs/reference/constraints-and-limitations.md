@@ -41,6 +41,11 @@ The global theme wrapper is an accessible Kotlin `object` named `CustomCStoriesT
 `CStoriesThemeWrapper`. It is discovered automatically. Each story may override it with
 `@CStory(themeWrapper = WrapperObject::class)`. Only one global wrapper may exist across the aggregated project.
 
+## Gradle configuration cache
+
+Both `dev.cstories.gradle` and `dev.cstories.gradle.components` support the Gradle configuration cache since
+CStories 2.0.5. Earlier versions fail when it is enabled and require `--no-configuration-cache`.
+
 ## Multi-module component references
 
 `@CStoryComponent` is only visible to KSP within the module it's declared in. When components and stories live in
