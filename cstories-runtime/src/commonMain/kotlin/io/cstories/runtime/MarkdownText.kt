@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.semantics.contentDescription
@@ -40,6 +41,12 @@ import androidx.compose.ui.unit.sp
 import io.cstories.runtime.resources.Res
 import io.cstories.runtime.resources.docs_example_copy_button_copied_description
 import io.cstories.runtime.resources.docs_example_copy_button_description
+import io.cstories.runtime.resources.docs_related_title
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.style.TextDecoration
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
@@ -50,24 +57,34 @@ import org.jetbrains.compose.resources.stringResource
  * by the KDoc-to-Markdown processor: paragraphs, `**bold**` section titles,
  * `- ` bullet lists (with 2-space nested indentation), pipe tables
  * (`| Header | ... |` with a `| --- | ... |` separator row, cells may embed
- * `<br>` for multi-line content), and inline `` `code` `` / `**bold**` spans.
+ * `<br>` for multi-line content), inline `` `code` `` / `**bold**` spans, and
+ * `[label](#anchor)` links scrolling to a `### {#anchor} Title` heading.
  * Deliberately hand-rolled (no third-party lib) to stay Kotlin/Wasm-friendly.
  */
 @Composable
 fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
     val blocks = remember(markdown) { parseMarkdownBlocks(markdown) }
+    val anchors = remember(blocks) {
+        blocks.mapNotNull { (it as? MarkdownBlock.Heading)?.anchor }.associateWith { BringIntoViewRequester() }
+    }
+    val scope = rememberCoroutineScope()
+    val onLink: (String) -> Unit = { anchor -> anchors[anchor]?.let { scope.launch { it.bringIntoView(anchorRevealRect) } } }
+    val relatedTitle = stringResource(Res.string.docs_related_title)
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         blocks.forEach { block ->
             when (block) {
                 is MarkdownBlock.Heading -> Text(
-                    text = renderInline(block.text),
+                    text = if (block.text == RELATED_MARKER) AnnotatedString(relatedTitle) else renderInline(block.text, onLink),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
+                    fontSize = if (block.text == RELATED_MARKER) 15.sp else 13.sp,
                     color = CStoriesColors.text,
+                    modifier = block.anchor?.let { anchors[it] }
+                        ?.let { Modifier.padding(top = 8.dp).bringIntoViewRequester(it) }
+                        ?: Modifier,
                 )
 
                 is MarkdownBlock.Paragraph -> Text(
-                    text = renderInline(block.text),
+                    text = renderInline(block.text, onLink),
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
                     color = CStoriesColors.textMuted,
@@ -78,14 +95,14 @@ fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
                 ) {
                     Text("•  ", fontSize = 13.sp, color = CStoriesColors.textFaint)
                     Text(
-                        text = renderInline(block.text),
+                        text = renderInline(block.text, onLink),
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
                         color = CStoriesColors.textMuted,
                     )
                 }
 
-                is MarkdownBlock.Table -> MarkdownTable(block)
+                is MarkdownBlock.Table -> MarkdownTable(block, onLink)
 
                 is MarkdownBlock.CodeBlock -> MarkdownExampleCodeBlock(block.code)
             }
@@ -135,7 +152,7 @@ private fun MarkdownExampleCodeBlock(code: String) {
 }
 
 @Composable
-private fun MarkdownTable(table: MarkdownBlock.Table) {
+private fun MarkdownTable(table: MarkdownBlock.Table, onLink: (String) -> Unit) {
     val growIndex = table.headers.indexOf("Description").takeIf { it >= 0 }
     Column(
         modifier = Modifier
@@ -143,16 +160,16 @@ private fun MarkdownTable(table: MarkdownBlock.Table) {
             .padding(vertical = 4.dp)
             .border(1.dp, CStoriesColors.border),
     ) {
-        MarkdownTableRow(table.headers, bold = true, growIndex = growIndex)
+        MarkdownTableRow(table.headers, bold = true, growIndex = growIndex, onLink = onLink)
         table.rows.forEach { row ->
             HorizontalDivider(color = CStoriesColors.border)
-            MarkdownTableRow(row, bold = false, growIndex = growIndex)
+            MarkdownTableRow(row, bold = false, growIndex = growIndex, onLink = onLink)
         }
     }
 }
 
 @Composable
-private fun MarkdownTableRow(cells: List<String>, bold: Boolean, growIndex: Int?) {
+private fun MarkdownTableRow(cells: List<String>, bold: Boolean, growIndex: Int?, onLink: (String) -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         cells.forEachIndexed { index, cell ->
             if (index > 0) VerticalDivider(color = CStoriesColors.border, modifier = Modifier.fillMaxHeight())
@@ -170,7 +187,7 @@ private fun MarkdownTableRow(cells: List<String>, bold: Boolean, growIndex: Int?
             ) {
                 cell.split("<br>").forEach { line ->
                     Text(
-                        text = renderInline(line),
+                        text = renderInline(line, onLink),
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
                         fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
@@ -183,7 +200,7 @@ private fun MarkdownTableRow(cells: List<String>, bold: Boolean, growIndex: Int?
 }
 
 internal sealed interface MarkdownBlock {
-    data class Heading(val text: String) : MarkdownBlock
+    data class Heading(val text: String, val anchor: String? = null) : MarkdownBlock
     data class Paragraph(val text: String) : MarkdownBlock
     data class ListItem(val indent: Int, val text: String) : MarkdownBlock
     data class Table(val headers: List<String>, val rows: List<List<String>>) : MarkdownBlock
@@ -193,7 +210,7 @@ internal sealed interface MarkdownBlock {
 }
 
 private sealed interface MarkdownLine {
-    data class Heading(val text: String) : MarkdownLine
+    data class Heading(val text: String, val anchor: String? = null) : MarkdownLine
     data class ListItem(val indent: Int, val text: String) : MarkdownLine
     data class TableRow(val cells: List<String>) : MarkdownLine
     data class Text(val text: String) : MarkdownLine
@@ -211,6 +228,19 @@ private val codeFenceRegex = Regex("^```(\\w*)\\s*$")
  */
 private const val REQUIRED_MARKER = "\u00A4req\u00A4"
 
+/**
+ * Heading emitted by `KDocMarkdownParser` above the sections documenting
+ * the declarations linked from a component's KDoc. Rendered here as a
+ * localized title. Must stay in sync with `KDocMarkdownParser.RELATED_MARKER`.
+ */
+private const val RELATED_MARKER = "\u00A4related\u00A4"
+
+// Taller than any viewport so the anchored heading is aligned to the top of the scrolled area.
+private val anchorRevealRect = Rect(0f, 0f, 1f, 100_000f)
+
+private val headingAnchorRegex = Regex("^\\{#([^}\\s]+)}")
+private val inlineLinkRegex = Regex("^\\[([^]]+)]\\(#([^)\\s]+)\\)")
+
 private fun classifyLine(line: String): MarkdownLine {
     if (line.isBlank()) return MarkdownLine.Blank
     val leadingSpaces = line.takeWhile { it == ' ' }.length
@@ -225,6 +255,10 @@ private fun classifyLine(line: String): MarkdownLine {
         val level = stripped.takeWhile { it == '#' }.length
         val text = stripped.drop(level).trim()
         if (level in 1..6 && text.isNotEmpty()) {
+            val anchorMatch = headingAnchorRegex.find(text)
+            if (anchorMatch != null) {
+                return MarkdownLine.Heading(text.substring(anchorMatch.range.last + 1).trim(), anchorMatch.groupValues[1])
+            }
             return MarkdownLine.Heading(text)
         }
     }
@@ -317,7 +351,7 @@ internal fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
             is MarkdownLine.Heading -> {
                 flushParagraph()
                 flushTable()
-                blocks += MarkdownBlock.Heading(line.text)
+                blocks += MarkdownBlock.Heading(line.text, line.anchor)
             }
 
             is MarkdownLine.ListItem -> {
@@ -360,10 +394,28 @@ internal fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
 }
 
 
-private fun renderInline(text: String): AnnotatedString = buildAnnotatedString {
+private val linkStyles = TextLinkStyles(
+    style = SpanStyle(color = CStoriesColors.primary, textDecoration = TextDecoration.Underline),
+)
+
+private fun renderInline(text: String, onLink: ((String) -> Unit)? = null): AnnotatedString = buildAnnotatedString {
     var i = 0
     while (i < text.length) {
+        val link = if (text[i] == '[') inlineLinkRegex.find(text.substring(i)) else null
         when {
+            link != null -> {
+                val anchor = link.groupValues[2]
+                val label = renderInline(link.groupValues[1])
+                if (onLink != null) {
+                    pushLink(LinkAnnotation.Clickable(tag = anchor, styles = linkStyles) { onLink(anchor) })
+                    append(label)
+                    pop()
+                } else {
+                    append(label)
+                }
+                i += link.value.length
+            }
+
             text.startsWith(REQUIRED_MARKER, i) -> {
                 pushStyle(SpanStyle(color = Color.Red))
                 append("*")
@@ -402,6 +454,7 @@ private fun renderInline(text: String): AnnotatedString = buildAnnotatedString {
                     text.indexOf("**", i),
                     text.indexOf('`', i),
                     text.indexOf(REQUIRED_MARKER, i),
+                    text.indexOf('[', i + 1),
                 ).filter { it != -1 }
                 val nextSpecial = candidates.minOrNull() ?: text.length
                 append(text.substring(i, nextSpecial))

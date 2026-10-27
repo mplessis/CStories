@@ -20,6 +20,13 @@ class MarkdownTextTest {
     }
 
     @Test
+    fun `parses an anchored heading`() {
+        val blocks = parseMarkdownBlocks("### {#TabItem} TabItem")
+
+        assertEquals(listOf(MarkdownBlock.Heading("TabItem", anchor = "TabItem")), blocks)
+    }
+
+    @Test
     fun `parses a fenced kotlin code block preserving line breaks`() {
         val markdown = """
             ## Example

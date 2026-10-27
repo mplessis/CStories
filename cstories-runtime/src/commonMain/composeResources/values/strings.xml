@@ -32,6 +32,7 @@
     <string name="code_copy_button_copied_description">Copied code</string>
     <string name="docs_example_copy_button_description">Copy the example</string>
     <string name="docs_example_copy_button_copied_description">Copied example</string>
+    <string name="docs_related_title">Related</string>
     <plurals name="sidebar_group_story_count_description">
         <item quantity="one">%1$d story</item>
         <item quantity="other">%1$d stories</item>

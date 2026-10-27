@@ -3,6 +3,8 @@ package io.cstories.runtime
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -121,6 +123,8 @@ fun DocsCodeTabs(
                         markdown = it,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .heightIn(max = 480.dp)
+                            .verticalScroll(rememberScrollState())
                             .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
                     )
                 }
