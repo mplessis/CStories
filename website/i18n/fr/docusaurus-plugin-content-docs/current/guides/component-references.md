@@ -63,6 +63,31 @@ object DemoIconOnBackground {
 Le namespace doit être un identifiant Kotlin unique et valide. CStories ne le déduit jamais automatiquement du nom de
 package.
 
+### Noms des propriétés générées
+
+Chaque référence est une `const val` contenant le nom complet de la fonction. Son chemin dans `CStoryComponentRefs`
+est :
+
+`CStoryComponentRefs[.<namespace>][.<classe ou objet englobant>].<nom de la fonction>`
+
+- Le nom de package ne fait jamais partie du chemin.
+- Pour un membre de companion object, le nom de la classe englobante est utilisé et `Companion` est omis :
+  `SynButton.Primary` ci-dessous génère `CStoryComponentRefs.SynButton.Primary`, de valeur
+  `"<package>.SynButton.Companion.Primary"`.
+- Aucun nom aplati du type `SynButtonPrimary` n'est généré.
+
+```kotlin
+class SynButton {
+    companion object {
+        @CStoryComponent
+        @Composable
+        fun Primary(onClick: () -> Unit) { /* ... */ }
+    }
+}
+
+// Génère CStoryComponentRefs.SynButton.Primary
+```
+
 ## Appliquer le plugin components
 
 Cela nécessite d'appliquer un plugin supplémentaire, léger, **directement sur le module qui déclare le composant**
@@ -85,6 +110,11 @@ différents** (le découpage `:lib` / `:lib:stories` — voir
 dans le module qu'il traite actuellement, jamais au-delà d'une frontière de dépendance. Appliquer
 `dev.cstories.gradle.components` directement sur `:lib` génère `CStoryComponentRefs` localement, dans la même
 compilation où le KDoc du composant est encore visible en tant que source.
+
+Entre modules d'un même projet, les métadonnées transitent par une variante Gradle dédiée
+(`cstoriesComponentMetadataElements`), indépendamment de la façon dont Kotlin Multiplatform empaquette ses jars et
+klibs. Pour les dépendances publiées, elles sont lues dans les jars résolus. Si une dépendance applique le plugin
+components sans fournir de métadonnées, le build des stories émet un avertissement nommant cette dépendance.
 
 ## Référencer le composant depuis une story
 

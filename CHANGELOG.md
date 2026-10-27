@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.0.6
+
+### Fixed
+
+- `dev.cstories.gradle` / `dev.cstories.gradle.components`: `CStoryComponentRefs` is generated again for components
+  declared in a separate multi-target module (e.g. Android, iOS, JS, wasmJs) and consumed by a wasmJs-only stories
+  module. `META-INF/cstories/components.txt` was only packaged in processed resources, never in the jar or klib the
+  stories module resolves. The components plugin now exposes it as a dedicated Gradle variant
+  (`cstoriesComponentMetadataElements`), resolved by the stories plugin. Reading the jars is kept as a fallback for
+  published dependencies.
+- `dev.cstories.gradle`: a single-target (e.g. wasmJs-only) stories module no longer fails with
+  `can be a part of only one module` when KSP adds its output directory after the plugin moved it to `commonMain`.
+- `dev.cstories.gradle`: `cstoriesExtractComponentMetadata` logs a warning when a dependency applying
+  `dev.cstories.gradle.components` provides no component metadata, instead of silently writing an empty file. The
+  last component of the extracted metadata no longer loses an empty documentation field.
+
+### Documentation
+
+- Documented how the property paths in `CStoryComponentRefs` are built, including for companion object members.
+
 ## 2.0.5
 
 ### Fixed

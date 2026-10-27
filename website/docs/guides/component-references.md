@@ -62,6 +62,29 @@ object DemoIconOnBackground {
 
 The namespace must be a single valid Kotlin identifier. CStories does not derive it from the package name.
 
+### Generated property names
+
+Each reference is a `const val` holding the function's fully qualified name. Its path in `CStoryComponentRefs` is:
+
+`CStoryComponentRefs[.<namespace>][.<enclosing class or object>].<function name>`
+
+- The package name is never part of the path.
+- For a companion object member, the enclosing class name is used and `Companion` is dropped: `SynButton.Primary`
+  below generates `CStoryComponentRefs.SynButton.Primary`, with the value `"<package>.SynButton.Companion.Primary"`.
+- No flattened name such as `SynButtonPrimary` is generated.
+
+```kotlin
+class SynButton {
+    companion object {
+        @CStoryComponent
+        @Composable
+        fun Primary(onClick: () -> Unit) { /* ... */ }
+    }
+}
+
+// Generates CStoryComponentRefs.SynButton.Primary
+```
+
 ## Applying the components plugin
 
 This requires applying an additional, lightweight plugin **directly on the module that declares the component**
@@ -85,6 +108,11 @@ ever scans annotated symbols within the module it's currently processing, never 
 Applying `dev.cstories.gradle.components` directly on `:lib` publishes only internal CStories component metadata. The
 stories module consumes that metadata and generates `CStoryComponentRefs` in its own compilation, while the KDoc is
 copied into the generated `StoryEntry` used by the runtime documentation tab.
+
+Between project modules, the metadata travels through a dedicated Gradle variant (`cstoriesComponentMetadataElements`),
+independently of how Kotlin Multiplatform packages jars and klibs. For published dependencies, it is read from the
+resolved jars. If a dependency applies the components plugin but provides no metadata, the stories build logs a
+warning naming that dependency.
 
 ## Referencing the component from a story
 
