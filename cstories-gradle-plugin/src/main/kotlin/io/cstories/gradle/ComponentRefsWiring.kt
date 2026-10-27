@@ -10,8 +10,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
-import java.security.MessageDigest
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import org.gradle.language.jvm.tasks.ProcessResources
@@ -98,25 +99,18 @@ internal fun Project.wireComponentRefsGeneration(
         null
     }
     val metadataArgument = componentMetadata?.let { task ->
-        CommandLineArgumentProvider {
-            val file = task.get().outputFile.get().asFile
-            // KSP reruns non-incrementally when processor options change, so
-            // the content hash forces regeneration whenever a dependency's
-            // components.txt changes (e.g. a KDoc-only edit), which the
-            // classpath ABI snapshot alone would never detect.
-            listOf(
-                "$COMPONENT_METADATA_OPTION=${file.absolutePath}",
-                "$COMPONENT_METADATA_HASH_OPTION=${file.sha256()}",
-            )
+        objects.newInstance(ComponentMetadataArgumentProvider::class.java).apply {
+            metadataFile.set(task.flatMap { it.outputFile })
         }
     }
     tasks.withType<KspAATask>().configureEach {
-        metadataArgument?.let(commandLineArgumentProviders::add)
-        componentMetadata?.let { task ->
-            dependsOn(task)
-            inputs.file(task.flatMap { it.outputFile })
-                .withPathSensitivity(PathSensitivity.NONE)
-                .withPropertyName("cstoriesComponentMetadata")
+        metadataArgument?.let { provider ->
+            commandLineArgumentProviders.add(provider)
+            // The task reruns whenever components.txt changes (it is an
+            // input of the argument provider), but KSP's incremental pass
+            // only tracks source files, so a KDoc-only edit in a dependency
+            // would otherwise never be reflected in the generated refs.
+            kspConfig.incremental.set(false)
         }
         if (!readDependencyMetadata) {
             commandLineArgumentProviders.add(CommandLineArgumentProvider { listOf("$WRITE_COMPONENT_METADATA_OPTION=true") })
@@ -270,16 +264,25 @@ internal const val PROCESS_MODE_OPTION = "cstories.processMode"
 internal const val MODULE_NAME_OPTION = "cstories.moduleName"
 internal const val COMPONENT_METADATA_OPTION = "cstories.componentMetadata"
 internal const val WRITE_COMPONENT_METADATA_OPTION = "cstories.writeComponentMetadata"
-internal const val COMPONENT_METADATA_HASH_OPTION = "cstories.componentMetadataHash"
 
 // Compose Multiplatform copies every resources dir (including the KSP one
 // added above) into its own tasks, which don't infer the KSP dependency.
 private fun Project.composeResourceCopyTasks() =
     tasks.matching { it.name.startsWith("copy") && it.name.contains("ComposeResources") }
 
-private fun File.sha256(): String {
-    if (!exists()) return ""
-    return MessageDigest.getInstance("SHA-256").digest(readBytes()).joinToString("") { "%02x".format(it) }
+/**
+ * Passes the extracted component metadata file to KSP. Only the path is
+ * passed (known at configuration time), and the file itself is declared as
+ * an input, which also wires the dependency on the extraction task in a
+ * configuration-cache compatible way.
+ */
+abstract class ComponentMetadataArgumentProvider : CommandLineArgumentProvider {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val metadataFile: RegularFileProperty
+
+    override fun asArguments(): Iterable<String> =
+        listOf("$COMPONENT_METADATA_OPTION=${metadataFile.get().asFile.absolutePath}")
 }
 
 abstract class ExtractComponentMetadataTask : DefaultTask() {
