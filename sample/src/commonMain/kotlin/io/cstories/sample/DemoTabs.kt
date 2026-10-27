@@ -52,6 +52,7 @@ data class TabItem(
  * @param onTabSelected Called with the index of the clicked tab.
  * @param modifier Modifier applied to the tab row.
  * @param scrollable When `true`, tabs are not stretched to fill the width and the row scrolls horizontally.
+ * @see TabItem
  */
 @CStoryComponent
 @Composable

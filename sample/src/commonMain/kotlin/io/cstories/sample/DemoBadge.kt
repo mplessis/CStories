@@ -36,7 +36,7 @@ enum class BadgeSize(
  * e.g. "Active", "Draft" or "3 new".
  *
  * ### Usage
- * - Pick the [tone] from what the status *means* (see `StatusTone`), not from the color you want.
+ * - Pick the [tone] from what the status *means* (see [StatusTone]), not from the color you want.
  * - Keep the [text] to one or two words; a badge is read at a glance.
  * - Enable [withDot] when the badge represents a live state ("Online", "Running").
  * - A badge is not interactive. Use a `DemoChip` for something the user can click or remove.
@@ -50,6 +50,8 @@ enum class BadgeSize(
  * @param tone The semantic tone controlling the badge colors.
  * @param size The badge size, see [BadgeSize].
  * @param withDot When `true`, draws a small status dot before the [text] in the tone's accent color.
+ *
+ * @see statusToneColors
  */
 @CStoryComponent
 @Composable
