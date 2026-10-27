@@ -93,6 +93,9 @@ Replace the placeholders with:
 
 | CStories | Kotlin (`<kotlin-version>`) | Compose Multiplatform (`<compose-version>`) |
 |---|---|---|
+| 2.0.5 | 2.4.21 | 1.12.2 |
+| 2.0.4 | 2.4.21 | 1.12.2 |
+| 2.0.3 | 2.4.21 | 1.12.2 |
 | 2.0.2 | 2.4.21 | 1.12.2 |
 | 2.0.1 | 2.4.21 | 1.12.2 |
 | 2.0.0 | 2.4.21 | 1.12.2 |

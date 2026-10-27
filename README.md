@@ -109,6 +109,9 @@ Replace `<version>` with the CStories version you published, defined by `cstorie
 
 | CStories | Kotlin | Compose Multiplatform |
 |---|---|---|
+| 2.0.5 | 2.4.21 | 1.12.2 |
+| 2.0.4 | 2.4.21 | 1.12.2 |
+| 2.0.3 | 2.4.21 | 1.12.2 |
 | 2.0.2 | 2.4.21 | 1.12.2 |
 | 2.0.1 | 2.4.21 | 1.12.2 |
 | 2.0.0 | 2.4.21 | 1.12.2 |
