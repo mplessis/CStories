@@ -66,13 +66,13 @@ class KDocMarkdownParserTest {
              * Description.
              *
              * @param x A param.
-             * @see SomethingElse
+             * @sample SomethingElse
              * @throws IllegalStateException sometimes
              */
             """.trimIndent(),
         )
 
-        assertEquals(listOf("see", "throws"), result?.unsupportedTags)
+        assertEquals(listOf("sample", "throws"), result?.unsupportedTags)
         assertTrue(result?.markdown?.contains("SomethingElse") == false)
     }
 
@@ -242,5 +242,78 @@ class KDocMarkdownParserTest {
         )
 
         assertTrue(result?.markdown?.contains("`label`${KDocMarkdownParser.REQUIRED_MARKER} | `String`") == true)
+    }
+
+    @Test
+    fun `renders see tags as a see also list`() {
+        val result = KDocMarkdownParser.parse(
+            """
+            /**
+             * Description.
+             *
+             * @see Other The other one.
+             */
+            """.trimIndent(),
+        )
+
+        assertEquals(emptyList(), result?.unsupportedTags)
+        assertEquals("Description.\n\n**See also**\n\n- `Other` — The other one.", result?.markdown)
+    }
+
+    @Test
+    fun `renders property tags as a table`() {
+        val result = KDocMarkdownParser.parse(
+            """
+            /**
+             * An item.
+             *
+             * @property label Text of the item.
+             */
+            """.trimIndent(),
+        )
+
+        assertEquals(
+            "An item.\n\n**Properties**\n\n| Name | Description |\n| --- | --- |\n| `label` | Text of the item. |",
+            result?.markdown,
+        )
+    }
+
+    @Test
+    fun `links resolved references to anchored related sections`() {
+        val result = KDocMarkdownParser.parse(
+            docString = """
+            /**
+             * Uses [Item], [Item.count] and [Unknown].
+             *
+             * @param items See [Item].
+             */
+            """.trimIndent(),
+            relatedDocs = listOf(
+                RelatedDoc(
+                    anchor = "Item",
+                    title = "Item",
+                    docString = "/**\n * An item.\n *\n * @property count Counter.\n */",
+                    linkTexts = setOf("Item", "Item.count"),
+                ),
+            ),
+        )
+
+        val markdown = result?.markdown.orEmpty()
+        assertTrue(markdown.startsWith("Uses [`Item`](#Item), [`Item.count`](#Item) and `Unknown`."))
+        assertTrue(markdown.contains("| See [`Item`](#Item). |"))
+        assertTrue(
+            markdown.endsWith(
+                "## ${KDocMarkdownParser.RELATED_MARKER}\n\n### {#Item} Item\n\nAn item.\n\n" +
+                    "**Properties**\n\n| Name | Description |\n| --- | --- |\n| `count` | Counter. |",
+            ),
+        )
+    }
+
+    @Test
+    fun `extracts explicit link texts`() {
+        assertEquals(
+            listOf("Item", "Item.count", "Other"),
+            KDocLinkResolver.extractLinkTexts("Uses [Item] and [Item.count], [label](https://x).\n@see Other"),
+        )
     }
 }

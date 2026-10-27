@@ -151,7 +151,7 @@ internal class CStoriesProcessor(
         val deferredComponents = componentSymbols.filterNot(KSAnnotated::isResolved)
         val validComponents = componentSymbols
             .filter(KSAnnotated::isResolved)
-            .mapNotNull(::validateAndBuildComponent)
+            .mapNotNull { validateAndBuildComponent(it, resolver) }
 
         val newCandidates = validComponents.filter { it.refKey !in processedComponentKeys }
         val structureErrors = ComponentRefsGenerator.validateStructure(processedComponents + newCandidates)
@@ -304,7 +304,7 @@ internal class CStoriesProcessor(
         }
     }
 
-    private fun validateAndBuildComponent(function: KSFunctionDeclaration): ComponentDescriptor? {
+    private fun validateAndBuildComponent(function: KSFunctionDeclaration, resolver: Resolver): ComponentDescriptor? {
         val location = resolveFunctionLocation(function)
         if (location == null) {
             logger.error(
@@ -338,7 +338,7 @@ internal class CStoriesProcessor(
             fqn = fqn,
             function = function,
             originatingFile = function.containingFile,
-            documentation = parseFunctionDocumentation(function),
+            documentation = parseFunctionDocumentation(function, resolver),
         )
 
         if (processedComponentKeys.contains(descriptor.refKey)) {
@@ -373,7 +373,7 @@ internal class CStoriesProcessor(
             return null
         }
 
-        return parseFunctionDocumentation(componentFunction)
+        return parseFunctionDocumentation(componentFunction, resolver)
             ?: externalDocumentation[componentFunction.qualifiedNameAsString()]
             ?: resolveDocumentationFromGeneratedRefs(resolver, componentFunction)
     }
@@ -396,8 +396,12 @@ internal class CStoriesProcessor(
      * a dependency module (KDoc comments are source-only, stripped from
      * `.class` files), regardless of how that symbol was reached.
      */
-    private fun parseFunctionDocumentation(function: KSFunctionDeclaration): String? {
-        val parsed = KDocMarkdownParser.parse(function.docString, ParamTypeResolver.resolve(function)) ?: return null
+    private fun parseFunctionDocumentation(function: KSFunctionDeclaration, resolver: Resolver): String? {
+        val parsed = KDocMarkdownParser.parse(
+            docString = function.docString,
+            paramTypes = ParamTypeResolver.resolve(function),
+            relatedDocs = KDocLinkResolver.resolve(resolver, function),
+        ) ?: return null
         parsed.unsupportedTags.forEach { tag ->
             logger.warn(
                 "@CStoryComponent: KDoc tag '@$tag' on ${function.simpleName.asString()} is not supported and will be ignored",

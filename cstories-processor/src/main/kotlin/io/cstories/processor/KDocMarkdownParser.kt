@@ -11,13 +11,18 @@ internal data class KDocParseResult(
  * into a Markdown string suitable for display in the story catalog's
  * documentation panel.
  *
- * Supports the description paragraph(s), `@param`, and `@return`/`@returns`
- * tags. Any other tag (`@see`, `@throws`, `@sample`, `@property`...) is
+ * Supports the description paragraph(s), `@param`, `@property`, `@see` and
+ * `@return`/`@returns` tags. Any other tag (`@throws`, `@sample`...) is
  * reported back via [KDocParseResult.unsupportedTags] so the caller can emit
  * a KSP warning, but does not appear in the rendered output in this version.
  *
  * [paramTypes] optionally enriches each `@param` entry with the resolved
  * type's possible values (enum entries) or variants (sealed subtypes).
+ *
+ * [relatedDocs] are the declarations explicitly linked from the KDoc (see
+ * [KDocLinkResolver]): links pointing to them become `[text](#anchor)`
+ * Markdown links, and each one is rendered in an anchored section under a
+ * [RELATED_MARKER] heading. Unresolved links stay as inline code.
  */
 internal object KDocMarkdownParser {
     private val tagRegex = Regex("^@(\\w+)\\s*(.*)$")
@@ -31,7 +36,37 @@ internal object KDocMarkdownParser {
      */
     internal const val REQUIRED_MARKER = "\u00A4req\u00A4"
 
-    fun parse(docString: String?, paramTypes: Map<String, ParamMetadata> = emptyMap()): KDocParseResult? {
+    /**
+     * Heading text emitted above the related declarations sections.
+     * Replaced by a localized title by `MarkdownText` (in `cstories-runtime`).
+     */
+    internal const val RELATED_MARKER = "\u00A4related\u00A4"
+
+    fun parse(
+        docString: String?,
+        paramTypes: Map<String, ParamMetadata> = emptyMap(),
+        relatedDocs: List<RelatedDoc> = emptyList(),
+    ): KDocParseResult? {
+        val links = relatedDocs.flatMap { doc -> doc.linkTexts.map { it to doc.anchor } }.toMap()
+        val main = parseSingle(docString, paramTypes, links) ?: return null
+        if (relatedDocs.isEmpty()) return main
+
+        val sb = StringBuilder(main.markdown)
+        sb.append("\n\n## ").append(RELATED_MARKER)
+        relatedDocs.forEach { doc ->
+            sb.append("\n\n### {#").append(doc.anchor).append("} ").append(doc.title)
+            parseSingle(doc.docString, emptyMap(), links)?.markdown?.takeIf { it.isNotBlank() }?.let {
+                sb.append("\n\n").append(it)
+            }
+        }
+        return KDocParseResult(sb.toString(), main.unsupportedTags)
+    }
+
+    private fun parseSingle(
+        docString: String?,
+        paramTypes: Map<String, ParamMetadata>,
+        links: Map<String, String>,
+    ): KDocParseResult? {
         if (docString.isNullOrBlank()) return null
 
         val cleaned = cleanDocString(docString)
@@ -61,17 +96,18 @@ internal object KDocMarkdownParser {
 
         val unsupportedTags = mutableListOf<String>()
         val params = mutableListOf<Pair<String, String>>()
+        val properties = mutableListOf<Pair<String, String>>()
+        val seeAlso = mutableListOf<String>()
         var returns: String? = null
 
         blocks.forEach { (tag, body) ->
             val text = body.toString().trim()
             when (tag) {
-                "param" -> {
-                    val spaceIndex = text.indexOf(' ')
-                    val name = if (spaceIndex == -1) text else text.substring(0, spaceIndex)
-                    val desc = if (spaceIndex == -1) "" else text.substring(spaceIndex + 1).trim()
-                    if (name.isNotBlank()) params += name to desc
-                }
+                "param" -> splitNameAndDescription(text)?.let { params += it }
+
+                "property" -> splitNameAndDescription(text)?.let { properties += it }
+
+                "see" -> if (text.isNotBlank()) seeAlso += text
 
                 "return", "returns" -> returns = text
 
@@ -79,8 +115,15 @@ internal object KDocMarkdownParser {
             }
         }
 
-        val markdown = render(description.toString().trim(), params, returns, paramTypes)
+        val markdown = Renderer(links).render(description.toString().trim(), params, properties, seeAlso, returns, paramTypes)
         return KDocParseResult(markdown, unsupportedTags)
+    }
+
+    private fun splitNameAndDescription(text: String): Pair<String, String>? {
+        val spaceIndex = text.indexOf(' ')
+        val name = if (spaceIndex == -1) text else text.substring(0, spaceIndex)
+        val desc = if (spaceIndex == -1) "" else text.substring(spaceIndex + 1).trim()
+        return if (name.isNotBlank()) name to desc else null
     }
 
     /**
@@ -120,59 +163,90 @@ internal object KDocMarkdownParser {
         return if (match != null) line.substring(match.value.length).trimEnd() else line.removePrefix(" ").trimEnd()
     }
 
-    private fun render(
-        description: String,
-        params: List<Pair<String, String>>,
-        returns: String?,
-        paramTypes: Map<String, ParamMetadata>,
-    ): String {
-        val sb = StringBuilder()
+    private class Renderer(private val links: Map<String, String>) {
+        fun render(
+            description: String,
+            params: List<Pair<String, String>>,
+            properties: List<Pair<String, String>>,
+            seeAlso: List<String>,
+            returns: String?,
+            paramTypes: Map<String, ParamMetadata>,
+        ): String {
+            val sb = StringBuilder()
 
-        if (description.isNotBlank()) {
-            sb.append(escapeLinks(description))
-        }
-
-        if (params.isNotEmpty()) {
-            if (sb.isNotEmpty()) sb.append("\n\n")
-            sb.append("**Parameters**\n\n")
-            sb.append("| Name | Type | Default | Description | Possible values |\n")
-            sb.append("| --- | --- | --- | --- | --- |\n")
-            params.forEach { (name, desc) ->
-                val cellDescription = if (desc.isNotBlank()) escapeLinks(desc) else ""
-                val metadata = paramTypes[name]
-                val values = when (val info = metadata?.structural) {
-                    is ParamTypeInfo.EnumValues -> entriesToCell(info.entries)
-                    is ParamTypeInfo.SealedSubtypes -> entriesToCell(info.subtypes)
-                    else -> ""
-                }
-                val requiredMarker = if (metadata?.required == true) REQUIRED_MARKER else ""
-                val typeName = metadata?.typeName ?: ""
-                val defaultCell = metadata?.defaultValue?.let { "`$it`" } ?: ""
-                sb.append("| `").append(name).append("`").append(requiredMarker).append(" | ")
-                    .append("`").append(typeName).append("` | ")
-                    .append(defaultCell).append(" | ")
-                    .append(escapeCell(cellDescription)).append(" | ")
-                    .append(escapeCell(values)).append(" |\n")
+            if (description.isNotBlank()) {
+                sb.append(escapeLinks(description))
             }
-            sb.setLength(sb.length - 1)
+
+            if (params.isNotEmpty()) {
+                if (sb.isNotEmpty()) sb.append("\n\n")
+                sb.append("**Parameters**\n\n")
+                sb.append("| Name | Type | Default | Description | Possible values |\n")
+                sb.append("| --- | --- | --- | --- | --- |\n")
+                params.forEach { (name, desc) ->
+                    val cellDescription = if (desc.isNotBlank()) escapeLinks(desc) else ""
+                    val metadata = paramTypes[name]
+                    val values = when (val info = metadata?.structural) {
+                        is ParamTypeInfo.EnumValues -> entriesToCell(info.entries)
+                        is ParamTypeInfo.SealedSubtypes -> entriesToCell(info.subtypes)
+                        else -> ""
+                    }
+                    val requiredMarker = if (metadata?.required == true) REQUIRED_MARKER else ""
+                    val typeName = metadata?.typeName ?: ""
+                    val defaultCell = metadata?.defaultValue?.let { "`$it`" } ?: ""
+                    sb.append("| `").append(name).append("`").append(requiredMarker).append(" | ")
+                        .append("`").append(typeName).append("` | ")
+                        .append(defaultCell).append(" | ")
+                        .append(escapeCell(cellDescription)).append(" | ")
+                        .append(escapeCell(values)).append(" |\n")
+                }
+                sb.setLength(sb.length - 1)
+            }
+
+            if (properties.isNotEmpty()) {
+                if (sb.isNotEmpty()) sb.append("\n\n")
+                sb.append("**Properties**\n\n")
+                sb.append("| Name | Description |\n")
+                sb.append("| --- | --- |\n")
+                properties.forEach { (name, desc) ->
+                    sb.append("| `").append(name).append("` | ").append(escapeCell(escapeLinks(desc))).append(" |\n")
+                }
+                sb.setLength(sb.length - 1)
+            }
+
+            if (seeAlso.isNotEmpty()) {
+                if (sb.isNotEmpty()) sb.append("\n\n")
+                sb.append("**See also**\n")
+                seeAlso.forEach { entry ->
+                    val target = entry.substringBefore(' ')
+                    val rest = entry.substringAfter(' ', "").trim()
+                    val bracketed = if (target.startsWith("[")) target else "[$target]"
+                    sb.append("\n- ").append(escapeLinks(bracketed))
+                    if (rest.isNotEmpty()) sb.append(" — ").append(escapeLinks(rest))
+                }
+            }
+
+            if (!returns.isNullOrBlank()) {
+                if (sb.isNotEmpty()) sb.append("\n\n")
+                sb.append("**Returns**\n").append(escapeLinks(returns))
+            }
+
+            return sb.toString().trim()
         }
 
-        if (!returns.isNullOrBlank()) {
-            if (sb.isNotEmpty()) sb.append("\n\n")
-            sb.append("**Returns**\n").append(escapeLinks(returns))
-        }
+        private fun entriesToCell(entries: List<DocumentedEntry>): String =
+            entries.joinToString("<br>") { entry ->
+                val name = "**${entry.name}**"
+                if (!entry.doc.isNullOrBlank()) "$name — ${escapeLinks(entry.doc)}" else name
+            }
 
-        return sb.toString().trim()
+        private fun escapeLinks(text: String): String =
+            kdocLinkRegex.replace(text) { match ->
+                val target = match.groupValues[1]
+                val anchor = links[target]
+                if (anchor != null) "[`$target`](#$anchor)" else "`$target`"
+            }
     }
-
-    private fun entriesToCell(entries: List<DocumentedEntry>): String =
-        entries.joinToString("<br>") { entry ->
-            val name = "**${entry.name}**"
-            if (!entry.doc.isNullOrBlank()) "$name — ${escapeLinks(entry.doc)}" else name
-        }
-
-    private fun escapeLinks(text: String): String =
-        kdocLinkRegex.replace(text) { match -> "`${match.groupValues[1]}`" }
 
     /** Escapes literal `|` characters so they don't break the Markdown table cell boundaries. */
     private fun escapeCell(text: String): String = text.replace("|", "\\|")
