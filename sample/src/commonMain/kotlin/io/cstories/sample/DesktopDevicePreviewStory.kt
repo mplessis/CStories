@@ -40,7 +40,7 @@ fun DesktopDevicePreviewStory() {
         BooleanKnob(label = "Show action", value = showAction, onValueChange = { showAction = it })
     }
 
-    DesktopDevicePreview(device = DesktopDevice(title = title)) {
+    DesktopDevicePreview(device = DesktopDevice(title = title), scrollable = true) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier

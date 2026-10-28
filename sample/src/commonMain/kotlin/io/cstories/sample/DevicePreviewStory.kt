@@ -51,6 +51,7 @@ fun DevicePreviewStory() {
                 height = 852.dp,
             ),
         ),
+        scrollable = true,
     ) {
         DevicePreviewDemoScreen(title = title, showAction = showAction)
     }

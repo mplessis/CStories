@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,7 +27,14 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Renders content inside a device-shaped viewport for mobile screen previews.
- * Content scrolls vertically when it is taller than the simulated screen.
+ *
+ * By default, the content receives the finite height of the simulated screen, like on a real device, so
+ * full-height layouts (`Scaffold`, `fillMaxSize`, `LazyColumn`, `Modifier.weight`…) render correctly.
+ *
+ * @param scrollable when `true`, the content scrolls vertically when it is taller than the simulated screen.
+ * It is then measured with an unbounded height and must not try to fill the available height.
+ * @param contentPadding padding applied around the content inside the simulated screen. Use `PaddingValues(0.dp)`
+ * for full-screen content such as a `Scaffold`.
  */
 @Composable
 fun MobileDevicePreview(
@@ -34,6 +42,8 @@ fun MobileDevicePreview(
     device: MobileDevice = MobileDevice.Default,
     additionalMobileDevices: List<MobileDevice> = emptyList(),
     registerInToolbar: Boolean = true,
+    scrollable: Boolean = false,
+    contentPadding: PaddingValues = PaddingValues(top = 22.dp, start = 18.dp, end = 18.dp, bottom = 18.dp),
     content: @Composable BoxScope.() -> Unit,
 ) {
     val previewSlot = LocalDevicePreviewSlot.current
@@ -74,8 +84,8 @@ fun MobileDevicePreview(
                     .fillMaxSize()
                     .clip(screenShape)
                     .background(MaterialTheme.colorScheme.background)
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 22.dp, start = 18.dp, end = 18.dp, bottom = 18.dp),
+                    .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                    .padding(contentPadding),
                 content = content,
             )
         }

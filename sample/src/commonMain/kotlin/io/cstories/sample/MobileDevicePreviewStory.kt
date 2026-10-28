@@ -28,7 +28,7 @@ fun MobileDevicePreviewStory() {
         BooleanKnob(label = "Show action", value = showAction, onValueChange = { showAction = it })
     }
 
-    MobileDevicePreview {
+    MobileDevicePreview(scrollable = true) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp),

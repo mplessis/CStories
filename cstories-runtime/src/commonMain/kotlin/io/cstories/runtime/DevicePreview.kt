@@ -41,6 +41,9 @@ enum class PreviewDevice {
 /**
  * Displays the same content in either a simulated mobile device or desktop
  * window, with an in-preview segmented switch to change between them.
+ *
+ * @param scrollable when `true`, the content scrolls vertically when it is taller than the simulated screen.
+ * Otherwise it receives the finite height of the simulated screen.
  */
 @Composable
 fun DevicePreview(
@@ -50,6 +53,7 @@ fun DevicePreview(
     desktopDevice: DesktopDevice = DesktopDevice.Default,
     additionalMobileDevices: List<MobileDevice> = emptyList(),
     onDeviceChanged: (PreviewDevice) -> Unit = {},
+    scrollable: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
     var selectedDevice by remember { mutableStateOf(initialDevice) }
@@ -83,6 +87,7 @@ fun DevicePreview(
             desktopDevice = desktopDevice,
             selectedMobileDevice = selectedMobileDevice,
             modifier = modifier,
+            scrollable = scrollable,
             content = content,
         )
     } else {
@@ -98,6 +103,7 @@ fun DevicePreview(
                 selectedDevice = selectedDevice,
                 desktopDevice = desktopDevice,
                 selectedMobileDevice = selectedMobileDevice,
+                scrollable = scrollable,
                 content = content,
             )
         }
@@ -110,6 +116,7 @@ private fun DevicePreviewContent(
     desktopDevice: DesktopDevice,
     selectedMobileDevice: MobileDevice,
     modifier: Modifier = Modifier,
+    scrollable: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
     when (selectedDevice) {
@@ -117,6 +124,7 @@ private fun DevicePreviewContent(
             modifier = modifier,
             device = selectedMobileDevice,
             registerInToolbar = false,
+            scrollable = scrollable,
             content = content
         )
 
@@ -124,6 +132,7 @@ private fun DevicePreviewContent(
             modifier = modifier,
             device = desktopDevice,
             registerInToolbar = false,
+            scrollable = scrollable,
             content = content,
         )
     }

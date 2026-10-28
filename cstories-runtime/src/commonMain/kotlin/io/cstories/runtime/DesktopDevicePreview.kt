@@ -45,14 +45,19 @@ data class DesktopDevice(
  * Renders content inside a desktop-window-shaped viewport.
  *
  * The window chrome is decorative. The content viewport has a fixed size so
- * that stories can be checked at a predictable desktop resolution and scrolls
- * vertically when its content is taller than the simulated screen.
+ * that stories can be checked at a predictable desktop resolution. By default,
+ * the content receives the finite height of the simulated screen, so full-height
+ * layouts (`Scaffold`, `fillMaxSize`, `LazyColumn`, `Modifier.weight`…) render correctly.
+ *
+ * @param scrollable when `true`, the content scrolls vertically when it is taller than the simulated screen.
+ * It is then measured with an unbounded height and must not try to fill the available height.
  */
 @Composable
 fun DesktopDevicePreview(
     modifier: Modifier = Modifier,
     device: DesktopDevice = DesktopDevice.Default,
     registerInToolbar: Boolean = true,
+    scrollable: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val previewSlot = LocalDevicePreviewSlot.current
@@ -87,7 +92,7 @@ fun DesktopDevicePreview(
                 modifier = Modifier
                     .size(width = device.width, height = device.height)
                     .background(MaterialTheme.colorScheme.background)
-                    .verticalScroll(rememberScrollState()),
+                    .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier),
                 content = content,
             )
         }
