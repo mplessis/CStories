@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1.1
+
+### Fixed
+
+- `MobileDevicePreview` / `DevicePreview`: leaving a mobile preview while the built-in device catalog was loading no
+  longer crashes the wasm catalog with `MissingResourceException … mobile-devices.json`. The catalog is now loaded once
+  per session, and a failure to read it falls back to the project's additional devices instead of crashing.
+
 ## 2.1.0
 
 ### Changed
