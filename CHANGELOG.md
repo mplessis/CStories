@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.1.0
+
+### Changed
+
+- `MobileDevicePreview`, `DesktopDevicePreview` and `DevicePreview` no longer scroll by default: the content receives
+  the finite height of the simulated screen, like on a real device. Full-height content (`Scaffold`, `fillMaxSize`,
+  `LazyColumn`, `Modifier.weight`…) no longer crashes with `Size(… x 2147483647) is out of range`. Pass
+  `scrollable = true` to restore the previous scrolling behaviour for content taller than the screen.
+- `MobileDevicePreview` accepts a `contentPadding` parameter replacing the hard-coded padding, e.g.
+  `PaddingValues(0.dp)` for a full-screen `Scaffold`.
+- Binary-incompatible change: the new parameters change the signatures of these composables. Libraries compiled
+  against a previous version must be recompiled.
+
 ## 2.0.6
 
 ### Fixed
