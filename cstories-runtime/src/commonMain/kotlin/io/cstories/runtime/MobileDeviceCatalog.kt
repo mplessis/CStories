@@ -8,6 +8,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import io.cstories.runtime.resources.Res
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -33,8 +35,11 @@ data class MobileDevice(
 }
 
 object MobileDeviceCatalog {
+    private var builtIn: List<MobileDevice>? = null
+
     @OptIn(ExperimentalResourceApi::class)
     suspend fun loadBuiltIn(): List<MobileDevice> {
+        builtIn?.let { return it }
         val json = Json.parseToJsonElement(Res.readBytes("files/mobile-devices.json").decodeToString())
         return json.jsonObject.getValue("devices").jsonArray.map { element ->
             val device = element.jsonObject
@@ -49,7 +54,7 @@ object MobileDeviceCatalog {
                 height = device.getValue("height").jsonPrimitive.content.toFloat().dp,
                 cornerRadius = device.getValue("cornerRadius").jsonPrimitive.content.toFloat().dp,
             )
-        }
+        }.also { builtIn = it }
     }
 }
 
@@ -58,7 +63,12 @@ object MobileDeviceCatalog {
 internal fun rememberMobileDevices(additional: List<MobileDevice>): List<MobileDevice> {
     var builtIn by remember { mutableStateOf<List<MobileDevice>?>(null) }
     LaunchedEffect(Unit) {
-        builtIn = MobileDeviceCatalog.loadBuiltIn()
+        builtIn = try {
+            MobileDeviceCatalog.loadBuiltIn()
+        } catch (e: Exception) {
+            currentCoroutineContext().ensureActive()
+            emptyList()
+        }
     }
     return remember(builtIn, additional) {
         val merged = LinkedHashMap<String, MobileDevice>()
