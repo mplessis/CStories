@@ -31,8 +31,18 @@ object CustomCStoriesThemeWrapper : CStoriesThemeWrapper {
 }
 ```
 
-The object is discovered automatically by the CStories plugin. No Gradle configuration is required. If the object is
-not present, `DefaultCStoriesThemeWrapper` is used.
+The object is discovered automatically by the CStories plugin, **by name only**. No Gradle configuration is required.
+
+:::warning
+The global wrapper **must** be named exactly `CustomCStoriesThemeWrapper`. Any other name is ignored and
+`DefaultCStoriesThemeWrapper` is used instead. It must also:
+
+- be a top-level `object`, not `private`;
+- implement `CStoriesThemeWrapper`;
+- be unique in the module (declaring several fails the build).
+:::
+
+If the object is not present, `DefaultCStoriesThemeWrapper` is used.
 
 ## Override a story
 

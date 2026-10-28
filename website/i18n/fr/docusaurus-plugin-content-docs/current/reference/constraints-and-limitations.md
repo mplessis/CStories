@@ -39,7 +39,7 @@ placé dans un autre module (par exemple un module de composants) est ignoré. V
 
 ## Wrappers de thème
 
-Le wrapper global est un `object` Kotlin accessible nommé `CustomCStoriesThemeWrapper` qui implémente
+Le wrapper global est un `object` Kotlin accessible nommé exactement `CustomCStoriesThemeWrapper` qui implémente
 `CStoriesThemeWrapper`. Il est découvert automatiquement. Chaque story peut le surcharger avec
 `@CStory(themeWrapper = WrapperObject::class)`. Un seul wrapper global peut exister dans le projet agrégé.
 

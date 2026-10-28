@@ -37,7 +37,7 @@ example a components module) is ignored. See [Home page](/guides/home-page).
 
 ## Theme wrappers
 
-The global theme wrapper is an accessible Kotlin `object` named `CustomCStoriesThemeWrapper` implementing
+The global theme wrapper is an accessible Kotlin `object` named exactly `CustomCStoriesThemeWrapper` implementing
 `CStoriesThemeWrapper`. It is discovered automatically. Each story may override it with
 `@CStory(themeWrapper = WrapperObject::class)`. Only one global wrapper may exist across the aggregated project.
 

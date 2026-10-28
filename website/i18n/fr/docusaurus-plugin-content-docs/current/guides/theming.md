@@ -31,8 +31,19 @@ object CustomCStoriesThemeWrapper : CStoriesThemeWrapper {
 }
 ```
 
-L'objet est découvert automatiquement par le plugin CStories. Aucune configuration Gradle n'est nécessaire. S'il
-n'est pas présent, `DefaultCStoriesThemeWrapper` est utilisé.
+L'objet est découvert automatiquement par le plugin CStories, **uniquement à partir de son nom**. Aucune configuration
+Gradle n'est nécessaire.
+
+:::warning
+Le wrapper global **doit** s'appeler exactement `CustomCStoriesThemeWrapper`. Tout autre nom est ignoré et
+`DefaultCStoriesThemeWrapper` est utilisé à la place. Il doit aussi :
+
+- être un `object` de premier niveau, non `private` ;
+- implémenter `CStoriesThemeWrapper` ;
+- être unique dans le module (en déclarer plusieurs fait échouer le build).
+:::
+
+S'il n'est pas présent, `DefaultCStoriesThemeWrapper` est utilisé.
 
 ## Surcharger le thème d'une story
 

@@ -17,7 +17,7 @@ Applying it with neither `jvm()` nor `wasmJs` declared fails fast with a clear e
 
 ### Global theme wrapper
 
-The plugin automatically discovers an accessible object named `CustomCStoriesThemeWrapper` that implements
+The plugin automatically discovers an accessible object named exactly `CustomCStoriesThemeWrapper` that implements
 `CStoriesThemeWrapper`. No Gradle configuration is required. If it is not present, the runtime uses
 `DefaultCStoriesThemeWrapper`.
 

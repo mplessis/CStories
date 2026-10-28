@@ -18,7 +18,7 @@ L'appliquer sans `jvm()` ni `wasmJs` déclarés échoue immédiatement avec une 
 
 ### Wrapper de thème global
 
-Le plugin découvre automatiquement un objet accessible nommé `CustomCStoriesThemeWrapper` qui implémente
+Le plugin découvre automatiquement un objet accessible nommé exactement `CustomCStoriesThemeWrapper` qui implémente
 `CStoriesThemeWrapper`. Aucune configuration Gradle n'est nécessaire. S'il est absent, le runtime utilise
 `DefaultCStoriesThemeWrapper`.
 
