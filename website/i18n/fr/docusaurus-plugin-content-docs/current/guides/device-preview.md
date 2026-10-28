@@ -79,8 +79,26 @@ DevicePreview(
 }
 ```
 
-Les dimensions par défaut sont `390.dp x 844.dp` pour le mobile et `1280.dp x 800.dp` pour le desktop. Les deux
-prévisualisations défilent verticalement lorsque leur contenu dépasse la hauteur du viewport simulé.
+Les dimensions par défaut sont `390.dp x 844.dp` pour le mobile et `1280.dp x 800.dp` pour le desktop.
+
+## Hauteur fixe ou contenu défilant
+
+Par défaut, le contenu reçoit la hauteur finie de l'écran simulé, comme sur un vrai appareil. Les layouts qui occupent
+toute la hauteur, comme `Scaffold`, `fillMaxSize`, `LazyColumn` ou `Modifier.weight`, s'affichent correctement.
+
+Passez `scrollable = true` lorsque le contenu est une simple colonne plus haute que l'écran et doit défiler
+verticalement :
+
+```kotlin
+DevicePreview(scrollable = true) {
+    LongFormScreen()
+}
+```
+
+Avec `scrollable = true`, le contenu est mesuré avec une hauteur non bornée : il ne doit pas chercher à remplir la
+hauteur disponible (`Scaffold`, `fillMaxSize`, `LazyColumn`…), sinon Compose lève `Size(… x 2147483647) is out of range`.
+
+`MobileDevicePreview` et `DesktopDevicePreview` acceptent le même paramètre `scrollable`.
 
 ## Utiliser le catalogue mobile intégré
 
@@ -155,7 +173,19 @@ MobileDevicePreview(
 }
 ```
 
-Le contenu défile verticalement à l'intérieur de l'écran simulé lorsqu'il dépasse la hauteur du viewport.
+Le contenu reçoit la hauteur de l'écran simulé. Passez `scrollable = true` pour le faire défiler verticalement
+(voir [Hauteur fixe ou contenu défilant](#hauteur-fixe-ou-contenu-défilant)).
+
+Le contenu est entouré d'une marge intérieure par défaut. Passez `contentPadding = PaddingValues(0.dp)` pour un contenu
+plein écran comme un `Scaffold` :
+
+```kotlin
+MobileDevicePreview(contentPadding = PaddingValues(0.dp)) {
+    Scaffold(topBar = { ProfileTopBar() }) { innerPadding ->
+        ProfileContent(Modifier.padding(innerPadding))
+    }
+}
+```
 
 Lorsque `MobileDevicePreview` est utilisé directement dans une story du catalogue, la barre d'outils affiche
 automatiquement le sélecteur de modèle mobile. Celui-ci affiche le modèle sélectionné et ouvre le catalogue intégré,
@@ -204,7 +234,7 @@ DesktopDevicePreview {
 ```
 
 `DesktopDevicePreview` rend une fenêtre desktop avec une barre de titre, des contrôles de fenêtre décoratifs et un
-viewport de contenu défilable. Sa taille par défaut est `1280.dp x 800.dp`. Configurez la taille et le titre de la
+viewport de contenu de taille fixe. Sa taille par défaut est `1280.dp x 800.dp`. Configurez la taille et le titre de la
 fenêtre si nécessaire :
 
 ```kotlin

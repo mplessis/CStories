@@ -79,8 +79,25 @@ DevicePreview(
 }
 ```
 
-The default dimensions are `390.dp x 844.dp` for mobile and `1280.dp x 800.dp` for desktop. Both previews scroll
-vertically when their content is taller than the simulated viewport.
+The default dimensions are `390.dp x 844.dp` for mobile and `1280.dp x 800.dp` for desktop.
+
+## Fixed height or scrolling content
+
+By default, the content receives the finite height of the simulated screen, like on a real device. Full-height layouts
+such as `Scaffold`, `fillMaxSize`, `LazyColumn` or `Modifier.weight` render correctly.
+
+Pass `scrollable = true` when the content is a simple column taller than the screen and should scroll vertically:
+
+```kotlin
+DevicePreview(scrollable = true) {
+    LongFormScreen()
+}
+```
+
+With `scrollable = true`, the content is measured with an unbounded height: it must not try to fill the available height
+(`Scaffold`, `fillMaxSize`, `LazyColumn`…), otherwise Compose throws `Size(… x 2147483647) is out of range`.
+
+`MobileDevicePreview` and `DesktopDevicePreview` accept the same `scrollable` parameter.
 
 ## Use the built-in mobile catalog
 
@@ -153,7 +170,19 @@ MobileDevicePreview(
 }
 ```
 
-The content scrolls vertically inside the simulated screen when it is taller than the viewport.
+The content receives the height of the simulated screen. Pass `scrollable = true` to make it scroll vertically instead
+(see [Fixed height or scrolling content](#fixed-height-or-scrolling-content)).
+
+The content is padded inside the simulated screen by default. Pass `contentPadding = PaddingValues(0.dp)` for
+full-screen content such as a `Scaffold`:
+
+```kotlin
+MobileDevicePreview(contentPadding = PaddingValues(0.dp)) {
+    Scaffold(topBar = { ProfileTopBar() }) { innerPadding ->
+        ProfileContent(Modifier.padding(innerPadding))
+    }
+}
+```
 
 When `MobileDevicePreview` is used directly inside a catalog story, the story toolbar automatically shows the mobile
 device selector. It displays the selected model and opens the built-in device catalog, without showing the
@@ -200,7 +229,7 @@ DesktopDevicePreview {
 }
 ```
 
-`DesktopDevicePreview` renders a desktop window with a title bar, decorative window controls and a scrollable content
+`DesktopDevicePreview` renders a desktop window with a title bar, decorative window controls and a fixed-size content
 viewport. Its default size is `1280.dp x 800.dp`. Configure the window size and title when needed:
 
 ```kotlin
