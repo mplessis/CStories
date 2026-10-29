@@ -41,6 +41,26 @@ internal data class HomeSection(
 )
 
 /**
+ * A collapsible block of the home page grouping the sections under one
+ * top-level sidebar entry; section paths are relative to [name]. An empty
+ * [name] holds the story groups placed directly at the root, shown without header.
+ */
+internal data class HomeCollection(
+    val name: String,
+    val sections: List<HomeSection>,
+) {
+    val storyCount: Int get() = sections.sumOf { section -> section.cards.sumOf { it.storyCount } }
+}
+
+/** Groups the [buildHomeSections] of [tree] by top-level sidebar entry, in sidebar order. */
+internal fun buildHomeCollections(tree: List<TreeNode>): List<HomeCollection> =
+    buildHomeSections(tree)
+        .groupBy { it.path.firstOrNull().orEmpty() }
+        .map { (name, sections) ->
+            HomeCollection(name, sections.map { it.copy(path = it.path.drop(1)) })
+        }
+
+/**
  * Flattens [tree] into the home page sections, following the sidebar order:
  * one section per group that directly contains story groups, each story group
  * becoming a card.

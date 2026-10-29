@@ -59,6 +59,26 @@ class HomeSectionsTest {
         assertEquals(listOf("v1", "Components", "Forms", "TextField", "Default"), forms[1].firstStory.path)
     }
 
+    @Test
+    fun `collections group sections by top-level entry with relative paths`() {
+        val tree = buildTree(
+            listOf(
+                story("Root", "Default"),
+                story("v1/Components/Actions/Button", "Primary"),
+                story("v1/Screens/Mobile", "Welcome"),
+                story("v2/Badge", "Default"),
+            ),
+        )
+
+        val collections = buildHomeCollections(tree)
+
+        assertEquals(listOf("", "v1", "v2"), collections.map { it.name })
+        assertEquals(listOf(emptyList<String>()), collections[0].sections.map { it.path })
+        assertEquals(listOf(listOf("Components", "Actions"), listOf("Screens")), collections[1].sections.map { it.path })
+        assertEquals(2, collections[1].storyCount)
+        assertEquals(listOf(emptyList<String>()), collections[2].sections.map { it.path })
+    }
+
     private fun story(group: String, name: String, documentation: String? = null): StoryEntry =
         StoryEntry(path = group.split('/') + name, composableInvoker = {}, documentation = documentation)
 }

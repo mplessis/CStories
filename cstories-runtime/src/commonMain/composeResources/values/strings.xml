@@ -40,6 +40,8 @@
     <string name="home_title">Home</string>
     <string name="home_components_title">Components</string>
     <string name="home_no_match">No component matches your search</string>
+    <string name="home_collection_expand">Expand the section</string>
+    <string name="home_collection_collapse">Collapse the section</string>
     <plurals name="home_story_count">
         <item quantity="one">%1$d story</item>
         <item quantity="other">%1$d stories</item>
