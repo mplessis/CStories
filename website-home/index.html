@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="CStories helps Compose Multiplatform teams explore, document, and share their UI components."
+    />
+    <meta name="theme-color" content="#11111b" />
+    <title>CStories — Your components, as stories</title>
+    <link rel="icon" href="./assets/logo.png" type="image/png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./version.js"></script>
+    <script src="./main.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="CStories home">
+        <img src="./assets/logo.png" alt="" width="44" height="44" />
+        <span>CStories</span>
+      </a>
+      <div class="header-meta">
+        <span class="kotlin-tag"><span aria-hidden="true">⌘</span> Compose Multiplatform</span>
+        <span class="version-badge">Version <span data-cstories-version>…</span></span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="status-dot"></span> The component catalog for Kotlin Compose Multiplatform</p>
+          <h1>Your components deserve more than a <span>folder of previews.</span></h1>
+          <p class="hero-description">
+            Turn your composables into interactive stories. Explore every state, share a clear catalog,
+            and keep your design system close to the code.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="/docs/">
+              Read the documentation <span aria-hidden="true">↗</span>
+            </a>
+            <a class="button button-secondary" href="https://github.com/mplessis/CStories">
+              <span class="github-mark" aria-hidden="true"><img src="./assets/github-logo-white.png" width="30"
+              height="30"/></span> View on GitHub
+            </a>
+          </div>
+          <p class="hero-footnote"><span class="code-mark">&gt;</span> Kotlin first. Your components, no black magic.</p>
+        </div>
+
+        <div class="hero-visual">
+            <img
+                class="desktop-shot"
+                src="./assets/home.png"
+                alt="CStories catalog preview with story navigation, live preview, and interactive controls"
+                width="3424"
+                height="2624"
+            />
+          <div class="floating-code" aria-label="Example of a CStory annotation in Kotlin">
+            <span class="code-file">PrimaryButton.story.kt</span>
+            <code><span class="syntax-purple">@CStory</span>(name = <span class="syntax-green">"Primary"</span>)</code>
+            <code><span class="syntax-blue">fun</span> <span class="syntax-yellow">PrimaryButtonStory</span>() {</code>
+            <code>&nbsp;&nbsp;PrimaryButton(label = <span class="syntax-green">"Click"</span>) {}</code>
+            <code>}</code>
+          </div>
+        </div>
+      </section>
+
+      <section class="toolchain" aria-label="Supported technologies">
+        <span>BUILT FOR YOUR STACK</span>
+        <div class="toolchain-items">
+          <span><b>K</b> Kotlin Compose Multiplatform</span>
+          <span><b>↗</b> Desktop/Wasm</span>
+          <span><b>⌘</b> Gradle &amp; KSP</span>
+        </div>
+      </section>
+
+      <section class="features" aria-labelledby="features-title">
+        <div class="section-heading">
+          <p class="eyebrow">LESS FRICTION, MORE FEEDBACK</p>
+          <h2 id="features-title">A better development loop.</h2>
+          <p>A dedicated space to build, try, and document your components.</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-icon icon-pink" aria-hidden="true">&lt;/&gt;</span>
+            <h3>Stories, not magic</h3>
+            <p>Write regular Compose functions. The <code>@CStory</code> annotation makes them visible in the catalog.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon icon-violet" aria-hidden="true">◫</span>
+            <h3>Test every state</h3>
+            <p>Tweak parameters on the fly with interactive controls and see your components come to life.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon icon-blue" aria-hidden="true">⌘</span>
+            <h3>Desktop or browser</h3>
+            <p>Generate a desktop catalog or share a web version compiled with Kotlin/Wasm.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="showcase" aria-labelledby="showcase-title">
+        <div class="showcase-copy">
+          <p class="eyebrow">FROM CODE TO UI</p>
+          <h2 id="showcase-title">Stay in your environment.</h2>
+          <p>
+            CStories fits into your Kotlin workflow: the Gradle plugin and KSP generate the catalog from
+            your stories. No separate preview app to maintain.
+          </p>
+          <a class="text-link" href="/docs/">See how it works <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="showcase-images">
+          <figure class="showcase-card showcase-code">
+            <pre class="story-source"><code><span class="syntax-purple">@CStory</span>(
+    collection = <span class="syntax-green">"DesignSystem"</span>,
+    group = <span class="syntax-green">"Buttons"</span>,
+    name = <span class="syntax-green">"Primary"</span>,
+    component = CStoryComponentRefs.DemoButton,
+)
+<span class="syntax-purple">@Composable</span>
+<span class="syntax-blue">fun</span> <span class="syntax-yellow">DemoButtonPrimaryStory</span>() {
+    <span class="syntax-blue">var</span> label <span class="syntax-blue">by</span> remember { mutableStateOf(<span class="syntax-green">"Save changes"</span>) }
+    <span class="syntax-blue">var</span> isEnabled <span class="syntax-blue">by</span> remember { mutableStateOf(<span class="syntax-blue">true</span>) }
+    <span class="syntax-blue">var</span> isLoading <span class="syntax-blue">by</span> remember { mutableStateOf(<span class="syntax-blue">false</span>) }
+
+    KnobPanel {
+        TextKnob(label = <span class="syntax-green">"Text"</span>, value = label, onValueChange = { label = it }, codeKey = <span class="syntax-green">"label"</span>)
+        BooleanKnob(label = <span class="syntax-green">"Enabled"</span>, value = isEnabled, onValueChange = { isEnabled = it }, codeKey = <span class="syntax-green">"isEnabled"</span>)
+        BooleanKnob(label = <span class="syntax-green">"Loading"</span>, value = isLoading, onValueChange = { isLoading = it }, codeKey = <span class="syntax-green">"isLoading"</span>)
+    }
+
+    DemoButton(
+        text = label,
+        onClick = {},
+        variant = ButtonVariant.Primary,
+        enabled = isEnabled,
+        loading = isLoading,
+    )
+}</code></pre>
+            <figcaption><span class="caption-dot pink-dot"></span> Your stories stay in Kotlin</figcaption>
+          </figure>
+
+        </div>
+      </section>
+
+      <section class="final-cta">
+        <div class="cta-orb" aria-hidden="true"></div>
+        <p class="eyebrow">YOUR NEXT COMPONENT IS READY</p>
+        <h2>Turn your components<br />into an experience worth exploring.</h2>
+        <a class="button button-primary" href="/docs/">
+          Get started with CStories <span aria-hidden="true">↗</span>
+        </a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="brand footer-brand" href="./">
+        <img src="./assets/logo.png" alt="" width="30" height="30" />
+        <span>CStories</span>
+      </a>
+      <span>Made for Compose Multiplatform teams.</span>
+      <span class="footer-version">Version <span data-cstories-version>…</span></span>
+    </footer>
+  </body>
+</html>
