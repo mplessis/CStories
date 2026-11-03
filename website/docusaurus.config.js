@@ -88,7 +88,8 @@ const config = {
     ({
       image: 'img/logo-inline.png',
       colorMode: {
-        respectPrefersColorScheme: true,
+        defaultMode: 'dark',
+        respectPrefersColorScheme: false,
       },
       navbar: {
         logo: {
