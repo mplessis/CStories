@@ -210,7 +210,7 @@ The story should then appear in the navigation and let you view the component in
 ## Advanced documentation
 
 More advanced use cases are covered in the full documentation site (available in English and French):
-**https://www.cstories.dev**, notably for:
+**https://www.cstories.dev/docs**, notably for:
 
 - multi-module architectures
 - advanced usage of `wasmJs`
