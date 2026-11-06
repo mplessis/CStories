@@ -90,11 +90,14 @@ internal fun Sidebar(
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
+            val forceExpanded = query.isNotBlank()
             tree.forEach { node ->
                 TreeNodeItem(
                     node = node,
+                    path = listOf(node.name),
                     selectedPath = selectedPath,
                     onSelect = onSelect,
+                    forceExpanded = forceExpanded,
                     depth = 0,
                 )
             }
@@ -202,26 +205,33 @@ private fun SearchField(value: String, onValueChange: (String) -> Unit) {
 @Composable
 private fun TreeNodeItem(
     node: TreeNode,
+    path: List<String>,
     selectedPath: List<String>?,
     onSelect: (StoryEntry) -> Unit,
+    forceExpanded: Boolean,
     depth: Int,
 ) {
     when (node) {
         is TreeNode.Group -> {
-            var expanded by remember(node.name, depth) { mutableStateOf(true) }
+            var userExpanded by remember(path) { mutableStateOf(!node.hasDirectStories) }
+            LaunchedEffect(path, selectedPath) {
+                if (isAncestorPath(path, selectedPath)) userExpanded = true
+            }
+            val expanded = userExpanded || forceExpanded
+            val onToggle = { userExpanded = !expanded }
             val storyCount = node.storyCount()
             if (depth == 0) {
                 CollectionHeaderRow(
                     name = node.name,
                     expanded = expanded,
-                    onToggle = { expanded = !expanded },
+                    onToggle = onToggle,
                     storyCount = storyCount,
                 )
             } else {
                 GroupHeaderRow(
                     name = node.name,
                     expanded = expanded,
-                    onToggle = { expanded = !expanded },
+                    onToggle = onToggle,
                     depth = depth,
                     storyCount = storyCount,
                 )
@@ -246,8 +256,10 @@ private fun TreeNodeItem(
                         node.children.forEach { child ->
                             TreeNodeItem(
                                 node = child,
+                                path = path + child.name,
                                 selectedPath = selectedPath,
                                 onSelect = onSelect,
+                                forceExpanded = forceExpanded,
                                 depth = depth + 1,
                             )
                         }

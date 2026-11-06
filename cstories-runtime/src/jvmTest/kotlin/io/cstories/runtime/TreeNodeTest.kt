@@ -2,6 +2,7 @@ package io.cstories.runtime
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TreeNodeTest {
@@ -124,6 +125,32 @@ class TreeNodeTest {
         assertEquals(1, components.group("Actions").storyCount())
         assertEquals(1, v1.group("Screens").storyCount())
         assertEquals(1, tree.group("v2").storyCount())
+    }
+
+    @Test
+    fun `hasDirectStories is true only for groups with a story child`() {
+        val tree = buildTree(
+            listOf(
+                story("DesignSystem/Buttons", "Primary"),
+                story("DesignSystem", "Overview"),
+                story("Atoms/Icons", "Star"),
+            ),
+        )
+
+        assertTrue(tree.group("DesignSystem").hasDirectStories)
+        assertTrue(tree.group("DesignSystem").group("Buttons").hasDirectStories)
+        assertFalse(tree.group("Atoms").hasDirectStories)
+    }
+
+    @Test
+    fun `isAncestorPath matches strict prefixes of the story path`() {
+        val storyPath = listOf("DesignSystem", "Buttons", "Primary")
+
+        assertTrue(isAncestorPath(listOf("DesignSystem"), storyPath))
+        assertTrue(isAncestorPath(listOf("DesignSystem", "Buttons"), storyPath))
+        assertFalse(isAncestorPath(storyPath, storyPath))
+        assertFalse(isAncestorPath(listOf("Buttons"), storyPath))
+        assertFalse(isAncestorPath(listOf("DesignSystem"), null))
     }
 
     private fun List<TreeNode>.group(name: String): TreeNode.Group =

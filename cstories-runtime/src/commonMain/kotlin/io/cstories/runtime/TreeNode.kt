@@ -11,6 +11,10 @@ sealed interface TreeNode {
         val isStoryGroup: Boolean
             get() = children.isNotEmpty() && children.all { it is Leaf }
 
+        /** Whether at least one story sits directly under this group. */
+        val hasDirectStories: Boolean
+            get() = children.any { it is Leaf }
+
         /** Total number of stories under this group, summed through every sub-group. */
         fun storyCount(): Int = children.sumOf { child ->
             when (child) {
@@ -25,6 +29,10 @@ sealed interface TreeNode {
         val entry: StoryEntry,
     ) : TreeNode
 }
+
+/** Whether the group at [groupPath] is an ancestor of the story at [storyPath]. */
+internal fun isAncestorPath(groupPath: List<String>, storyPath: List<String>?): Boolean =
+    storyPath != null && storyPath.size > groupPath.size && storyPath.subList(0, groupPath.size) == groupPath
 
 fun buildTree(entries: List<StoryEntry>): List<TreeNode> {
     if (entries.isEmpty()) {
