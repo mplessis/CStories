@@ -21,7 +21,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -176,26 +178,36 @@ private fun HomeRow(isSelected: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun SearchField(value: String, onValueChange: (String) -> Unit) {
+    val textStyle = TextStyle(
+        color = CStoriesColors.text,
+        fontSize = 13.sp,
+        lineHeight = 18.sp,
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
+    )
     Box(
+        contentAlignment = Alignment.CenterStart,
         modifier = Modifier
             .padding(horizontal = 4.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(CStoriesRadii.sm))
             .background(CStoriesColors.surfaceMuted)
             .border(1.dp, CStoriesColors.border, RoundedCornerShape(CStoriesRadii.sm))
-            .padding(horizontal = 12.dp, vertical = 9.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         if (value.isEmpty()) {
             Text(
                 text = stringResource(Res.string.sidebar_search_placeholder),
-                color = CStoriesColors.textFaint,
-                fontSize = 13.sp,
+                style = textStyle.copy(color = CStoriesColors.textFaint),
             )
         }
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
-            textStyle = TextStyle(color = CStoriesColors.text, fontSize = 13.sp),
+            textStyle = textStyle,
+            cursorBrush = SolidColor(CStoriesColors.text),
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
