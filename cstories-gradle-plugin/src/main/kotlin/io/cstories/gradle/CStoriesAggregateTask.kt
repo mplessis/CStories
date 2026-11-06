@@ -86,6 +86,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
 
             val webResourcesDir = webResourcesDirectory.get().asFile.apply { mkdirs() }
             File(webResourcesDir, "index.html").writeText(buildIndexHtmlSource())
+            writeFavicon(File(webResourcesDir, FAVICON_FILE_NAME))
         }
 
         if (generateDesktopEntryPoint.get()) {
@@ -243,6 +244,7 @@ abstract class CStoriesAggregateTask : DefaultTask() {
             |    <meta charset="UTF-8">
             |    <meta name="viewport" content="width=device-width, initial-scale=1.0">
             |    <title>$escapedApplicationName</title>
+            |    <link rel="icon" type="image/png" href="$FAVICON_FILE_NAME">
             |    <style>
             |        html, body {
             |            margin: 0;
@@ -259,7 +261,14 @@ abstract class CStoriesAggregateTask : DefaultTask() {
         """.trimMargin()
     }
 
+    private fun writeFavicon(target: File) {
+        val favicon = CStoriesAggregateTask::class.java.getResourceAsStream(FAVICON_FILE_NAME)
+            ?: throw org.gradle.api.GradleException("Missing bundled CStories favicon resource")
+        favicon.use { input -> target.outputStream().use(input::copyTo) }
+    }
+
     private companion object {
+        const val FAVICON_FILE_NAME = "favicon.png"
         const val REGISTRIES_MANIFEST_PATH = "META-INF/cstories/registries.txt"
         const val THEME_WRAPPER_MANIFEST_PATH = "META-INF/cstories/theme-wrapper.txt"
         const val HOME_MARKDOWN_CHUNK_SIZE = 8_000
