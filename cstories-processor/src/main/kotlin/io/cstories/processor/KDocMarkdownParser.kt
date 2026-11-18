@@ -42,6 +42,12 @@ internal object KDocMarkdownParser {
      */
     internal const val RELATED_MARKER = "\u00A4related\u00A4"
 
+    /**
+     * Heading text emitted above the `@see` list. Replaced by a localized,
+     * visually distinct callout by `MarkdownText` (in `cstories-runtime`).
+     */
+    internal const val SEE_ALSO_MARKER = "\u00A4seealso\u00A4"
+
     fun parse(
         docString: String?,
         paramTypes: Map<String, ParamMetadata> = emptyMap(),
@@ -216,7 +222,7 @@ internal object KDocMarkdownParser {
 
             if (seeAlso.isNotEmpty()) {
                 if (sb.isNotEmpty()) sb.append("\n\n")
-                sb.append("**See also**\n")
+                sb.append("**").append(SEE_ALSO_MARKER).append("**\n")
                 seeAlso.forEach { entry ->
                     val target = entry.substringBefore(' ')
                     val rest = entry.substringAfter(' ', "").trim()

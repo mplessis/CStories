@@ -1,6 +1,9 @@
 package io.cstories.runtime
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -42,6 +45,7 @@ import io.cstories.runtime.resources.Res
 import io.cstories.runtime.resources.docs_example_copy_button_copied_description
 import io.cstories.runtime.resources.docs_example_copy_button_description
 import io.cstories.runtime.resources.docs_related_title
+import io.cstories.runtime.resources.docs_see_also_title
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.text.LinkAnnotation
@@ -69,44 +73,132 @@ fun MarkdownText(markdown: String, modifier: Modifier = Modifier) {
     }
     val scope = rememberCoroutineScope()
     val onLink: (String) -> Unit = { anchor -> anchors[anchor]?.let { scope.launch { it.bringIntoView(anchorRevealRect) } } }
-    val relatedTitle = stringResource(Res.string.docs_related_title)
+    val nodes = remember(blocks) { groupMarkdownBlocks(blocks) }
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        blocks.forEach { block ->
-            when (block) {
-                is MarkdownBlock.Heading -> Text(
-                    text = if (block.text == RELATED_MARKER) AnnotatedString(relatedTitle) else renderInline(block.text, onLink),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = if (block.text == RELATED_MARKER) 15.sp else 13.sp,
-                    color = CStoriesColors.text,
-                    modifier = block.anchor?.let { anchors[it] }
-                        ?.let { Modifier.padding(top = 8.dp).bringIntoViewRequester(it) }
-                        ?: Modifier,
-                )
-
-                is MarkdownBlock.Paragraph -> Text(
-                    text = renderInline(block.text, onLink),
-                    fontSize = 13.sp,
-                    lineHeight = 18.sp,
-                    color = CStoriesColors.textMuted,
-                )
-
-                is MarkdownBlock.ListItem -> Row(
-                    modifier = Modifier.padding(start = (block.indent * 14).dp),
+        nodes.forEach { node ->
+            when (node) {
+                is MarkdownNode.RelatedTitle -> Column(
+                    modifier = Modifier.padding(top = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Text("•  ", fontSize = 13.sp, color = CStoriesColors.textFaint)
+                    HorizontalDivider(color = CStoriesColors.border)
                     Text(
-                        text = renderInline(block.text, onLink),
-                        fontSize = 13.sp,
-                        lineHeight = 18.sp,
-                        color = CStoriesColors.textMuted,
+                        text = stringResource(Res.string.docs_related_title),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = CStoriesColors.text,
                     )
                 }
 
-                is MarkdownBlock.Table -> MarkdownTable(block, onLink)
+                is MarkdownNode.RelatedCard -> MarkdownRelatedCard(
+                    card = node,
+                    modifier = node.anchor?.let { anchors[it] }
+                        ?.let { Modifier.bringIntoViewRequester(it) }
+                        ?: Modifier,
+                    onLink = onLink,
+                )
 
-                is MarkdownBlock.CodeBlock -> MarkdownExampleCodeBlock(block.code)
+                else -> MarkdownNodeView(node, onLink)
             }
         }
+    }
+}
+
+@Composable
+private fun MarkdownNodeView(node: MarkdownNode, onLink: (String) -> Unit) {
+    when (node) {
+        is MarkdownNode.Plain -> MarkdownBlockView(node.block, onLink)
+        is MarkdownNode.SeeAlso -> MarkdownSeeAlso(node, onLink)
+        is MarkdownNode.RelatedTitle, is MarkdownNode.RelatedCard -> Unit
+    }
+}
+
+@Composable
+private fun MarkdownBlockView(block: MarkdownBlock, onLink: (String) -> Unit) {
+    when (block) {
+        is MarkdownBlock.Heading -> Text(
+            text = renderInline(block.text, onLink),
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp,
+            color = CStoriesColors.text,
+        )
+
+        is MarkdownBlock.Paragraph -> Text(
+            text = renderInline(block.text, onLink),
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            color = CStoriesColors.textMuted,
+        )
+
+        is MarkdownBlock.ListItem -> MarkdownListItem(block, onLink)
+
+        is MarkdownBlock.Table -> MarkdownTable(block, onLink)
+
+        is MarkdownBlock.CodeBlock -> MarkdownExampleCodeBlock(block.code)
+    }
+}
+
+@Composable
+private fun MarkdownListItem(item: MarkdownBlock.ListItem, onLink: (String) -> Unit) {
+    Row(modifier = Modifier.padding(start = (item.indent * 14).dp)) {
+        Text("•  ", fontSize = 13.sp, color = CStoriesColors.textFaint)
+        Text(
+            text = renderInline(item.text, onLink),
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            color = CStoriesColors.textMuted,
+        )
+    }
+}
+
+@Composable
+private fun MarkdownSeeAlso(seeAlso: MarkdownNode.SeeAlso, onLink: (String) -> Unit) {
+    val shape = RoundedCornerShape(6.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .height(IntrinsicSize.Min)
+            .clip(shape)
+            .background(CStoriesColors.surfaceMuted),
+    ) {
+        Box(modifier = Modifier.width(3.dp).fillMaxHeight().background(CStoriesColors.primary))
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = stringResource(Res.string.docs_see_also_title),
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                color = CStoriesColors.text,
+            )
+            seeAlso.items.forEach { MarkdownListItem(it, onLink) }
+        }
+    }
+}
+
+@Composable
+private fun MarkdownRelatedCard(card: MarkdownNode.RelatedCard, modifier: Modifier, onLink: (String) -> Unit) {
+    val shape = RoundedCornerShape(8.dp)
+    Column(
+        modifier = modifier
+            .padding(top = 4.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(CStoriesColors.surfaceMuted)
+            .border(1.dp, CStoriesColors.border, shape)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = renderInline(card.title, onLink),
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 14.sp,
+            color = CStoriesColors.text,
+        )
+        card.children.forEach { MarkdownNodeView(it, onLink) }
     }
 }
 
@@ -209,6 +301,64 @@ internal sealed interface MarkdownBlock {
     data class CodeBlock(val language: String?, val code: String) : MarkdownBlock
 }
 
+/**
+ * Display-level grouping of [MarkdownBlock]s, so the `See also` list and the
+ * related declarations sections can be rendered distinctly from the rest of
+ * the documentation. Built by [groupMarkdownBlocks].
+ */
+internal sealed interface MarkdownNode {
+    data class Plain(val block: MarkdownBlock) : MarkdownNode
+    data class SeeAlso(val items: List<MarkdownBlock.ListItem>) : MarkdownNode
+    data object RelatedTitle : MarkdownNode
+    data class RelatedCard(val title: String, val anchor: String?, val children: List<MarkdownNode>) : MarkdownNode
+}
+
+internal fun groupMarkdownBlocks(blocks: List<MarkdownBlock>): List<MarkdownNode> {
+    val relatedIndex = blocks.indexOfFirst { it is MarkdownBlock.Heading && it.text == RELATED_MARKER }
+    if (relatedIndex == -1) return groupSeeAlso(blocks)
+
+    val nodes = groupSeeAlso(blocks.subList(0, relatedIndex)).toMutableList()
+    nodes += MarkdownNode.RelatedTitle
+    var cardHeading: MarkdownBlock.Heading? = null
+    val cardChildren = mutableListOf<MarkdownBlock>()
+    fun flushCard() {
+        val heading = cardHeading
+        if (heading != null) {
+            nodes += MarkdownNode.RelatedCard(heading.text, heading.anchor, groupSeeAlso(cardChildren.toList()))
+        } else {
+            nodes += groupSeeAlso(cardChildren.toList())
+        }
+        cardChildren.clear()
+    }
+    blocks.subList(relatedIndex + 1, blocks.size).forEach { block ->
+        if (block is MarkdownBlock.Heading && block.anchor != null) {
+            flushCard()
+            cardHeading = block
+        } else {
+            cardChildren += block
+        }
+    }
+    flushCard()
+    return nodes
+}
+
+private fun groupSeeAlso(blocks: List<MarkdownBlock>): List<MarkdownNode> {
+    val nodes = mutableListOf<MarkdownNode>()
+    var i = 0
+    while (i < blocks.size) {
+        val block = blocks[i]
+        if (block is MarkdownBlock.Heading && block.text == SEE_ALSO_MARKER) {
+            val items = blocks.drop(i + 1).takeWhile { it is MarkdownBlock.ListItem }.filterIsInstance<MarkdownBlock.ListItem>()
+            nodes += MarkdownNode.SeeAlso(items)
+            i += 1 + items.size
+        } else {
+            nodes += MarkdownNode.Plain(block)
+            i++
+        }
+    }
+    return nodes
+}
+
 private sealed interface MarkdownLine {
     data class Heading(val text: String, val anchor: String? = null) : MarkdownLine
     data class ListItem(val indent: Int, val text: String) : MarkdownLine
@@ -233,7 +383,14 @@ private const val REQUIRED_MARKER = "\u00A4req\u00A4"
  * the declarations linked from a component's KDoc. Rendered here as a
  * localized title. Must stay in sync with `KDocMarkdownParser.RELATED_MARKER`.
  */
-private const val RELATED_MARKER = "\u00A4related\u00A4"
+internal const val RELATED_MARKER = "\u00A4related\u00A4"
+
+/**
+ * Heading emitted by `KDocMarkdownParser` above a `@see` list. Rendered here
+ * as a localized callout. Must stay in sync with
+ * `KDocMarkdownParser.SEE_ALSO_MARKER`.
+ */
+internal const val SEE_ALSO_MARKER = "\u00A4seealso\u00A4"
 
 // Taller than any viewport so the anchored heading is aligned to the top of the scrolled area.
 private val anchorRevealRect = Rect(0f, 0f, 1f, 100_000f)

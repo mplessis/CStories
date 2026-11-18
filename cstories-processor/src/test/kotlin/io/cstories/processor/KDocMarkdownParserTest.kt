@@ -257,7 +257,10 @@ class KDocMarkdownParserTest {
         )
 
         assertEquals(emptyList(), result?.unsupportedTags)
-        assertEquals("Description.\n\n**See also**\n\n- `Other` — The other one.", result?.markdown)
+        assertEquals(
+            "Description.\n\n**${KDocMarkdownParser.SEE_ALSO_MARKER}**\n\n- `Other` — The other one.",
+            result?.markdown,
+        )
     }
 
     @Test

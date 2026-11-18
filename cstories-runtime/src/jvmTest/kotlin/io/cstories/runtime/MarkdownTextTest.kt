@@ -101,4 +101,66 @@ class MarkdownTextTest {
             blocks,
         )
     }
+
+    @Test
+    fun `groups the see also heading with its list items`() {
+        val blocks = listOf(
+            MarkdownBlock.Paragraph("Intro."),
+            MarkdownBlock.Heading(SEE_ALSO_MARKER),
+            MarkdownBlock.ListItem(0, "[Other](#Other)"),
+            MarkdownBlock.ListItem(0, "`Unresolved`"),
+            MarkdownBlock.Paragraph("Outro."),
+        )
+
+        assertEquals(
+            listOf(
+                MarkdownNode.Plain(MarkdownBlock.Paragraph("Intro.")),
+                MarkdownNode.SeeAlso(
+                    listOf(MarkdownBlock.ListItem(0, "[Other](#Other)"), MarkdownBlock.ListItem(0, "`Unresolved`")),
+                ),
+                MarkdownNode.Plain(MarkdownBlock.Paragraph("Outro.")),
+            ),
+            groupMarkdownBlocks(blocks),
+        )
+    }
+
+    @Test
+    fun `splits related declarations into one card per anchored heading`() {
+        val markdown = """
+            Main.
+
+            ## $RELATED_MARKER
+
+            ### {#TabItem} TabItem
+
+            Tab doc.
+
+            **Parameters**
+
+            ### {#TabRow} TabRow
+
+            Row doc.
+        """.trimIndent()
+
+        assertEquals(
+            listOf(
+                MarkdownNode.Plain(MarkdownBlock.Paragraph("Main.")),
+                MarkdownNode.RelatedTitle,
+                MarkdownNode.RelatedCard(
+                    title = "TabItem",
+                    anchor = "TabItem",
+                    children = listOf(
+                        MarkdownNode.Plain(MarkdownBlock.Paragraph("Tab doc.")),
+                        MarkdownNode.Plain(MarkdownBlock.Heading("Parameters")),
+                    ),
+                ),
+                MarkdownNode.RelatedCard(
+                    title = "TabRow",
+                    anchor = "TabRow",
+                    children = listOf(MarkdownNode.Plain(MarkdownBlock.Paragraph("Row doc."))),
+                ),
+            ),
+            groupMarkdownBlocks(parseMarkdownBlocks(markdown)),
+        )
+    }
 }
