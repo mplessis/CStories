@@ -526,6 +526,7 @@ internal class CStoriesProcessor(
             themeWrapper = themeWrapperResolution.reference,
             documentation = documentation,
             usageCode = usageCode,
+            canvasScroll = annotation.enumArgumentName("canvasScroll") != CANVAS_SCROLL_NONE,
         )
     }
 }
@@ -535,6 +536,7 @@ private const val CSTORY_COMPONENT_ANNOTATION_FQN = "io.cstories.annotations.CSt
 private const val CSTORIES_THEME_WRAPPER_FQN = "io.cstories.runtime.CStoriesThemeWrapper"
 private const val CUSTOM_THEME_WRAPPER_NAME = "CustomCStoriesThemeWrapper"
 private const val COMPOSABLE_ANNOTATION_FQN = "androidx.compose.runtime.Composable"
+private const val CANVAS_SCROLL_NONE = "None"
 private const val GENERATED_DOC_ANNOTATION_FQN = "io.cstories.annotations.GeneratedComponentDocumentation"
 
 private fun KSFunctionDeclaration.isComposable(): Boolean {
@@ -550,6 +552,19 @@ private fun allClassDeclarations(declaration: KSDeclaration): List<KSClassDeclar
 
 private fun com.google.devtools.ksp.symbol.KSAnnotation.stringArgument(name: String): String? {
     return arguments.firstOrNull { it.name?.asString() == name }?.value as? String
+}
+
+/**
+ * KSP exposes enum annotation arguments either as a [com.google.devtools.ksp.symbol.KSType] whose declaration is the
+ * enum entry, or directly as the entry's [KSClassDeclaration], depending on the KSP version and source/binary origin.
+ */
+private fun com.google.devtools.ksp.symbol.KSAnnotation.enumArgumentName(name: String): String? {
+    val value = arguments.firstOrNull { it.name?.asString() == name }?.value ?: return null
+    return when (value) {
+        is com.google.devtools.ksp.symbol.KSType -> value.declaration.simpleName.asString()
+        is KSDeclaration -> value.simpleName.asString()
+        else -> value.toString().substringAfterLast('.')
+    }
 }
 
 private sealed interface ThemeWrapperResolution {

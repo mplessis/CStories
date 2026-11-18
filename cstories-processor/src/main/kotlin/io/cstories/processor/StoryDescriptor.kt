@@ -8,6 +8,7 @@ internal data class StoryDescriptor(
     val themeWrapper: ThemeWrapperReference? = null,
     val documentation: String? = null,
     val usageCode: String? = null,
+    val canvasScroll: Boolean = true,
 ) {
     val pathSegments: List<String>
         get() = collection.split('/') + group.split('/') + name

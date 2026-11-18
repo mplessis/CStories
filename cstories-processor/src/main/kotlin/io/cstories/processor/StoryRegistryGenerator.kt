@@ -81,7 +81,7 @@ internal object StoryRegistryGenerator {
         }
     }
 
-    private fun buildEntriesInitializer(entries: List<StoryDescriptor>): CodeBlock {
+    internal fun buildEntriesInitializer(entries: List<StoryDescriptor>): CodeBlock {
         val builder = CodeBlock.builder().add("listOf(\n")
         entries.forEachIndexed { index, entry ->
             builder.add("  %T(\n", storyEntryClass)
@@ -98,7 +98,11 @@ internal object StoryRegistryGenerator {
                 builder.add("    themeWrapper = %T,\n", ClassName(entry.themeWrapper.packageName, entry.themeWrapper.objectName))
             }
             builder.add("    documentation = %L,\n", entry.documentation?.let { CodeBlock.of("%S", it) } ?: CodeBlock.of("null"))
-            builder.add("    usageCode = %L\n", entry.usageCode?.let { CodeBlock.of("%S", it) } ?: CodeBlock.of("null"))
+            builder.add("    usageCode = %L", entry.usageCode?.let { CodeBlock.of("%S", it) } ?: CodeBlock.of("null"))
+            if (!entry.canvasScroll) {
+                builder.add(",\n    canvasScroll = false")
+            }
+            builder.add("\n")
             builder.add("  )")
             if (index < entries.lastIndex) {
                 builder.add(",")
