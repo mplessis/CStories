@@ -11,4 +11,5 @@ annotation class CStory(
     val tags: Array<String> = [],
     val component: String = "",
     val themeWrapper: KClass<*> = Any::class,
+    val canvasScroll: CanvasScroll = CanvasScroll.Auto,
 )
