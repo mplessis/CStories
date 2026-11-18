@@ -43,6 +43,13 @@ Le wrapper global est un `object` Kotlin accessible nommé exactement `CustomCSt
 `CStoriesThemeWrapper`. Il est découvert automatiquement. Chaque story peut le surcharger avec
 `@CStory(themeWrapper = WrapperObject::class)`. Un seul wrapper global peut exister dans le projet agrégé.
 
+## Défilement du canevas
+
+Le défilement automatique du canevas repose sur les mesures intrinsèques. Un contenu construit sur `SubcomposeLayout`
+(`LazyColumn`, `Scaffold`, `BoxWithConstraints`…) ne les supporte pas : une telle story est disposée dans la zone
+d'aperçu et ne défile pas via le catalogue, même si d'autres parties débordent. Voir
+[Défilement du canevas](/reference/annotations#défilement-du-canevas).
+
 ## Cache de configuration Gradle
 
 `dev.cstories.gradle` et `dev.cstories.gradle.components` supportent le cache de configuration de Gradle depuis

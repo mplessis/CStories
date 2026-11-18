@@ -83,22 +83,17 @@ Les dimensions par défaut sont `390.dp x 844.dp` pour le mobile et `1280.dp x 8
 
 ## Hauteur fixe ou contenu défilant
 
-Par défaut, le contenu reçoit la hauteur finie de l'écran simulé, comme sur un vrai appareil. Les layouts qui occupent
-toute la hauteur, comme `Scaffold`, `fillMaxSize`, `LazyColumn` ou `Modifier.weight`, s'affichent correctement.
+Le contenu reçoit la hauteur finie de l'écran simulé, comme sur un vrai appareil. Les layouts qui occupent toute la
+hauteur, comme `Scaffold`, `fillMaxSize`, `LazyColumn` ou `Modifier.weight`, s'affichent correctement.
 
-Passez `scrollable = true` lorsque le contenu est une simple colonne plus haute que l'écran et doit défiler
-verticalement :
+Un contenu plus haut que l'écran, comme une simple longue colonne, défile verticalement automatiquement : aucun
+`Modifier.verticalScroll(...)` n'est nécessaire dans la story. Un contenu qui gère son propre défilement (`LazyColumn`,
+`Scaffold`…) reste inchangé. Utilisez `@CStory(canvasScroll = CanvasScroll.None)` pour désactiver ce comportement pour
+une story (voir [Défilement du canevas](/reference/annotations#défilement-du-canevas)).
 
-```kotlin
-DevicePreview(scrollable = true) {
-    LongFormScreen()
-}
-```
-
-Avec `scrollable = true`, le contenu est mesuré avec une hauteur non bornée : il ne doit pas chercher à remplir la
-hauteur disponible (`Scaffold`, `fillMaxSize`, `LazyColumn`…), sinon Compose lève `Size(… x 2147483647) is out of range`.
-
-`MobileDevicePreview` et `DesktopDevicePreview` acceptent le même paramètre `scrollable`.
+Le paramètre `scrollable` de `DevicePreview`, `MobileDevicePreview` et `DesktopDevicePreview` est déprécié. Avec
+`scrollable = true`, le contenu est mesuré avec une hauteur non bornée : il ne doit pas chercher à remplir la hauteur
+disponible (`Scaffold`, `fillMaxSize`, `LazyColumn`…), sinon Compose lève `Size(… x 2147483647) is out of range`.
 
 ## Utiliser le catalogue mobile intégré
 
@@ -173,7 +168,7 @@ MobileDevicePreview(
 }
 ```
 
-Le contenu reçoit la hauteur de l'écran simulé. Passez `scrollable = true` pour le faire défiler verticalement
+Le contenu reçoit la hauteur de l'écran simulé et défile verticalement lorsqu'il est plus haut
 (voir [Hauteur fixe ou contenu défilant](#hauteur-fixe-ou-contenu-défilant)).
 
 Le contenu est entouré d'une marge intérieure par défaut. Passez `contentPadding = PaddingValues(0.dp)` pour un contenu

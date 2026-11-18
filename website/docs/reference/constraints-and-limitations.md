@@ -41,6 +41,12 @@ The global theme wrapper is an accessible Kotlin `object` named exactly `CustomC
 `CStoriesThemeWrapper`. It is discovered automatically. Each story may override it with
 `@CStory(themeWrapper = WrapperObject::class)`. Only one global wrapper may exist across the aggregated project.
 
+## Canvas scrolling
+
+Automatic canvas scrolling relies on intrinsic measurements. Content built on `SubcomposeLayout` (`LazyColumn`,
+`Scaffold`, `BoxWithConstraints`…) does not support them: such a story is laid out within the preview area and is not
+scrolled by the catalog, even when other parts of it overflow. See [Canvas scrolling](/reference/annotations#canvas-scrolling).
+
 ## Gradle configuration cache
 
 Both `dev.cstories.gradle` and `dev.cstories.gradle.components` support the Gradle configuration cache since

@@ -83,21 +83,17 @@ The default dimensions are `390.dp x 844.dp` for mobile and `1280.dp x 800.dp` f
 
 ## Fixed height or scrolling content
 
-By default, the content receives the finite height of the simulated screen, like on a real device. Full-height layouts
-such as `Scaffold`, `fillMaxSize`, `LazyColumn` or `Modifier.weight` render correctly.
+The content receives the finite height of the simulated screen, like on a real device. Full-height layouts such as
+`Scaffold`, `fillMaxSize`, `LazyColumn` or `Modifier.weight` render correctly.
 
-Pass `scrollable = true` when the content is a simple column taller than the screen and should scroll vertically:
+Content taller than the screen, such as a simple long column, scrolls vertically automatically: no
+`Modifier.verticalScroll(...)` is needed in the story. Content that handles its own scrolling (`LazyColumn`,
+`Scaffold`…) is left unchanged. Use `@CStory(canvasScroll = CanvasScroll.None)` to disable this behaviour for a story
+(see [Canvas scrolling](/reference/annotations#canvas-scrolling)).
 
-```kotlin
-DevicePreview(scrollable = true) {
-    LongFormScreen()
-}
-```
-
-With `scrollable = true`, the content is measured with an unbounded height: it must not try to fill the available height
+The `scrollable` parameter of `DevicePreview`, `MobileDevicePreview` and `DesktopDevicePreview` is deprecated. With
+`scrollable = true`, the content is measured with an unbounded height: it must not try to fill the available height
 (`Scaffold`, `fillMaxSize`, `LazyColumn`…), otherwise Compose throws `Size(… x 2147483647) is out of range`.
-
-`MobileDevicePreview` and `DesktopDevicePreview` accept the same `scrollable` parameter.
 
 ## Use the built-in mobile catalog
 
@@ -170,7 +166,7 @@ MobileDevicePreview(
 }
 ```
 
-The content receives the height of the simulated screen. Pass `scrollable = true` to make it scroll vertically instead
+The content receives the height of the simulated screen and scrolls vertically when it is taller
 (see [Fixed height or scrolling content](#fixed-height-or-scrolling-content)).
 
 The content is padded inside the simulated screen by default. Pass `contentPadding = PaddingValues(0.dp)` for

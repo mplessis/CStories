@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.3.0
+
+### Added
+
+- `@CStory(canvasScroll = CanvasScroll.Auto | None)`: the story canvas now scrolls vertically and horizontally, with
+  scrollbars and mouse wheel / trackpad support, when the story is larger than it. Content taller than a
+  `MobileDevicePreview` or `DesktopDevicePreview` screen scrolls vertically. Stories no longer need
+  `Modifier.verticalScroll(...)`. Smaller content keeps its layout, and content handling its own scrolling
+  (`LazyColumn`, `Scaffold`…) still receives the bounded preview size. The scroll position resets on story change and is
+  kept while changing knobs. `CanvasScroll.None` opts a story out.
+
+### Deprecated
+
+- The `scrollable` parameter of `DevicePreview`, `MobileDevicePreview` and `DesktopDevicePreview`: tall content now
+  scrolls automatically.
+
 ## 2.1.1
 
 ### Fixed
