@@ -8,4 +8,6 @@ data class StoryEntry(
     val themeWrapper: CStoriesThemeWrapper? = null,
     val documentation: String? = null,
     val usageCode: String? = null,
+    /** `false` when the story opted out of canvas scrolling with `@CStory(canvasScroll = CanvasScroll.None)`. */
+    val canvasScroll: Boolean = true,
 )

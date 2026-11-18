@@ -45,12 +45,14 @@ data class DesktopDevice(
  * Renders content inside a desktop-window-shaped viewport.
  *
  * The window chrome is decorative. The content viewport has a fixed size so
- * that stories can be checked at a predictable desktop resolution. By default,
- * the content receives the finite height of the simulated screen, so full-height
- * layouts (`Scaffold`, `fillMaxSize`, `LazyColumn`, `Modifier.weight`…) render correctly.
+ * that stories can be checked at a predictable desktop resolution. The content
+ * receives the finite height of the simulated screen, so full-height layouts
+ * (`Scaffold`, `fillMaxSize`, `LazyColumn`, `Modifier.weight`…) render correctly.
+ * In the catalog, content taller than the screen scrolls vertically automatically,
+ * unless the story uses `@CStory(canvasScroll = CanvasScroll.None)`.
  *
- * @param scrollable when `true`, the content scrolls vertically when it is taller than the simulated screen.
- * It is then measured with an unbounded height and must not try to fill the available height.
+ * @param scrollable deprecated: content taller than the screen now scrolls automatically. When `true`, the content
+ * is measured with an unbounded height (legacy behaviour) and must not try to fill the available height.
  */
 @Composable
 fun DesktopDevicePreview(
@@ -88,13 +90,23 @@ fun DesktopDevicePreview(
     ) {
         DesktopWindowTitleBar(title = device.title)
         PreviewThemedContent {
-            Box(
-                modifier = Modifier
-                    .size(width = device.width, height = device.height)
-                    .background(MaterialTheme.colorScheme.background)
-                    .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier),
-                content = content,
-            )
+            val screenModifier = Modifier
+                .size(width = device.width, height = device.height)
+                .background(MaterialTheme.colorScheme.background)
+            if (!scrollable && LocalCanvasScroll.current) {
+                CanvasScrollContainer(
+                    verticalState = rememberScrollState(),
+                    horizontalState = null,
+                    modifier = screenModifier,
+                    content = content,
+                )
+            } else {
+                Box(
+                    modifier = screenModifier
+                        .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier),
+                    content = content,
+                )
+            }
         }
     }
 }

@@ -42,8 +42,11 @@ enum class PreviewDevice {
  * Displays the same content in either a simulated mobile device or desktop
  * window, with an in-preview segmented switch to change between them.
  *
- * @param scrollable when `true`, the content scrolls vertically when it is taller than the simulated screen.
- * Otherwise it receives the finite height of the simulated screen.
+ * The content receives the finite height of the simulated screen. In the catalog, content taller than the screen
+ * scrolls vertically automatically, unless the story uses `@CStory(canvasScroll = CanvasScroll.None)`.
+ *
+ * @param scrollable deprecated: content taller than the screen now scrolls automatically. When `true`, the content
+ * is measured with an unbounded height (legacy behaviour) and must not try to fill the available height.
  */
 @Composable
 fun DevicePreview(

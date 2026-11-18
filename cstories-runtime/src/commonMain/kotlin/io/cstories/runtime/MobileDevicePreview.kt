@@ -28,11 +28,12 @@ import androidx.compose.ui.unit.dp
 /**
  * Renders content inside a device-shaped viewport for mobile screen previews.
  *
- * By default, the content receives the finite height of the simulated screen, like on a real device, so
- * full-height layouts (`Scaffold`, `fillMaxSize`, `LazyColumn`, `Modifier.weight`…) render correctly.
+ * The content receives the finite height of the simulated screen, like on a real device, so full-height layouts
+ * (`Scaffold`, `fillMaxSize`, `LazyColumn`, `Modifier.weight`…) render correctly. In the catalog, content taller than
+ * the screen scrolls vertically automatically, unless the story uses `@CStory(canvasScroll = CanvasScroll.None)`.
  *
- * @param scrollable when `true`, the content scrolls vertically when it is taller than the simulated screen.
- * It is then measured with an unbounded height and must not try to fill the available height.
+ * @param scrollable deprecated: content taller than the screen now scrolls automatically. When `true`, the content
+ * is measured with an unbounded height (legacy behaviour) and must not try to fill the available height.
  * @param contentPadding padding applied around the content inside the simulated screen. Use `PaddingValues(0.dp)`
  * for full-screen content such as a `Scaffold`.
  */
@@ -79,15 +80,26 @@ fun MobileDevicePreview(
         contentAlignment = Alignment.TopCenter,
     ) {
         PreviewThemedContent {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(screenShape)
-                    .background(MaterialTheme.colorScheme.background)
-                    .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-                    .padding(contentPadding),
-                content = content,
-            )
+            val screenModifier = Modifier
+                .fillMaxSize()
+                .clip(screenShape)
+                .background(MaterialTheme.colorScheme.background)
+            if (!scrollable && LocalCanvasScroll.current) {
+                CanvasScrollContainer(
+                    verticalState = rememberScrollState(),
+                    horizontalState = null,
+                    modifier = screenModifier,
+                    contentPadding = contentPadding,
+                    content = content,
+                )
+            } else {
+                Box(
+                    modifier = screenModifier
+                        .then(if (scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                        .padding(contentPadding),
+                    content = content,
+                )
+            }
         }
 
         Box(

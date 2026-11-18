@@ -1,6 +1,7 @@
 package io.cstories.runtime
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -83,24 +84,46 @@ fun StoryFrame(
                             if (!hasDevicePreview && isDark) CStoriesColors.dark else CStoriesColors.surface,
                         )
                     }
-                }
-                .padding(24.dp),
-            contentAlignment = Alignment.Center,
+                },
         ) {
-            CompositionLocalProvider(
-                LocalDevicePreviewSlot provides devicePreviewSlot,
-                LocalPreviewTheme provides PreviewTheme(isDark = isDark, wrapper = themeWrapper),
-            ) {
-                if (devicePreviewSlot.value == null) {
-                    themeWrapper(isDark) {
+            val story: @Composable () -> Unit = {
+                CompositionLocalProvider(
+                    LocalDevicePreviewSlot provides devicePreviewSlot,
+                    LocalPreviewTheme provides PreviewTheme(isDark = isDark, wrapper = themeWrapper),
+                    LocalCanvasScroll provides entry.canvasScroll,
+                ) {
+                    if (devicePreviewSlot.value == null) {
+                        themeWrapper(isDark) {
+                            key(entry.path, resetToken) {
+                                entry.composableInvoker()
+                            }
+                        }
+                    } else {
                         key(entry.path, resetToken) {
                             entry.composableInvoker()
                         }
                     }
-                } else {
-                    key(entry.path, resetToken) {
-                        entry.composableInvoker()
-                    }
+                }
+            }
+            if (entry.canvasScroll) {
+                // Keyed by story only: knob changes and the reset action keep the scroll position.
+                val verticalState = remember(entry.path) { ScrollState(0) }
+                val horizontalState = remember(entry.path) { ScrollState(0) }
+                CanvasScrollContainer(
+                    verticalState = verticalState,
+                    horizontalState = horizontalState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                    contentPadding = PaddingValues(24.dp),
+                ) {
+                    story()
+                }
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(24.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    story()
                 }
             }
         }
