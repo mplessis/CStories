@@ -116,12 +116,7 @@ private fun MarkdownNodeView(node: MarkdownNode, onLink: (String) -> Unit) {
 @Composable
 private fun MarkdownBlockView(block: MarkdownBlock, onLink: (String) -> Unit) {
     when (block) {
-        is MarkdownBlock.Heading -> Text(
-            text = renderInline(block.text, onLink),
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp,
-            color = CStoriesColors.text,
-        )
+        is MarkdownBlock.Heading -> MarkdownHeading(block, onLink)
 
         is MarkdownBlock.Paragraph -> Text(
             text = renderInline(block.text, onLink),
@@ -135,6 +130,29 @@ private fun MarkdownBlockView(block: MarkdownBlock, onLink: (String) -> Unit) {
         is MarkdownBlock.Table -> MarkdownTable(block, onLink)
 
         is MarkdownBlock.CodeBlock -> MarkdownExampleCodeBlock(block.code)
+    }
+}
+
+@Composable
+private fun MarkdownHeading(heading: MarkdownBlock.Heading, onLink: (String) -> Unit) {
+    val (fontSize, topPadding) = when (heading.level) {
+        1 -> 22.sp to 12.dp
+        2 -> 18.sp to 10.dp
+        3 -> 15.sp to 6.dp
+        else -> 13.sp to 0.dp
+    }
+    Column(
+        modifier = Modifier.padding(top = topPadding),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = renderInline(heading.text, onLink),
+            fontWeight = FontWeight.Bold,
+            fontSize = fontSize,
+            lineHeight = fontSize * 1.3f,
+            color = CStoriesColors.text,
+        )
+        if (heading.level <= 2) HorizontalDivider(color = CStoriesColors.border)
     }
 }
 
@@ -292,7 +310,8 @@ private fun MarkdownTableRow(cells: List<String>, bold: Boolean, growIndex: Int?
 }
 
 internal sealed interface MarkdownBlock {
-    data class Heading(val text: String, val anchor: String? = null) : MarkdownBlock
+    /** [level] follows ATX `#` count (1–6); `**bold**` section titles use [BOLD_HEADING_LEVEL]. */
+    data class Heading(val text: String, val anchor: String? = null, val level: Int = BOLD_HEADING_LEVEL) : MarkdownBlock
     data class Paragraph(val text: String) : MarkdownBlock
     data class ListItem(val indent: Int, val text: String) : MarkdownBlock
     data class Table(val headers: List<String>, val rows: List<List<String>>) : MarkdownBlock
@@ -360,7 +379,7 @@ private fun groupSeeAlso(blocks: List<MarkdownBlock>): List<MarkdownNode> {
 }
 
 private sealed interface MarkdownLine {
-    data class Heading(val text: String, val anchor: String? = null) : MarkdownLine
+    data class Heading(val text: String, val anchor: String? = null, val level: Int = BOLD_HEADING_LEVEL) : MarkdownLine
     data class ListItem(val indent: Int, val text: String) : MarkdownLine
     data class TableRow(val cells: List<String>) : MarkdownLine
     data class Text(val text: String) : MarkdownLine
@@ -392,6 +411,8 @@ internal const val RELATED_MARKER = "\u00A4related\u00A4"
  */
 internal const val SEE_ALSO_MARKER = "\u00A4seealso\u00A4"
 
+internal const val BOLD_HEADING_LEVEL = 4
+
 // Taller than any viewport so the anchored heading is aligned to the top of the scrolled area.
 private val anchorRevealRect = Rect(0f, 0f, 1f, 100_000f)
 
@@ -414,9 +435,9 @@ private fun classifyLine(line: String): MarkdownLine {
         if (level in 1..6 && text.isNotEmpty()) {
             val anchorMatch = headingAnchorRegex.find(text)
             if (anchorMatch != null) {
-                return MarkdownLine.Heading(text.substring(anchorMatch.range.last + 1).trim(), anchorMatch.groupValues[1])
+                return MarkdownLine.Heading(text.substring(anchorMatch.range.last + 1).trim(), anchorMatch.groupValues[1], level)
             }
-            return MarkdownLine.Heading(text)
+            return MarkdownLine.Heading(text, level = level)
         }
     }
     if (stripped.startsWith("|") && stripped.endsWith("|")) {
@@ -508,7 +529,7 @@ internal fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
             is MarkdownLine.Heading -> {
                 flushParagraph()
                 flushTable()
-                blocks += MarkdownBlock.Heading(line.text, line.anchor)
+                blocks += MarkdownBlock.Heading(line.text, line.anchor, line.level)
             }
 
             is MarkdownLine.ListItem -> {

@@ -16,14 +16,28 @@ class MarkdownTextTest {
     fun `parses an ATX heading distinct from a bold heading`() {
         val blocks = parseMarkdownBlocks("## Example")
 
-        assertEquals(listOf(MarkdownBlock.Heading("Example")), blocks)
+        assertEquals(listOf(MarkdownBlock.Heading("Example", level = 2)), blocks)
+    }
+
+    @Test
+    fun `keeps the ATX heading level and defaults bold headings below h3`() {
+        val blocks = parseMarkdownBlocks("# Title\n\n## Section\n\n**Parameters**")
+
+        assertEquals(
+            listOf(
+                MarkdownBlock.Heading("Title", level = 1),
+                MarkdownBlock.Heading("Section", level = 2),
+                MarkdownBlock.Heading("Parameters", level = BOLD_HEADING_LEVEL),
+            ),
+            blocks,
+        )
     }
 
     @Test
     fun `parses an anchored heading`() {
         val blocks = parseMarkdownBlocks("### {#TabItem} TabItem")
 
-        assertEquals(listOf(MarkdownBlock.Heading("TabItem", anchor = "TabItem")), blocks)
+        assertEquals(listOf(MarkdownBlock.Heading("TabItem", anchor = "TabItem", level = 3)), blocks)
     }
 
     @Test
@@ -42,7 +56,7 @@ class MarkdownTextTest {
 
         assertEquals(
             listOf(
-                MarkdownBlock.Heading("Example"),
+                MarkdownBlock.Heading("Example", level = 2),
                 MarkdownBlock.CodeBlock(
                     language = "kotlin",
                     code = "PrimaryButton(\n    text = \"Ok\",\n)",
