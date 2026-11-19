@@ -38,7 +38,7 @@ lib/stories/
 ```
 
 Its content is displayed at the top of the home page. It supports the same Markdown as the component documentation:
-headings, lists, tables, bold, inline code and fenced code blocks (with a copy button).
+headings, bulleted and numbered lists, tables, bold, italics, inline code and fenced code blocks (with a copy button).
 
 ```markdown
 # CStories design system

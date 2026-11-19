@@ -1,5 +1,7 @@
 package io.cstories.runtime
 
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -176,5 +178,80 @@ class MarkdownTextTest {
             ),
             groupMarkdownBlocks(parseMarkdownBlocks(markdown)),
         )
+    }
+
+    @Test
+    fun `parses star and plus bullets while keeping bold lines as headings`() {
+        val blocks = parseMarkdownBlocks("* one\n+ two\n**Parameters**")
+
+        assertEquals(
+            listOf(
+                MarkdownBlock.ListItem(0, "one"),
+                MarkdownBlock.ListItem(0, "two"),
+                MarkdownBlock.Heading("Parameters"),
+            ),
+            blocks,
+        )
+    }
+
+    @Test
+    fun `renumbers ordered lists from their first number`() {
+        val markdown = "3. a\n7) b\n  1. nested\n  - bullet\n  1. restarted\n1. c\n\nText.\n\n5. new list"
+
+        val blocks = parseMarkdownBlocks(markdown)
+
+        assertEquals(
+            listOf(
+                MarkdownBlock.ListItem(0, "a", ordinal = 3),
+                MarkdownBlock.ListItem(0, "b", ordinal = 4),
+                MarkdownBlock.ListItem(1, "nested", ordinal = 1),
+                MarkdownBlock.ListItem(1, "bullet"),
+                MarkdownBlock.ListItem(1, "restarted", ordinal = 1),
+                MarkdownBlock.ListItem(0, "c", ordinal = 5),
+                MarkdownBlock.Paragraph("Text."),
+                MarkdownBlock.ListItem(0, "new list", ordinal = 5),
+            ),
+            blocks,
+        )
+    }
+
+    @Test
+    fun `renders star and underscore emphasis`() {
+        val rendered = renderInline("*a* _b_ __c__ **d**")
+
+        assertEquals("a b c d", rendered.text)
+        assertEquals(
+            listOf(
+                "a" to SpanStyleKind.Italic,
+                "b" to SpanStyleKind.Italic,
+                "c" to SpanStyleKind.Bold,
+                "d" to SpanStyleKind.Bold,
+            ),
+            rendered.spanStyles.map { rendered.text.substring(it.start, it.end) to it.item.kind() },
+        )
+    }
+
+    @Test
+    fun `nests emphasis and code`() {
+        val rendered = renderInline("*see `x` and **y** too*")
+
+        assertEquals("see x and y too", rendered.text)
+        assertEquals(listOf(SpanStyleKind.Italic, SpanStyleKind.Other, SpanStyleKind.Bold), rendered.spanStyles.map { it.item.kind() })
+    }
+
+    @Test
+    fun `keeps intraword underscores and unmatched delimiters literal`() {
+        val rendered = renderInline("snake_case_name, a * b, *open")
+
+        assertEquals("snake_case_name, a * b, *open", rendered.text)
+        assertEquals(emptyList(), rendered.spanStyles)
+    }
+
+    private enum class SpanStyleKind { Bold, Italic, Other }
+
+    private fun androidx.compose.ui.text.SpanStyle.kind() = when {
+        fontWeight == FontWeight.Bold -> SpanStyleKind.Bold
+        fontStyle == FontStyle.Italic -> SpanStyleKind.Italic
+        else -> SpanStyleKind.Other
     }
 }

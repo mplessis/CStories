@@ -31,7 +31,9 @@ The first paragraph of the description is also used as the component's summary o
 
 ## Formatting with Markdown
 
-The description supports Markdown: `###` headings, bulleted lists, tables, **bold**, *italics*, inline code and fenced
+The description supports Markdown: `#` to `######` headings, bulleted lists (`-`, `*` or `+`), numbered lists (`1.` or
+`1)`, numbered automatically from the first item), tables, **bold** (`**` or `__`), *italics* (`*` or `_`), inline code
+and fenced
 code blocks. Kotlin code blocks are syntax-highlighted and come with a copy button, which makes them a good place for
 usage examples:
 

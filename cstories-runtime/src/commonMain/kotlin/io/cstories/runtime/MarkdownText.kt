@@ -38,6 +38,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,10 +59,12 @@ import org.jetbrains.compose.resources.stringResource
 
 /**
  * Minimal, dependency-free Markdown renderer supporting the subset produced
- * by the KDoc-to-Markdown processor: paragraphs, `**bold**` section titles,
- * `- ` bullet lists (with 2-space nested indentation), pipe tables
+ * by the KDoc-to-Markdown processor: paragraphs, `#` headings, `**bold**` section titles,
+ * `- ` / `* ` / `+ ` bullet lists and `1.` / `1)` numbered lists (2-space nested
+ * indentation, CommonMark-style renumbering), pipe tables
  * (`| Header | ... |` with a `| --- | ... |` separator row, cells may embed
- * `<br>` for multi-line content), inline `` `code` `` / `**bold**` spans, and
+ * `<br>` for multi-line content), inline `` `code` ``, `**bold**` / `__bold__`,
+ * `*italic*` / `_italic_` spans, and
  * `[label](#anchor)` links scrolling to a `### {#anchor} Title` heading.
  * Deliberately hand-rolled (no third-party lib) to stay Kotlin/Wasm-friendly.
  */
@@ -159,7 +162,12 @@ private fun MarkdownHeading(heading: MarkdownBlock.Heading, onLink: (String) -> 
 @Composable
 private fun MarkdownListItem(item: MarkdownBlock.ListItem, onLink: (String) -> Unit) {
     Row(modifier = Modifier.padding(start = (item.indent * 14).dp)) {
-        Text("•  ", fontSize = 13.sp, color = CStoriesColors.textFaint)
+        Text(
+            text = item.ordinal?.let { "$it.  " } ?: "•  ",
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            color = CStoriesColors.textFaint,
+        )
         Text(
             text = renderInline(item.text, onLink),
             fontSize = 13.sp,
@@ -313,7 +321,8 @@ internal sealed interface MarkdownBlock {
     /** [level] follows ATX `#` count (1–6); `**bold**` section titles use [BOLD_HEADING_LEVEL]. */
     data class Heading(val text: String, val anchor: String? = null, val level: Int = BOLD_HEADING_LEVEL) : MarkdownBlock
     data class Paragraph(val text: String) : MarkdownBlock
-    data class ListItem(val indent: Int, val text: String) : MarkdownBlock
+    /** A list item; [ordinal] is the displayed number for ordered items, `null` for bullets. */
+    data class ListItem(val indent: Int, val text: String, val ordinal: Int? = null) : MarkdownBlock
     data class Table(val headers: List<String>, val rows: List<List<String>>) : MarkdownBlock
 
     /** A fenced ` ```language ` … ` ``` ` code block, rendered with [CodeBlock]'s Kotlin syntax highlighting. */
@@ -380,7 +389,7 @@ private fun groupSeeAlso(blocks: List<MarkdownBlock>): List<MarkdownNode> {
 
 private sealed interface MarkdownLine {
     data class Heading(val text: String, val anchor: String? = null, val level: Int = BOLD_HEADING_LEVEL) : MarkdownLine
-    data class ListItem(val indent: Int, val text: String) : MarkdownLine
+    data class ListItem(val indent: Int, val text: String, val number: Int? = null) : MarkdownLine
     data class TableRow(val cells: List<String>) : MarkdownLine
     data class Text(val text: String) : MarkdownLine
     data object Blank : MarkdownLine
@@ -416,6 +425,7 @@ internal const val BOLD_HEADING_LEVEL = 4
 // Taller than any viewport so the anchored heading is aligned to the top of the scrolled area.
 private val anchorRevealRect = Rect(0f, 0f, 1f, 100_000f)
 
+private val orderedItemRegex = Regex("^(\\d{1,9})[.)]\\s+(\\S.*)$")
 private val headingAnchorRegex = Regex("^\\{#([^}\\s]+)}")
 private val inlineLinkRegex = Regex("^\\[([^]]+)]\\(#([^)\\s]+)\\)")
 
@@ -423,8 +433,15 @@ private fun classifyLine(line: String): MarkdownLine {
     if (line.isBlank()) return MarkdownLine.Blank
     val leadingSpaces = line.takeWhile { it == ' ' }.length
     val stripped = line.trim()
-    if (stripped.startsWith("- ")) {
-        return MarkdownLine.ListItem(indent = leadingSpaces / 2, text = stripped.removePrefix("- ").trim())
+    if (stripped.length > 2 && stripped[0] in "-*+" && stripped[1] == ' ') {
+        return MarkdownLine.ListItem(indent = leadingSpaces / 2, text = stripped.substring(2).trim())
+    }
+    orderedItemRegex.matchEntire(stripped)?.let { match ->
+        return MarkdownLine.ListItem(
+            indent = leadingSpaces / 2,
+            text = match.groupValues[2].trim(),
+            number = match.groupValues[1].toInt(),
+        )
     }
     if (stripped.startsWith("**") && stripped.endsWith("**") && stripped.length > 4 && stripped.count { it == '*' } == 4) {
         return MarkdownLine.Heading(stripped.trim('*'))
@@ -535,7 +552,7 @@ internal fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
             is MarkdownLine.ListItem -> {
                 flushParagraph()
                 flushTable()
-                blocks += MarkdownBlock.ListItem(line.indent, line.text)
+                blocks += MarkdownBlock.ListItem(line.indent, line.text, line.number)
             }
 
             is MarkdownLine.TableRow -> {
@@ -568,7 +585,32 @@ internal fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
     flushTable()
     codeFenceLines?.let { blocks += MarkdownBlock.CodeBlock(codeFenceLanguage, it.joinToString("\n")) }
 
-    return blocks
+    return renumberOrderedLists(blocks)
+}
+
+/**
+ * CommonMark-style numbering: an ordered list starts at its first written
+ * number and increments from there, whatever the following items say. A list
+ * ends at any non-list block, a bullet at the same indent, or a shallower item.
+ */
+private fun renumberOrderedLists(blocks: List<MarkdownBlock>): List<MarkdownBlock> {
+    val counters = mutableMapOf<Int, Int>()
+    return blocks.map { block ->
+        if (block !is MarkdownBlock.ListItem) {
+            counters.clear()
+            return@map block
+        }
+        counters.keys.removeAll { it > block.indent }
+        val written = block.ordinal
+        if (written == null) {
+            counters.remove(block.indent)
+            block
+        } else {
+            val ordinal = counters[block.indent]?.plus(1) ?: written
+            counters[block.indent] = ordinal
+            block.copy(ordinal = ordinal)
+        }
+    }
 }
 
 
@@ -576,7 +618,7 @@ private val linkStyles = TextLinkStyles(
     style = SpanStyle(color = CStoriesColors.primary, textDecoration = TextDecoration.Underline),
 )
 
-private fun renderInline(text: String, onLink: ((String) -> Unit)? = null): AnnotatedString = buildAnnotatedString {
+internal fun renderInline(text: String, onLink: ((String) -> Unit)? = null): AnnotatedString = buildAnnotatedString {
     var i = 0
     while (i < text.length) {
         val link = if (text[i] == '[') inlineLinkRegex.find(text.substring(i)) else null
@@ -601,19 +643,6 @@ private fun renderInline(text: String, onLink: ((String) -> Unit)? = null): Anno
                 i += REQUIRED_MARKER.length
             }
 
-            text.startsWith("**", i) -> {
-                val end = text.indexOf("**", i + 2)
-                if (end == -1) {
-                    append(text.substring(i))
-                    i = text.length
-                } else {
-                    pushStyle(SpanStyle(fontWeight = FontWeight.Bold))
-                    append(text.substring(i + 2, end))
-                    pop()
-                    i = end + 2
-                }
-            }
-
             text[i] == '`' -> {
                 val end = text.indexOf('`', i + 1)
                 if (end == -1) {
@@ -628,16 +657,56 @@ private fun renderInline(text: String, onLink: ((String) -> Unit)? = null): Anno
             }
 
             else -> {
-                val candidates = listOf(
-                    text.indexOf("**", i),
-                    text.indexOf('`', i),
-                    text.indexOf(REQUIRED_MARKER, i),
-                    text.indexOf('[', i + 1),
-                ).filter { it != -1 }
-                val nextSpecial = candidates.minOrNull() ?: text.length
-                append(text.substring(i, nextSpecial))
-                i = nextSpecial
+                val emphasis = findEmphasis(text, i)
+                if (emphasis != null) {
+                    pushStyle(emphasis.style)
+                    append(renderInline(text.substring(emphasis.contentStart, emphasis.contentEnd), onLink))
+                    pop()
+                    i = emphasis.end
+                } else {
+                    // Consume at least one char so an unmatched delimiter is emitted literally.
+                    val nextSpecial = (i + 1 until text.length).firstOrNull { text[it] in inlineSpecialChars } ?: text.length
+                    append(text.substring(i, nextSpecial))
+                    i = nextSpecial
+                }
             }
         }
     }
+}
+
+private const val inlineSpecialChars = "*_`[\u00A4"
+
+private class Emphasis(val style: SpanStyle, val contentStart: Int, val contentEnd: Int, val end: Int)
+
+private val boldStyle = SpanStyle(fontWeight = FontWeight.Bold)
+private val italicStyle = SpanStyle(fontStyle = FontStyle.Italic)
+
+/**
+ * Matches `**bold**`, `__bold__`, `*italic*` or `_italic_` starting at [start].
+ * Underscore delimiters only apply at word boundaries so `snake_case` stays literal,
+ * and single delimiters must hug their content (`a * b` is not italic).
+ */
+private fun findEmphasis(text: String, start: Int): Emphasis? {
+    val char = text[start]
+    if (char != '*' && char != '_') return null
+    val double = text.startsWith("$char$char", start)
+    val delimiter = if (double) "$char$char" else "$char"
+    val underscore = char == '_'
+    val contentStart = start + delimiter.length
+    if (contentStart >= text.length || text[contentStart].isWhitespace()) return null
+    if (underscore && start > 0 && text[start - 1].isLetterOrDigit()) return null
+
+    var j = text.indexOf(delimiter, contentStart + 1)
+    while (j != -1) {
+        val after = j + delimiter.length
+        val hugsContent = !text[j - 1].isWhitespace()
+        val closesWord = !underscore || after >= text.length || !text[after].isLetterOrDigit()
+        val notLonger = after >= text.length || text[after] != char
+        val notShorter = double || text[j - 1] != char
+        if (hugsContent && closesWord && notLonger && notShorter) {
+            return Emphasis(if (double) boldStyle else italicStyle, contentStart, j, after)
+        }
+        j = text.indexOf(delimiter, j + 1)
+    }
+    return null
 }
